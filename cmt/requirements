@@ -10,6 +10,9 @@ use AthenaBaseComps    AthenaBaseComps-*   	Control
 private
 use egammaEvent	       egammaEvent-*		Reconstruction/egamma
 use MissingETEvent     MissingETEvent-*         Reconstruction
+use JetEvent            JetEvent-*          Reconstruction/Jet
+use JetUtils            JetUtils-*          Reconstruction/Jet
+use FourMomUtils        FourMomUtils-*      Event
 end_private
 
 library gmsbTools *.cxx -s=components *.cxx
