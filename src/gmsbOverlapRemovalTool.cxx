@@ -141,7 +141,7 @@ StatusCode gmsbOverlapRemovalTool::execute() {
     loc = m_inputContainerKeys[i].find( tau, 0);
     if( loc != std::string::npos ) sc = this->tauJetPreparation( m_inputContainerKeys[i] );
 
-    std::string jet = "Jets";
+    std::string jet = "Jet";
     if ( m_isAtlfast ) jet = "Jet";
     loc = m_inputContainerKeys[i].find( jet, 0);
     if( loc != std::string::npos ) sc = this->jetPreparation( m_inputContainerKeys[i] );
@@ -267,7 +267,7 @@ const CaloClusterContainer * gmsbOverlapRemovalTool::finalStateCaloClusters() {
 
   /** container preparation */
 StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
-  ATH_MSG_DEBUG("in electronPreparation() ");
+  ATH_MSG_DEBUG("in electronPreparation() with key = " << key);
   StatusCode sc = StatusCode::SUCCESS;
 
   INavigable4MomentumCollection * particles = this->allParticles();
@@ -335,7 +335,7 @@ StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
 }
 
 StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
-  ATH_MSG_DEBUG("in photonPreparation() ");
+  ATH_MSG_DEBUG("in photonPreparation() with key = " << key);
   StatusCode sc = StatusCode::SUCCESS;
 
   INavigable4MomentumCollection * particles = this->allParticles();
@@ -456,7 +456,7 @@ StatusCode gmsbOverlapRemovalTool::muonPreparation( std:: string key ) {
 }
 
 StatusCode gmsbOverlapRemovalTool::tauJetPreparation( std::string key ) {
-  ATH_MSG_DEBUG("in tauJetPreparation() ");
+  ATH_MSG_DEBUG("in tauJetPreparation() with key = " << key);
   StatusCode sc = StatusCode::SUCCESS;
 
   INavigable4MomentumCollection * particles = this->allParticles();
@@ -514,7 +514,7 @@ StatusCode gmsbOverlapRemovalTool::tauJetPreparation( std::string key ) {
 }
 
 StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
-  ATH_MSG_DEBUG("in jetPreparation() ");
+  ATH_MSG_DEBUG("in jetPreparation() with key = " << key);
   StatusCode sc = StatusCode::SUCCESS;
 
   INavigable4MomentumCollection * particles = this->allParticles();

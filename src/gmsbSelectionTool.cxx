@@ -106,10 +106,11 @@ gmsbSelectionTool::~gmsbSelectionTool()
 
 bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron ) const
 {
-  ATH_MSG_VERBOSE("in electron isSelected()");
+  ATH_MSG_DEBUG("in electron isSelected(), with electron = " << electron);
 
-  bool select = false;
-  if ( !electron ) return select;
+  if ( !electron ) return false;
+
+  bool select = true;
 
   if ( m_authorEgammaOnly ) select = select && electron->author(egammaParameters::AuthorElectron);
 
@@ -126,6 +127,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron ) const
   select = electron->isElectron(m_electronIsEM); 
 
   select = select && pt > m_electronPt && absClusEta <m_electronEta;
+  ATH_MSG_DEBUG("select is now " << select);
 
   // check if electron is in bad eta region
 
@@ -133,6 +135,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron ) const
     const bool isCrack = absClusEta > m_electronEtaWindMin && absClusEta < m_electronEtaWindMax; 
     select = select && !isCrack;
   }
+
+  ATH_MSG_DEBUG("after crack, select is now " << select);
 
 
   if ( m_doElectronIsolation ) {
@@ -144,12 +148,14 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron ) const
     select = select && isol < m_electronEtcone20ovEt;
   }
 
+  ATH_MSG_DEBUG("after iso, select is now " << select);
+
   return select;
 }
 
 bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon ) const 
 {
-  ATH_MSG_VERBOSE("in photon isSelected()");
+  ATH_MSG_DEBUG("in photon isSelected()");
 
   bool select = false;
   if ( !photon ) return select;

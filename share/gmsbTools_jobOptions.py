@@ -1,7 +1,10 @@
 
 from gmsbTools.gmsbToolsConf import \
     gmsbSelectionTool as ConfiguredUserSelectionTool
-gmsbSelectionTool = ConfiguredUserSelectionTool(name = "gmsbSelectionTool")
+gmsbSelectionTool = ConfiguredUserSelectionTool(
+    name = "gmsbSelectionTool",
+    #OutputLevel = DEBUG
+)
 
 ToolSvc += gmsbSelectionTool
 print      gmsbSelectionTool
@@ -45,7 +48,8 @@ gmsbPreparationTool = ConfiguredgmsbPreparationTool(
     OutputContainerKeys=[ "SelectedPhotonAODCollection",
                           "SelectedElectronAODCollection",
                           "SelectedAntiKt4TopoJets"
-                          ]
+                          ],
+    #OutputLevel = DEBUG
     
     )
 
@@ -129,13 +133,14 @@ gmsbOverlapRemovalTool1 = ConfiguredgmsbOverlapRemovalTool(
   OutputPhotonKey        = "IntermediatePhotonCollection",
   OutputElectronKey      = "IntermediateElectronCollection",
   OutputMuonKey          = "IntermediateMuonCollection",
-  OutputTauJetKey        = "IntermediateTauJetCollection",
+  OutputTauJetKey        = "IntermediateTauCollection",
   OutputCalloClusterKey  = "IntermediateCaloClusterCollection",
   OutputTrackParticleKey = "IntermediateTrackParticleCollection",
   OutputJetKey           = "IntermediateJetCollection",
   OutputBJetKey          = "IntermediateBJetCollection",
-  OutputLightJetKey      = "IntermediateLightJetCollection"
+  OutputLightJetKey      = "IntermediateLightJetCollection",
 
+    # OutputLevel = DEBUG
     )
 
 ToolSvc += gmsbOverlapRemovalTool1
@@ -157,7 +162,7 @@ gmsbOverlapRemovalTool2 = ConfiguredgmsbOverlapRemovalTool(
     
     # thelist of the input container keys - the order is important: the overlap removing will be done in that order
     
-    InputContainerKeys=[  "IntermediateJetCollectioin"
+    InputContainerKeys=[  "IntermediateJetCollection",
                           "IntermediatePhotonCollection",
                           "IntermediateElectronCollection",
                           ],
@@ -173,13 +178,14 @@ gmsbOverlapRemovalTool2 = ConfiguredgmsbOverlapRemovalTool(
     OutputPhotonKey        = "FinalStatePhotonCollection",
     OutputElectronKey      = "FinalStateElectronCollection",
     OutputMuonKey          = "FinalStateMuonCollection",
-    OutputTauJetKey        = "FinalStateTauJetCollection",
+    OutputTauJetKey        = "FinalStateTauCollection",
     OutputCalloClusterKey  = "FinalStateCaloClusterCollection",
     OutputTrackParticleKey = "FinalStateTrackParticleCollection",
     OutputJetKey           = "FinalStateJetCollection",
     OutputBJetKey          = "FinalStateBJetCollection",
-    OutputLightJetKey      = "FinalStateLightJetCollection"
+    OutputLightJetKey      = "FinalStateLightJetCollection",
     
+    #OutputLevel = DEBUG
     )
 
 ToolSvc += gmsbOverlapRemovalTool2
