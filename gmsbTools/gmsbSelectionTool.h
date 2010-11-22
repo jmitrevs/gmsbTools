@@ -1,9 +1,9 @@
-#ifndef USERANALYSISUTILS_USERANALYSISSELECTIONTOOL_H  
-#define USERANALYSISUTILS_USERANALYSISSELECTIONTOOL_H 
+#ifndef GMSBTOOLS_GMSBSELECTIONTOOL_H  
+#define GMSBTOOLS_GMSBSELECTIONTOOL_H 
 
 /*****************************************************************************
-Name    : UserAnalysisSelectionTool.h
-Package : offline/PhysicsAnalysis/AnalysisCommon/UserAnalysisUtils
+Name    : gmsbSelectionTool.h
+Package : offline/PhysicsAnalysis/AnalysisCommon/gmsbTools
 Author  : Ketevi A. Assamagan
 Created : November 2007
 Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selections
@@ -29,25 +29,25 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 #include "NavFourMom/IParticleContainer.h"
 #include "NavFourMom/INavigable4MomentumCollection.h"
 
-#include "UserAnalysisUtils/EMJESfix.h"
+#include "gmsbTools/EMJESfix.h"
 
 #include <string>
 #include <map>
 #include <vector>
 
 /** Interface ID */  
-static const InterfaceID IID_UserAnalysisSelectionTool("UserAnalysisSelectionTool", 1, 0);
+static const InterfaceID IID_gmsbSelectionTool("gmsbSelectionTool", 1, 0);
 
-class UserAnalysisSelectionTool : public AthAlgTool {
+class gmsbSelectionTool : public AthAlgTool {
 
 public:
 
   /** Standard Constructor */
-  UserAnalysisSelectionTool(const std::string& type, const std::string& name,
+  gmsbSelectionTool(const std::string& type, const std::string& name,
 	                    const IInterface* parent);
 
   /** AlgTool and IAlgTool interface methods */
-  static const InterfaceID& interfaceID() { return IID_UserAnalysisSelectionTool; };
+  static const InterfaceID& interfaceID() { return IID_gmsbSelectionTool; };
 
   /** Overriding initialize, finalize, and execute */
   virtual StatusCode initialize();
@@ -67,7 +67,7 @@ public:
 protected:
 
    /** Standard destructor */
-   virtual ~UserAnalysisSelectionTool();
+   virtual ~gmsbSelectionTool();
 
 private:
 
@@ -129,7 +129,7 @@ private:
   EMJESFixer m_jetEMJESfixer;
 };
 
-#endif // USERANALYSISUTILS_USERANALYSISSELECTIONTOOL_H 
+#endif // GMSBTOOLS_GMSBSELECTIONTOOL_H 
 
 
 

@@ -1,13 +1,13 @@
 
-from UserAnalysisUtils.UserAnalysisUtilsConf import \
-    UserAnalysisSelectionTool as ConfiguredUserSelectionTool
-UserAnalysisSelectionTool = ConfiguredUserSelectionTool(name = "UserAnalysisSelectionTool")
+from gmsbTools.gmsbToolsConf import \
+    gmsbSelectionTool as ConfiguredUserSelectionTool
+gmsbSelectionTool = ConfiguredUserSelectionTool(name = "gmsbSelectionTool")
 
-ToolSvc += UserAnalysisSelectionTool
-print      UserAnalysisSelectionTool
+ToolSvc += gmsbSelectionTool
+print      gmsbSelectionTool
 
-UserAnalysisCrackSelectionTool = ConfiguredUserSelectionTool(
-    name = "UserAnalysisCrackSelectionTool",
+gmsbCrackSelectionTool = ConfiguredUserSelectionTool(
+    name = "gmsbCrackSelectionTool",
     ElectronPt = 10.0*GeV,
     PhotonPt = 10.0*GeV,
     DoElectronIsolation = False,
@@ -20,17 +20,17 @@ UserAnalysisCrackSelectionTool = ConfiguredUserSelectionTool(
     PhotonEta = 1.52,
     )
 
-ToolSvc += UserAnalysisCrackSelectionTool
-print      UserAnalysisCrackSelectionTool
+ToolSvc += gmsbCrackSelectionTool
+print      gmsbCrackSelectionTool
 
 
-from UserAnalysisUtils.UserAnalysisUtilsConf import \
-     UserAnalysisPreparationTool as ConfiguredUserAnalysisPreparationTool
-UserAnalysisPreparationTool = ConfiguredUserAnalysisPreparationTool(
-    name = "UserAnalysisPreparationTool",
+from gmsbTools.gmsbToolsConf import \
+     gmsbPreparationTool as ConfiguredgmsbPreparationTool
+gmsbPreparationTool = ConfiguredgmsbPreparationTool(
+    name = "gmsbPreparationTool",
 
     # define the pre-selection tools
-    UserSelectionTool = UserAnalysisSelectionTool,
+    UserSelectionTool = gmsbSelectionTool,
     
     # thelist of the input container keys - the order does not matter
     InputContainerKeys=[ "PhotonAODCollection",
@@ -49,14 +49,14 @@ UserAnalysisPreparationTool = ConfiguredUserAnalysisPreparationTool(
     
     )
 
-ToolSvc += UserAnalysisPreparationTool
-print      UserAnalysisPreparationTool
+ToolSvc += gmsbPreparationTool
+print      gmsbPreparationTool
 
-UserAnalysisCrackPreparationTool = ConfiguredUserAnalysisPreparationTool(
-    name = "UserAnalysisCrackPreparationTool",
+gmsbCrackPreparationTool = ConfiguredgmsbPreparationTool(
+    name = "gmsbCrackPreparationTool",
     
     # define the pre-selection tools
-    UserSelectionTool = UserAnalysisCrackSelectionTool,
+    UserSelectionTool = gmsbCrackSelectionTool,
     
     # thelist of the input container keys - the order does not matter
     InputContainerKeys=[ "PhotonAODCollection",
@@ -73,35 +73,35 @@ UserAnalysisCrackPreparationTool = ConfiguredUserAnalysisPreparationTool(
     
   )
 
-ToolSvc += UserAnalysisCrackPreparationTool
-print      UserAnalysisCrackPreparationTool
+ToolSvc += gmsbCrackPreparationTool
+print      gmsbCrackPreparationTool
 
-from UserAnalysisUtils.UserAnalysisUtilsConf import \
-     UserAnalysisOverlapCheckingTool as ConfiguredUserAnalysisOverlapCheckingTool
-UserAnalysisOverlapCheckingTool1 = ConfiguredUserAnalysisOverlapCheckingTool(
-    name = "UserAnalysisOverlapCheckingTool1",
+from gmsbTools.gmsbToolsConf import \
+     gmsbOverlapCheckingTool as ConfiguredgmsbOverlapCheckingTool
+gmsbOverlapCheckingTool1 = ConfiguredgmsbOverlapCheckingTool(
+    name = "gmsbOverlapCheckingTool1",
     OverlapDeltaRWithJets=0.2 
     )
 
-ToolSvc += UserAnalysisOverlapCheckingTool1
-print      UserAnalysisOverlapCheckingTool1
+ToolSvc += gmsbOverlapCheckingTool1
+print      gmsbOverlapCheckingTool1
 
-UserAnalysisOverlapCheckingTool2 = ConfiguredUserAnalysisOverlapCheckingTool(
-    name = "UserAnalysisOverlapCheckingTool2",
+gmsbOverlapCheckingTool2 = ConfiguredgmsbOverlapCheckingTool(
+    name = "gmsbOverlapCheckingTool2",
     OverlapDeltaRWithJets=0.4
     )
 
-ToolSvc += UserAnalysisOverlapCheckingTool2
-print      UserAnalysisOverlapCheckingTool2
+ToolSvc += gmsbOverlapCheckingTool2
+print      gmsbOverlapCheckingTool2
 
 
-from UserAnalysisUtils.UserAnalysisUtilsConf import \
-     UserAnalysisOverlapRemovalTool as ConfiguredUserAnalysisOverlapRemovalTool
-UserAnalysisOverlapRemovalTool1 = ConfiguredUserAnalysisOverlapRemovalTool(
-    name = "UserAnalysisOverlapRemovalTool1",
+from gmsbTools.gmsbToolsConf import \
+     gmsbOverlapRemovalTool as ConfiguredgmsbOverlapRemovalTool
+gmsbOverlapRemovalTool1 = ConfiguredgmsbOverlapRemovalTool(
+    name = "gmsbOverlapRemovalTool1",
 
   # define the pre-selection tools - used here only to check if a jet is a b-jet
-  UserSelectionTool = UserAnalysisSelectionTool,
+  UserSelectionTool = gmsbSelectionTool,
 
   # Whether to check overlap in same container or not. 
   # For example, muon overlapping with muon?
@@ -109,7 +109,7 @@ UserAnalysisOverlapRemovalTool1 = ConfiguredUserAnalysisOverlapRemovalTool(
   RemoveOverlapInSameContainer = True,
 
   # define the overlap checking tools
-  UserOverlapCheckingTool = UserAnalysisOverlapCheckingTool1,
+  UserOverlapCheckingTool = gmsbOverlapCheckingTool1,
 
   # thelist of the input container keys - the order is important: the overlap removing will be done in that order
   
@@ -138,14 +138,14 @@ UserAnalysisOverlapRemovalTool1 = ConfiguredUserAnalysisOverlapRemovalTool(
 
     )
 
-ToolSvc += UserAnalysisOverlapRemovalTool1
-print      UserAnalysisOverlapRemovalTool1
+ToolSvc += gmsbOverlapRemovalTool1
+print      gmsbOverlapRemovalTool1
 
-UserAnalysisOverlapRemovalTool2 = ConfiguredUserAnalysisOverlapRemovalTool(
-    name = "UserAnalysisOverlapRemovalTool2",
+gmsbOverlapRemovalTool2 = ConfiguredgmsbOverlapRemovalTool(
+    name = "gmsbOverlapRemovalTool2",
 
     # define the pre-selection tools - used here only to check if a jet is a b-jet
-    UserSelectionTool = UserAnalysisSelectionTool,
+    UserSelectionTool = gmsbSelectionTool,
     
     # Whether to check overlap in same container or not. 
     # For example, muon overlapping with muon?
@@ -153,7 +153,7 @@ UserAnalysisOverlapRemovalTool2 = ConfiguredUserAnalysisOverlapRemovalTool(
     RemoveOverlapInSameContainer = True,
     
     # define the overlap checking tools
-    UserOverlapCheckingTool = UserAnalysisOverlapCheckingTool2,
+    UserOverlapCheckingTool = gmsbOverlapCheckingTool2,
     
     # thelist of the input container keys - the order is important: the overlap removing will be done in that order
     
@@ -182,5 +182,5 @@ UserAnalysisOverlapRemovalTool2 = ConfiguredUserAnalysisOverlapRemovalTool(
     
     )
 
-ToolSvc += UserAnalysisOverlapRemovalTool2
-print      UserAnalysisOverlapRemovalTool2
+ToolSvc += gmsbOverlapRemovalTool2
+print      gmsbOverlapRemovalTool2

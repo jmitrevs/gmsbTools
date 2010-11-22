@@ -1,9 +1,9 @@
-#ifndef USERANALYSISUTILS_USERANALYSISPREPARATIONTOOL_H  
-#define USERANALYSISUTILS_USERANALYSISPREPARATIONTOOL_H 
+#ifndef GMSBTOOLS_GMSBPREPARATIONTOOL_H  
+#define GMSBTOOLS_GMSBPREPARATIONTOOL_H 
 
 /*****************************************************************************
-Name    : UserAnalysisPreparationTool.h
-Package : offline/PhysicsAnalysis/AnalysisCommon/UserAnalysisUtils
+Name    : gmsbPreparationTool.h
+Package : offline/PhysicsAnalysis/AnalysisCommon/gmsbTools
 Author  : Ketevi A. Assamagan
 Created : November 2007
 Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena
@@ -14,7 +14,7 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena
 #include "AthenaBaseComps/AthAlgTool.h"
 #include "GaudiKernel/ToolHandle.h"
 
-#include "UserAnalysisUtils/UserAnalysisSelectionTool.h"
+#include "gmsbTools/gmsbSelectionTool.h"
 
 #include "VxVertex/VxContainer.h"
 #include "Particle/TrackParticleContainer.h"
@@ -38,18 +38,18 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena
 class MsgStream;
 
 /** Interface ID */  
-static const InterfaceID IID_UserAnalysisPreparationTool("UserAnalysisPreparationTool", 1, 0);
+static const InterfaceID IID_gmsbPreparationTool("gmsbPreparationTool", 1, 0);
 
-class UserAnalysisPreparationTool : public AthAlgTool {
+class gmsbPreparationTool : public AthAlgTool {
 
 public:
 
   /** Standard Constructor */
-  UserAnalysisPreparationTool(const std::string& type, const std::string& name,
+  gmsbPreparationTool(const std::string& type, const std::string& name,
 	                      const IInterface* parent);
 
   /** AlgTool and IAlgTool interface methods */
-  static const InterfaceID& interfaceID() { return IID_UserAnalysisPreparationTool; };
+  static const InterfaceID& interfaceID() { return IID_gmsbPreparationTool; };
 
   /** Overriding initialize, finalize, and execute */
   virtual StatusCode initialize();
@@ -79,7 +79,7 @@ public:
 protected:
 
    /** Standard destructor */
-   virtual ~UserAnalysisPreparationTool();
+   virtual ~gmsbPreparationTool();
 
 private:
 
@@ -98,7 +98,7 @@ private:
 private:
 
   /** a handle on selection */
-  ToolHandle <UserAnalysisSelectionTool> m_userSelectionTool;
+  ToolHandle <gmsbSelectionTool> m_userSelectionTool;
 
   /** should contain the StoreGate keys to be passed in job options */ 
   std::vector<std::string> m_inputContainerKeys;
@@ -136,42 +136,42 @@ private:
 
 };
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisPreparationTool::electronSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::electronSummary() const
 {
   return m_numElectrons;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisPreparationTool::photonSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::photonSummary() const
 {
   return m_numPhotons;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisPreparationTool::muonSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::muonSummary() const
 {
   return m_numMuons;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisPreparationTool::tauJetSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::tauJetSummary() const
 {
   return m_numTauJets;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisPreparationTool::jetSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::jetSummary() const
 {
   return m_numJets;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisPreparationTool::trackParticleSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::trackParticleSummary() const
 {
   return m_numTrackParticles;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisPreparationTool::caloClusterSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::caloClusterSummary() const
 {
   return m_numCaloClusters;
 }
 
-#endif // USERANALYSISUTILS_USERANALYSISPREPARATIONTOOL_H 
+#endif // GMSBTOOLS_GMSBPREPARATIONTOOL_H 
 
 
 

@@ -1,9 +1,9 @@
 /*****************************************************************************
-Name    : UserAnalysisOverlapCheckingTool.cxx
-Package : offline/PhysicsAnalysis/AnalysisCommon/UserAnalysisUtils
+Name    : gmsbOverlapCheckingTool.cxx
+Package : offline/PhysicsAnalysis/AnalysisCommon/gmsbTools
 Author  : Ketevi A. Assamagan
 Created : November 2007
-Purpose : User Analysis Overlap Checking - see UserAnalysisOverlapCheckingTool.h for details
+Purpose : User Analysis Overlap Checking - see gmsbOverlapCheckingTool.h for details
 *****************************************************************************/
 
 #include "GaudiKernel/MsgStream.h"
@@ -14,7 +14,7 @@ Purpose : User Analysis Overlap Checking - see UserAnalysisOverlapCheckingTool.h
 #include "CLHEP/Units/PhysicalConstants.h"
 
 // User Tools
-#include "UserAnalysisUtils/UserAnalysisOverlapCheckingTool.h"
+#include "gmsbTools/gmsbOverlapCheckingTool.h"
 
 #include <sstream>
 #include <iomanip>
@@ -25,12 +25,12 @@ Purpose : User Analysis Overlap Checking - see UserAnalysisOverlapCheckingTool.h
 //using namespace std;
 
 //------------------------------------------------------------------------------
-UserAnalysisOverlapCheckingTool::UserAnalysisOverlapCheckingTool( const std::string& type,
+gmsbOverlapCheckingTool::gmsbOverlapCheckingTool( const std::string& type,
                                                                   const std::string& name, 
                                                                   const IInterface* parent )
   : AthAlgTool( type, name, parent ) {
   
-  declareInterface<UserAnalysisOverlapCheckingTool>( this );
+  declareInterface<gmsbOverlapCheckingTool>( this );
 
   declareProperty("OverlapDeltaR",          m_deltaR=0.1);
   declareProperty("OverlapDeltaRWithJets",  m_deltaRWithJets=0.2);
@@ -38,7 +38,7 @@ UserAnalysisOverlapCheckingTool::UserAnalysisOverlapCheckingTool( const std::str
 }
 
 //------------------------------------------------------------------------------
-StatusCode UserAnalysisOverlapCheckingTool::initialize() {
+StatusCode gmsbOverlapCheckingTool::initialize() {
 
   ATH_MSG_DEBUG("in initialize()");
 
@@ -46,14 +46,14 @@ StatusCode UserAnalysisOverlapCheckingTool::initialize() {
 }
 
 //------------------------------------------------------------------------------
-StatusCode UserAnalysisOverlapCheckingTool::finalize() {
+StatusCode gmsbOverlapCheckingTool::finalize() {
 
   ATH_MSG_DEBUG("in finalize()");
   return StatusCode::SUCCESS;
 }
 
 //------------------------------------------------------------------------------
-UserAnalysisOverlapCheckingTool::~UserAnalysisOverlapCheckingTool()
+gmsbOverlapCheckingTool::~gmsbOverlapCheckingTool()
 {}
 
 

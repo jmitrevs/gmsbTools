@@ -1,9 +1,9 @@
 /*****************************************************************************
-Name    : UserAnalysisPreparationTool.cxx
-Package : offline/PhysicsAnalysis/AnalysisCommon/UserAnalysisUtils
+Name    : gmsbPreparationTool.cxx
+Package : offline/PhysicsAnalysis/AnalysisCommon/gmsbTools
 Author  : Ketevi A. Assamagan
 Created : November 2007
-Purpose : User Analysis Preparation - see UserAnalysisPreparationTool.h for details
+Purpose : User Analysis Preparation - see gmsbPreparationTool.h for details
 *****************************************************************************/
 
 #include "GaudiKernel/GaudiException.h"
@@ -13,7 +13,7 @@ Purpose : User Analysis Preparation - see UserAnalysisPreparationTool.h for deta
 #include "CLHEP/Units/PhysicalConstants.h"
 
 // User Tools
-#include "UserAnalysisUtils/UserAnalysisPreparationTool.h"
+#include "gmsbTools/gmsbPreparationTool.h"
 #include "AnalysisUtils/AnalysisMisc.h"
 
 #include <sstream>
@@ -25,13 +25,13 @@ using namespace Rec;
 //using namespace std;
 
 //------------------------------------------------------------------------------
-UserAnalysisPreparationTool::UserAnalysisPreparationTool( const std::string& type,
+gmsbPreparationTool::gmsbPreparationTool( const std::string& type,
                                                           const std::string& name, 
                                                           const IInterface* parent )
   : AthAlgTool( type, name, parent ),
-    m_userSelectionTool ( "UserAnalysisSelectionTool" ) {
+    m_userSelectionTool ( "gmsbSelectionTool" ) {
 
-  declareInterface<UserAnalysisPreparationTool>( this );
+  declareInterface<gmsbPreparationTool>( this );
 
   declareProperty("UserSelectionTool",      m_userSelectionTool);
   declareProperty("InputContainerKeys",     m_inputContainerKeys);
@@ -50,7 +50,7 @@ UserAnalysisPreparationTool::UserAnalysisPreparationTool( const std::string& typ
 }
 
 //------------------------------------------------------------------------------
-StatusCode UserAnalysisPreparationTool::initialize() {
+StatusCode gmsbPreparationTool::initialize() {
 
   ATH_MSG_DEBUG("in initialize()");
 
@@ -67,7 +67,7 @@ StatusCode UserAnalysisPreparationTool::initialize() {
 }
 
 //------------------------------------------------------------------------------
-StatusCode UserAnalysisPreparationTool::finalize() {
+StatusCode gmsbPreparationTool::finalize() {
 
   ATH_MSG_DEBUG("in finalize()");
   
@@ -77,11 +77,11 @@ StatusCode UserAnalysisPreparationTool::finalize() {
 }
 
 //------------------------------------------------------------------------------
-UserAnalysisPreparationTool::~UserAnalysisPreparationTool()
+gmsbPreparationTool::~gmsbPreparationTool()
 {}
 
 //-------------------------------------------------------------------------------
-StatusCode UserAnalysisPreparationTool::execute() {
+StatusCode gmsbPreparationTool::execute() {
   ATH_MSG_DEBUG("in execute()");
 
   /** check that the input and the output containers are defined */
@@ -156,7 +156,7 @@ StatusCode UserAnalysisPreparationTool::execute() {
 }
 
 //-------------------------------------------------------------------------------
-const PhotonContainer * UserAnalysisPreparationTool::selectedPhotons() {
+const PhotonContainer * gmsbPreparationTool::selectedPhotons() {
   ATH_MSG_DEBUG("in selectedPhotons()");
   const PhotonContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputPhotonKey);
@@ -165,7 +165,7 @@ const PhotonContainer * UserAnalysisPreparationTool::selectedPhotons() {
   return container;
 }
 
-const ElectronContainer * UserAnalysisPreparationTool::selectedElectrons() {
+const ElectronContainer * gmsbPreparationTool::selectedElectrons() {
   ATH_MSG_DEBUG("in selectedElectrons()");
   const ElectronContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputElectronKey);
@@ -174,7 +174,7 @@ const ElectronContainer * UserAnalysisPreparationTool::selectedElectrons() {
   return container;
 }
 
-const MuonContainer * UserAnalysisPreparationTool::selectedMuons() {
+const MuonContainer * gmsbPreparationTool::selectedMuons() {
   ATH_MSG_DEBUG("in selectedMuons()");
   const MuonContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputMuonKey);
@@ -183,7 +183,7 @@ const MuonContainer * UserAnalysisPreparationTool::selectedMuons() {
   return container;
 }
 
-const TauJetContainer * UserAnalysisPreparationTool::selectedTauJets() {
+const TauJetContainer * gmsbPreparationTool::selectedTauJets() {
   ATH_MSG_DEBUG("in selectedTauJets()");
   const TauJetContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputTauJetKey);
@@ -192,7 +192,7 @@ const TauJetContainer * UserAnalysisPreparationTool::selectedTauJets() {
   return container;
 }
 
-const JetCollection * UserAnalysisPreparationTool::selectedJets() {
+const JetCollection * gmsbPreparationTool::selectedJets() {
   ATH_MSG_DEBUG("in selectedJets()");
   const JetCollection * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputJetKey);
@@ -201,7 +201,7 @@ const JetCollection * UserAnalysisPreparationTool::selectedJets() {
   return container;
 }
 
-const TrackParticleContainer * UserAnalysisPreparationTool::selectedTrackParticles() {
+const TrackParticleContainer * gmsbPreparationTool::selectedTrackParticles() {
   ATH_MSG_DEBUG("in selectedTrackParticles()");
   const TrackParticleContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputTrackParticleKey);
@@ -210,7 +210,7 @@ const TrackParticleContainer * UserAnalysisPreparationTool::selectedTrackParticl
   return container;
 }
 
-const CaloClusterContainer * UserAnalysisPreparationTool::selectedCaloClusters() {
+const CaloClusterContainer * gmsbPreparationTool::selectedCaloClusters() {
   ATH_MSG_DEBUG("in selectedCaloClusters()");
   const CaloClusterContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputCaloClusterKey);
@@ -220,7 +220,7 @@ const CaloClusterContainer * UserAnalysisPreparationTool::selectedCaloClusters()
 }
 
   /** container preparation */
-StatusCode UserAnalysisPreparationTool::electronPreparation( std::string key ) {
+StatusCode gmsbPreparationTool::electronPreparation( std::string key ) {
   ATH_MSG_DEBUG("in electronPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -258,7 +258,7 @@ StatusCode UserAnalysisPreparationTool::electronPreparation( std::string key ) {
   return sc;
 }
 
-StatusCode UserAnalysisPreparationTool::photonPreparation( std::string key ) {
+StatusCode gmsbPreparationTool::photonPreparation( std::string key ) {
   ATH_MSG_DEBUG("in photonPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -297,7 +297,7 @@ StatusCode UserAnalysisPreparationTool::photonPreparation( std::string key ) {
   return sc;
 }
 
-StatusCode UserAnalysisPreparationTool::muonPreparation( std::string key ) {
+StatusCode gmsbPreparationTool::muonPreparation( std::string key ) {
   ATH_MSG_DEBUG("in muonPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -336,7 +336,7 @@ StatusCode UserAnalysisPreparationTool::muonPreparation( std::string key ) {
   return sc;
 }
 
-StatusCode UserAnalysisPreparationTool::tauJetPreparation( std::string key ) {
+StatusCode gmsbPreparationTool::tauJetPreparation( std::string key ) {
   ATH_MSG_DEBUG("in tauJetPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -375,7 +375,7 @@ StatusCode UserAnalysisPreparationTool::tauJetPreparation( std::string key ) {
   return sc;
 }
 
-StatusCode UserAnalysisPreparationTool::jetPreparation( std::string key ) {
+StatusCode gmsbPreparationTool::jetPreparation( std::string key ) {
   ATH_MSG_DEBUG("in jetPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -414,7 +414,7 @@ StatusCode UserAnalysisPreparationTool::jetPreparation( std::string key ) {
   return sc;
 }
 
-StatusCode UserAnalysisPreparationTool::trackParticlePreparation( std::string key ) {
+StatusCode gmsbPreparationTool::trackParticlePreparation( std::string key ) {
   ATH_MSG_DEBUG("in trackParticlePreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -453,7 +453,7 @@ StatusCode UserAnalysisPreparationTool::trackParticlePreparation( std::string ke
   return sc;
 }
 
-StatusCode UserAnalysisPreparationTool::caloClusterPreparation( std::string key ) {
+StatusCode gmsbPreparationTool::caloClusterPreparation( std::string key ) {
   ATH_MSG_DEBUG("in caloClusterPreparation() ");
 
   /** create an empty container of all particles and record it */
@@ -492,7 +492,7 @@ StatusCode UserAnalysisPreparationTool::caloClusterPreparation( std::string key 
 }
 
 //-----------------------------------------------------------------------------------------------
-void UserAnalysisPreparationTool::print() {
+void gmsbPreparationTool::print() {
   ATH_MSG_DEBUG("in print() ");
 
   /** Get the container of pre-selected Electrons */
@@ -526,7 +526,7 @@ void UserAnalysisPreparationTool::print() {
 }
 
 //---------------------------------------------------------------------------------------------------------
-void UserAnalysisPreparationTool::summarize() {
+void gmsbPreparationTool::summarize() {
   ATH_MSG_INFO("in summarize() ");
 
   ATH_MSG_INFO("Summary of Reconstructed Events/pre-selected events ############");

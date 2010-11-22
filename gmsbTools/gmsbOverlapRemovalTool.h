@@ -1,9 +1,9 @@
-#ifndef USERANALYSISUTILS_USERANALYSISOVERLAPREMOVALTOOL_H  
-#define USERANALYSISUTILS_USERANALYSISOVERLAPREMOVALTOOL_H 
+#ifndef GMSBTOOLS_GMSBOVERLAPREMOVALTOOL_H  
+#define GMSBTOOLS_GMSBOVERLAPREMOVALTOOL_H 
 
 /*****************************************************************************
-Name    : UserAnalysisOverlapRemovalTool.h
-Package : offline/PhysicsAnalysis/AnalysisCommon/UserAnalysisUtils
+Name    : gmsbOverlapRemovalTool.h
+Package : offline/PhysicsAnalysis/AnalysisCommon/gmsbTools
 Author  : Ketevi A. Assamagan
 Created : November 2007
 Purpose : User tools for analyis overlap removal on ESD/AOD/DPD in Athena
@@ -16,8 +16,8 @@ Purpose : User tools for analyis overlap removal on ESD/AOD/DPD in Athena
 
 #include "GaudiKernel/ToolHandle.h"
 
-#include "UserAnalysisUtils/UserAnalysisSelectionTool.h"
-#include "UserAnalysisUtils/UserAnalysisOverlapCheckingTool.h"
+#include "gmsbTools/gmsbSelectionTool.h"
+#include "gmsbTools/gmsbOverlapCheckingTool.h"
 
 #include "VxVertex/VxContainer.h"
 #include "Particle/TrackParticleContainer.h"
@@ -39,18 +39,18 @@ Purpose : User tools for analyis overlap removal on ESD/AOD/DPD in Athena
 #include <vector>
 
 /** Interface ID */  
-static const InterfaceID IID_UserAnalysisOverlapRemovalTool("UserAnalysisOverlapRemovalTool", 1, 0);
+static const InterfaceID IID_gmsbOverlapRemovalTool("gmsbOverlapRemovalTool", 1, 0);
 
-class UserAnalysisOverlapRemovalTool : public AthAlgTool {
+class gmsbOverlapRemovalTool : public AthAlgTool {
 
 public:
 
   /** Standard Constructor */
-  UserAnalysisOverlapRemovalTool(const std::string& type, const std::string& name,
+  gmsbOverlapRemovalTool(const std::string& type, const std::string& name,
 	                         const IInterface* parent);
 
   /** AlgTool and IAlgTool interface methods */
-  static const InterfaceID& interfaceID() { return IID_UserAnalysisOverlapRemovalTool; };
+  static const InterfaceID& interfaceID() { return IID_gmsbOverlapRemovalTool; };
 
   /** Overriding initialize, finalize, and execute */
   virtual StatusCode initialize();
@@ -89,7 +89,7 @@ public:
 protected:
 
    /** Standard destructor */
-   virtual ~UserAnalysisOverlapRemovalTool();
+   virtual ~gmsbOverlapRemovalTool();
 
 private:
 
@@ -124,8 +124,8 @@ private:
 private:
 
   /** a handle on selection  and on overlap checking */
-  ToolHandle <UserAnalysisSelectionTool> m_userSelectionTool;
-  ToolHandle <UserAnalysisOverlapCheckingTool> m_userOverlapCheckingTool;
+  ToolHandle <gmsbSelectionTool> m_userSelectionTool;
+  ToolHandle <gmsbOverlapCheckingTool> m_userOverlapCheckingTool;
 
   /** should contain the StoreGate keys to be passed in job options */ 
   std::vector<std::string> m_inputContainerKeys;
@@ -168,52 +168,52 @@ private:
 
 };
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisOverlapRemovalTool::electronSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::electronSummary() const
 {
   return m_numElectrons;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisOverlapRemovalTool::photonSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::photonSummary() const
 {
   return m_numPhotons;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisOverlapRemovalTool::muonSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::muonSummary() const
 {
   return m_numMuons;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisOverlapRemovalTool::tauJetSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::tauJetSummary() const
 {
   return m_numTauJets;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisOverlapRemovalTool::jetSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::jetSummary() const
 {
   return m_numJets;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisOverlapRemovalTool::bJetSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::bJetSummary() const
 {
   return m_numBJets;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisOverlapRemovalTool::lightJetSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::lightJetSummary() const
 {
   return m_numLightJets;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisOverlapRemovalTool::trackParticleSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::trackParticleSummary() const
 {
   return m_numTrackParticles;
 }
 
-inline const std::pair<unsigned int, unsigned int>& UserAnalysisOverlapRemovalTool::caloClusterSummary() const
+inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::caloClusterSummary() const
 {
   return m_numCaloClusters;
 }
 
-#endif // USERANALYSISUTILS_USERANALYSISOVERLAPREMOVALTOOL_H 
+#endif // GMSBTOOLS_GMSBOVERLAPREMOVALTOOL_H 
 
 
 

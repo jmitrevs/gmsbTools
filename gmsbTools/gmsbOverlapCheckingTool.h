@@ -1,10 +1,10 @@
-#ifndef USERANALYSISUTILS_USERANALYSISOVERLAPCHECKINGTOOL_H  
-#define USERANALYSISUTILS_USERANALYSISOVERLAPCHECKINGTOOL_H 
+#ifndef GMSBTOOLS_GMSBOVERLAPCHECKINGTOOL_H  
+#define GMSBTOOLS_GMSBOVERLAPCHECKINGTOOL_H 
 
 /*****************************************************************************
-Name    : UserAnalysisOverlapCheckingTool.h
-Package : offline/PhysicsAnalysis/AnalysisCommon/UserAnalysisUtils
-Author  : Ketevi A. Assamagan
+Name    : gmsbOverlapCheckingTool.h
+Package : gmsbTools
+Author  : Ketevi A. Assamagan (adopted by Jovan Mitrevski)
 Created : November 2007
 Purpose : User tools for checking overlaps at deltaR, TrackParticle/Cluster and Hit/Cell levels
 *****************************************************************************/
@@ -35,18 +35,18 @@ Purpose : User tools for checking overlaps at deltaR, TrackParticle/Cluster and 
 #include <vector>
 
 /** Interface ID */  
-static const InterfaceID IID_UserAnalysisOverlapCheckingTool("UserAnalysisOverlapCheckingTool", 1, 0);
+static const InterfaceID IID_gmsbOverlapCheckingTool("gmsbOverlapCheckingTool", 1, 0);
 
-class UserAnalysisOverlapCheckingTool : public AthAlgTool {
+class gmsbOverlapCheckingTool : public AthAlgTool {
 
 public:
 
   /** Standard Constructor */
-  UserAnalysisOverlapCheckingTool(const std::string& type, const std::string& name,
+  gmsbOverlapCheckingTool(const std::string& type, const std::string& name,
 	                          const IInterface* parent);
 
   /** AlgTool and IAlgTool interface methods */
-  static const InterfaceID& interfaceID() { return IID_UserAnalysisOverlapCheckingTool; };
+  static const InterfaceID& interfaceID() { return IID_gmsbOverlapCheckingTool; };
 
   /** Overriding initialize, finalize, and execute */
   virtual StatusCode initialize();
@@ -58,7 +58,7 @@ public:
 protected:
 
    /** Standard destructor */
-   virtual ~UserAnalysisOverlapCheckingTool();
+   virtual ~gmsbOverlapCheckingTool();
 
 private:
 
@@ -69,7 +69,7 @@ private:
 };
 
 /** check for oeverlap in deltaR and return as well the deltaR value */
-inline bool UserAnalysisOverlapCheckingTool::overlap(const I4Momentum *object1,
+inline bool gmsbOverlapCheckingTool::overlap(const I4Momentum *object1,
                                                      const I4Momentum *object2) const 
 {
 
@@ -82,7 +82,7 @@ inline bool UserAnalysisOverlapCheckingTool::overlap(const I4Momentum *object1,
   }
 }
 
-#endif // USERANALYSISUTILS_USERANALYSISOVERLAPCHECKINGTOOL_H 
+#endif // GMSBTOOLS_GMSBOVERLAPCHECKINGTOOL_H 
 
 
 

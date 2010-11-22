@@ -25,6 +25,7 @@ use CaloEvent			CaloEvent-*			Calorimeter
 use JetEvent			JetEvent-*			Reconstruction/Jet
 
 use NavFourMom			NavFourMom-*			Event
+use AnalysisTools		AnalysisTools-*			PhysicsAnalysis/AnalysisCommon
 
 apply_pattern dual_use_library files=*.cxx
 

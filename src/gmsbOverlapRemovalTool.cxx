@@ -1,9 +1,9 @@
 /*****************************************************************************
-Name    : UserAnalysisPreparationTool.cxx
-Package : offline/PhysicsAnalysis/AnalysisCommon/UserAnalysisUtils
+Name    : gmsbPreparationTool.cxx
+Package : offline/PhysicsAnalysis/AnalysisCommon/gmsbTools
 Author  : Ketevi A. Assamagan
 Created : November 2007
-Purpose : User Analysis Overlap Removal - see UserAnalysisOverlapRemovalTool.h for details
+Purpose : User Analysis Overlap Removal - see gmsbOverlapRemovalTool.h for details
 *****************************************************************************/
 
 #include "GaudiKernel/GaudiException.h"
@@ -13,7 +13,7 @@ Purpose : User Analysis Overlap Removal - see UserAnalysisOverlapRemovalTool.h f
 #include "CLHEP/Units/PhysicalConstants.h"
 
 // User Tools
-#include "UserAnalysisUtils/UserAnalysisOverlapRemovalTool.h"
+#include "gmsbTools/gmsbOverlapRemovalTool.h"
 
 #include "muonEvent/Muon.h"
 #include "egammaEvent/Electron.h"
@@ -32,14 +32,14 @@ using namespace Rec;
 
 
 //------------------------------------------------------------------------------
-UserAnalysisOverlapRemovalTool::UserAnalysisOverlapRemovalTool( const std::string& type,
+gmsbOverlapRemovalTool::gmsbOverlapRemovalTool( const std::string& type,
                                                                 const std::string& name, 
                                                                 const IInterface* parent )
   : AthAlgTool( type, name, parent ),
-    m_userSelectionTool ( "UserAnalysisSelectionTool"),
-    m_userOverlapCheckingTool ( "UserAnalysisOverlapCheckingTool") {
+    m_userSelectionTool ( "gmsbSelectionTool"),
+    m_userOverlapCheckingTool ( "gmsbOverlapCheckingTool") {
 
-  declareInterface<UserAnalysisOverlapRemovalTool>( this );
+  declareInterface<gmsbOverlapRemovalTool>( this );
 
   declareProperty("UserSelectionTool",       m_userSelectionTool);
   declareProperty("UserOverlapCheckingTool", m_userOverlapCheckingTool);
@@ -73,7 +73,7 @@ UserAnalysisOverlapRemovalTool::UserAnalysisOverlapRemovalTool( const std::strin
 }
 
 //------------------------------------------------------------------------------
-StatusCode UserAnalysisOverlapRemovalTool::initialize() {
+StatusCode gmsbOverlapRemovalTool::initialize() {
 
   ATH_MSG_DEBUG("in initialize()");
 
@@ -96,7 +96,7 @@ StatusCode UserAnalysisOverlapRemovalTool::initialize() {
 }
 
 //------------------------------------------------------------------------------
-StatusCode UserAnalysisOverlapRemovalTool::finalize() {
+StatusCode gmsbOverlapRemovalTool::finalize() {
 
   ATH_MSG_DEBUG("in finalize()");
  
@@ -106,11 +106,11 @@ StatusCode UserAnalysisOverlapRemovalTool::finalize() {
 }
 
 //------------------------------------------------------------------------------
-UserAnalysisOverlapRemovalTool::~UserAnalysisOverlapRemovalTool()
+gmsbOverlapRemovalTool::~gmsbOverlapRemovalTool()
 {}
 
 //-------------------------------------------------------------------------------
-StatusCode UserAnalysisOverlapRemovalTool::execute() {
+StatusCode gmsbOverlapRemovalTool::execute() {
   ATH_MSG_DEBUG("in execute()");
 
   /** check if the execute is already called or not 
@@ -166,7 +166,7 @@ StatusCode UserAnalysisOverlapRemovalTool::execute() {
 }
 
 //-------------------------------------------------------------------------------
-const INavigable4MomentumCollection * UserAnalysisOverlapRemovalTool::finalStateObjects() {
+const INavigable4MomentumCollection * gmsbOverlapRemovalTool::finalStateObjects() {
   ATH_MSG_DEBUG("in finalStateObjects()");
   const INavigable4MomentumCollection * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputObjectKey);
@@ -175,7 +175,7 @@ const INavigable4MomentumCollection * UserAnalysisOverlapRemovalTool::finalState
   return container;
 }
 
-const PhotonContainer * UserAnalysisOverlapRemovalTool::finalStatePhotons() {
+const PhotonContainer * gmsbOverlapRemovalTool::finalStatePhotons() {
   ATH_MSG_DEBUG("in finalStatePhotons()");
   const PhotonContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputPhotonKey);
@@ -184,7 +184,7 @@ const PhotonContainer * UserAnalysisOverlapRemovalTool::finalStatePhotons() {
   return container;
 }
 
-const ElectronContainer * UserAnalysisOverlapRemovalTool::finalStateElectrons() {
+const ElectronContainer * gmsbOverlapRemovalTool::finalStateElectrons() {
   ATH_MSG_DEBUG("in finalStateElectrons()");
   const ElectronContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputElectronKey);
@@ -193,7 +193,7 @@ const ElectronContainer * UserAnalysisOverlapRemovalTool::finalStateElectrons() 
   return container;
 }
 
-const MuonContainer * UserAnalysisOverlapRemovalTool::finalStateMuons() {
+const MuonContainer * gmsbOverlapRemovalTool::finalStateMuons() {
   ATH_MSG_DEBUG("in finalStateMuons()");
   const MuonContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputMuonKey);
@@ -202,7 +202,7 @@ const MuonContainer * UserAnalysisOverlapRemovalTool::finalStateMuons() {
   return container;
 }
 
-const INavigable4MomentumCollection * UserAnalysisOverlapRemovalTool::finalStateLeptons() {
+const INavigable4MomentumCollection * gmsbOverlapRemovalTool::finalStateLeptons() {
   ATH_MSG_DEBUG("in finalStateLeptons()");
   const INavigable4MomentumCollection * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputLeptonKey);
@@ -211,7 +211,7 @@ const INavigable4MomentumCollection * UserAnalysisOverlapRemovalTool::finalState
   return container;
 }
 
-const TauJetContainer * UserAnalysisOverlapRemovalTool::finalStateTauJets() {
+const TauJetContainer * gmsbOverlapRemovalTool::finalStateTauJets() {
   ATH_MSG_DEBUG("in finalStateTauJets()");
   const TauJetContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputTauJetKey);
@@ -220,7 +220,7 @@ const TauJetContainer * UserAnalysisOverlapRemovalTool::finalStateTauJets() {
   return container;
 }
 
-const JetCollection * UserAnalysisOverlapRemovalTool::finalStateJets() {
+const JetCollection * gmsbOverlapRemovalTool::finalStateJets() {
   ATH_MSG_DEBUG("in finalStateJets()");
   const JetCollection * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputJetKey);
@@ -229,7 +229,7 @@ const JetCollection * UserAnalysisOverlapRemovalTool::finalStateJets() {
   return container;
 }
 
-const JetCollection * UserAnalysisOverlapRemovalTool::finalStateBJets() {
+const JetCollection * gmsbOverlapRemovalTool::finalStateBJets() {
   ATH_MSG_DEBUG("in finalStateBJets()");
   const JetCollection * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputBJetKey);
@@ -238,7 +238,7 @@ const JetCollection * UserAnalysisOverlapRemovalTool::finalStateBJets() {
   return container;
 }
 
-const JetCollection * UserAnalysisOverlapRemovalTool::finalStateLightJets() {
+const JetCollection * gmsbOverlapRemovalTool::finalStateLightJets() {
   ATH_MSG_DEBUG("in finalStateLightJets()");
   const JetCollection * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputLightJetKey);
@@ -247,7 +247,7 @@ const JetCollection * UserAnalysisOverlapRemovalTool::finalStateLightJets() {
   return container;
 }
 
-const TrackParticleContainer * UserAnalysisOverlapRemovalTool::finalStateTrackParticles() {
+const TrackParticleContainer * gmsbOverlapRemovalTool::finalStateTrackParticles() {
   ATH_MSG_DEBUG("in finalStateTrackParticles()");
   const TrackParticleContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputTrackParticleKey);
@@ -256,7 +256,7 @@ const TrackParticleContainer * UserAnalysisOverlapRemovalTool::finalStateTrackPa
   return container;
 }
 
-const CaloClusterContainer * UserAnalysisOverlapRemovalTool::finalStateCaloClusters() {
+const CaloClusterContainer * gmsbOverlapRemovalTool::finalStateCaloClusters() {
   ATH_MSG_DEBUG("in finalStateCaloClusters()");
   const CaloClusterContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputCaloClusterKey);
@@ -266,7 +266,7 @@ const CaloClusterContainer * UserAnalysisOverlapRemovalTool::finalStateCaloClust
 }
 
   /** container preparation */
-StatusCode UserAnalysisOverlapRemovalTool::electronPreparation( std::string key ) {
+StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
   ATH_MSG_DEBUG("in electronPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -334,7 +334,7 @@ StatusCode UserAnalysisOverlapRemovalTool::electronPreparation( std::string key 
   return sc;
 }
 
-StatusCode UserAnalysisOverlapRemovalTool::photonPreparation( std::string key ) {
+StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
   ATH_MSG_DEBUG("in photonPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -397,7 +397,7 @@ StatusCode UserAnalysisOverlapRemovalTool::photonPreparation( std::string key ) 
   return sc;
 }
 
-StatusCode UserAnalysisOverlapRemovalTool::muonPreparation( std:: string key ) {
+StatusCode gmsbOverlapRemovalTool::muonPreparation( std:: string key ) {
   ATH_MSG_DEBUG("in muonPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -455,7 +455,7 @@ StatusCode UserAnalysisOverlapRemovalTool::muonPreparation( std:: string key ) {
   return sc;
 }
 
-StatusCode UserAnalysisOverlapRemovalTool::tauJetPreparation( std::string key ) {
+StatusCode gmsbOverlapRemovalTool::tauJetPreparation( std::string key ) {
   ATH_MSG_DEBUG("in tauJetPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -513,7 +513,7 @@ StatusCode UserAnalysisOverlapRemovalTool::tauJetPreparation( std::string key ) 
   return sc;
 }
 
-StatusCode UserAnalysisOverlapRemovalTool::jetPreparation( std::string key ) {
+StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
   ATH_MSG_DEBUG("in jetPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -584,7 +584,7 @@ StatusCode UserAnalysisOverlapRemovalTool::jetPreparation( std::string key ) {
   return sc;
 }
 
-StatusCode UserAnalysisOverlapRemovalTool::trackParticlePreparation( std::string key ) {
+StatusCode gmsbOverlapRemovalTool::trackParticlePreparation( std::string key ) {
   ATH_MSG_DEBUG("in trackParticlePreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -640,7 +640,7 @@ StatusCode UserAnalysisOverlapRemovalTool::trackParticlePreparation( std::string
   return sc;
 }
 
-StatusCode UserAnalysisOverlapRemovalTool::caloClusterPreparation( std::string key ) {
+StatusCode gmsbOverlapRemovalTool::caloClusterPreparation( std::string key ) {
   ATH_MSG_DEBUG("in caloClusterPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -699,7 +699,7 @@ StatusCode UserAnalysisOverlapRemovalTool::caloClusterPreparation( std::string k
   return sc;
 }
 
-INavigable4MomentumCollection * UserAnalysisOverlapRemovalTool::allParticles() {
+INavigable4MomentumCollection * gmsbOverlapRemovalTool::allParticles() {
   ATH_MSG_DEBUG("in allObjects()");
   INavigable4MomentumCollection * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputObjectKey);
@@ -708,7 +708,7 @@ INavigable4MomentumCollection * UserAnalysisOverlapRemovalTool::allParticles() {
   return container;
 }
 
-INavigable4MomentumCollection * UserAnalysisOverlapRemovalTool::allLeptons() {
+INavigable4MomentumCollection * gmsbOverlapRemovalTool::allLeptons() {
   ATH_MSG_DEBUG("in allLeptons()");
   INavigable4MomentumCollection * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputLeptonKey);
@@ -718,7 +718,7 @@ INavigable4MomentumCollection * UserAnalysisOverlapRemovalTool::allLeptons() {
 
 }
 
-PhotonContainer * UserAnalysisOverlapRemovalTool::allPhotons() {
+PhotonContainer * gmsbOverlapRemovalTool::allPhotons() {
   ATH_MSG_DEBUG("in allPhotons()");
   PhotonContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputPhotonKey);
@@ -727,7 +727,7 @@ PhotonContainer * UserAnalysisOverlapRemovalTool::allPhotons() {
   return container;
 }
 
-MuonContainer * UserAnalysisOverlapRemovalTool::allMuons() {
+MuonContainer * gmsbOverlapRemovalTool::allMuons() {
   ATH_MSG_DEBUG("in allMuons()");
   MuonContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputMuonKey);
@@ -736,7 +736,7 @@ MuonContainer * UserAnalysisOverlapRemovalTool::allMuons() {
   return container;
 }
 
-ElectronContainer * UserAnalysisOverlapRemovalTool::allElectrons() {
+ElectronContainer * gmsbOverlapRemovalTool::allElectrons() {
   ATH_MSG_DEBUG("in allElectrons()");
   ElectronContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputElectronKey);
@@ -745,7 +745,7 @@ ElectronContainer * UserAnalysisOverlapRemovalTool::allElectrons() {
   return container;
 }
 
-TauJetContainer * UserAnalysisOverlapRemovalTool::allTauJets() {
+TauJetContainer * gmsbOverlapRemovalTool::allTauJets() {
   ATH_MSG_DEBUG("in allTauJets()");
   TauJetContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputTauJetKey);
@@ -754,7 +754,7 @@ TauJetContainer * UserAnalysisOverlapRemovalTool::allTauJets() {
   return container;
 }
 
-JetCollection * UserAnalysisOverlapRemovalTool::allJets() {
+JetCollection * gmsbOverlapRemovalTool::allJets() {
   ATH_MSG_DEBUG("in allJets()");
   JetCollection * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputJetKey);
@@ -763,7 +763,7 @@ JetCollection * UserAnalysisOverlapRemovalTool::allJets() {
   return container;
 }
 
-JetCollection * UserAnalysisOverlapRemovalTool::allBJets() {
+JetCollection * gmsbOverlapRemovalTool::allBJets() {
   ATH_MSG_DEBUG("in allBJets()");
   JetCollection * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputBJetKey);
@@ -772,7 +772,7 @@ JetCollection * UserAnalysisOverlapRemovalTool::allBJets() {
   return container;
 }
 
-JetCollection * UserAnalysisOverlapRemovalTool::allLightJets() {
+JetCollection * gmsbOverlapRemovalTool::allLightJets() {
   ATH_MSG_DEBUG("in allLightJets()");
   JetCollection * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputLightJetKey);
@@ -781,7 +781,7 @@ JetCollection * UserAnalysisOverlapRemovalTool::allLightJets() {
   return container;
 }
 
-TrackParticleContainer * UserAnalysisOverlapRemovalTool::allTrackParticles() {
+TrackParticleContainer * gmsbOverlapRemovalTool::allTrackParticles() {
   ATH_MSG_DEBUG("in allTrackParticles()");
   TrackParticleContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputTrackParticleKey);
@@ -790,7 +790,7 @@ TrackParticleContainer * UserAnalysisOverlapRemovalTool::allTrackParticles() {
   return container;
 }
 
-CaloClusterContainer * UserAnalysisOverlapRemovalTool::allCaloClusters() {
+CaloClusterContainer * gmsbOverlapRemovalTool::allCaloClusters() {
   ATH_MSG_DEBUG("in allCaloClusters()");
   CaloClusterContainer * container = 0;
   StatusCode sc = evtStore()->retrieve(container, m_outputCaloClusterKey);
@@ -800,7 +800,7 @@ CaloClusterContainer * UserAnalysisOverlapRemovalTool::allCaloClusters() {
 }
 
 //-------------------------------------------------------------------------------
-StatusCode UserAnalysisOverlapRemovalTool::prepareContainers() {
+StatusCode gmsbOverlapRemovalTool::prepareContainers() {
   ATH_MSG_DEBUG("in prepareContainers()");
 
   /** create an empty container of all particles and record it */
@@ -895,7 +895,7 @@ StatusCode UserAnalysisOverlapRemovalTool::prepareContainers() {
 }
 
 //-------------------------------------------------------------------------------
-StatusCode UserAnalysisOverlapRemovalTool::lockContainers() {
+StatusCode gmsbOverlapRemovalTool::lockContainers() {
   ATH_MSG_DEBUG("in lockContainers()");
 
   /** lock the contianer so it is not modified downstream by anyone else */
@@ -936,7 +936,7 @@ StatusCode UserAnalysisOverlapRemovalTool::lockContainers() {
 }
 
 //-----------------------------------------------------------------------------------------------
-void UserAnalysisOverlapRemovalTool::print() {
+void gmsbOverlapRemovalTool::print() {
   ATH_MSG_DEBUG("in print() ");
 
   /** Get the container of pre-selected Electrons */
@@ -986,7 +986,7 @@ void UserAnalysisOverlapRemovalTool::print() {
 }
 
 //---------------------------------------------------------------------------------------------------------
-void UserAnalysisOverlapRemovalTool::summarize() {
+void gmsbOverlapRemovalTool::summarize() {
 
   ATH_MSG_INFO("Summary Pre-selected/Overlap Removed Events ###################");
   ATH_MSG_INFO("---------------------------------------------------------------");
@@ -1011,7 +1011,7 @@ void UserAnalysisOverlapRemovalTool::summarize() {
 }
 
 //-----------------------------------------------------------------------------------------------------------
-bool UserAnalysisOverlapRemovalTool::isExecuted() {
+bool gmsbOverlapRemovalTool::isExecuted() {
   ATH_MSG_DEBUG("in isExecuted() ");
   return evtStore()->contains<INavigable4MomentumCollection>( m_outputObjectKey );
 }

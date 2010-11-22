@@ -1,9 +1,9 @@
 /*****************************************************************************
-Name    : UserAnalysisSelectionTool.cxx
-Package : offline/PhysicsAnalysis/AnalysisCommon/UserAnalysisUtils
+Name    : gmsbSelectionTool.cxx
+Package : offline/PhysicsAnalysis/AnalysisCommon/gmsbTools
 Author  : Ketevi A. Assamagan
 Created : November 2007
-Purpose : User Analysis Selections - see UserAnalysisSelectionTool.h for details
+Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 *****************************************************************************/
 
 //#include "GaudiKernel/GaudiException.h"
@@ -15,7 +15,7 @@ Purpose : User Analysis Selections - see UserAnalysisSelectionTool.h for details
 #include "CLHEP/Units/PhysicalConstants.h"
 
 // User Tools
-#include "UserAnalysisUtils/UserAnalysisSelectionTool.h"
+#include "gmsbTools/gmsbSelectionTool.h"
 
 #include <sstream>
 #include <iomanip>
@@ -26,11 +26,11 @@ Purpose : User Analysis Selections - see UserAnalysisSelectionTool.h for details
 //using namespace std;
 
 //------------------------------------------------------------------------------
-UserAnalysisSelectionTool::UserAnalysisSelectionTool( const std::string& type,
+gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
                                                       const std::string& name, 
                                                       const IInterface* parent )
   : AthAlgTool( type, name, parent ) {
-  declareInterface<UserAnalysisSelectionTool>( this );
+  declareInterface<gmsbSelectionTool>( this );
 
   declareProperty("IsAtlfastData",          m_isAtlfast=false);
 
@@ -86,14 +86,14 @@ UserAnalysisSelectionTool::UserAnalysisSelectionTool( const std::string& type,
 }
 
 //------------------------------------------------------------------------------
-StatusCode UserAnalysisSelectionTool::initialize() {
+StatusCode gmsbSelectionTool::initialize() {
 
   ATH_MSG_DEBUG("in initialize()");
   return StatusCode::SUCCESS;
 }
 
 //------------------------------------------------------------------------------
-StatusCode UserAnalysisSelectionTool::finalize() {
+StatusCode gmsbSelectionTool::finalize() {
 
   ATH_MSG_DEBUG("in finalize()");
  
@@ -101,10 +101,10 @@ StatusCode UserAnalysisSelectionTool::finalize() {
 }
 
 //------------------------------------------------------------------------------
-UserAnalysisSelectionTool::~UserAnalysisSelectionTool()
+gmsbSelectionTool::~gmsbSelectionTool()
 {}
 
-bool UserAnalysisSelectionTool::isSelected( const Analysis::Electron * electron ) const
+bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron ) const
 {
   ATH_MSG_VERBOSE("in electron isSelected()");
 
@@ -147,7 +147,7 @@ bool UserAnalysisSelectionTool::isSelected( const Analysis::Electron * electron 
   return select;
 }
 
-bool UserAnalysisSelectionTool::isSelected( const Analysis::Photon * photon ) const 
+bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon ) const 
 {
   ATH_MSG_VERBOSE("in photon isSelected()");
 
@@ -184,7 +184,7 @@ bool UserAnalysisSelectionTool::isSelected( const Analysis::Photon * photon ) co
   return select;
 }
 
-bool UserAnalysisSelectionTool::isSelected( const Analysis::Muon * muon ) const
+bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
 {
   bool select = false;
   if ( !muon ) return select;
@@ -207,7 +207,7 @@ bool UserAnalysisSelectionTool::isSelected( const Analysis::Muon * muon ) const
   return select;
 }
 
-bool UserAnalysisSelectionTool::isSelected( const Jet* jet ) const
+bool gmsbSelectionTool::isSelected( const Jet* jet ) const
 {
   bool select = false;
   if ( !jet ) return select;
@@ -223,7 +223,7 @@ bool UserAnalysisSelectionTool::isSelected( const Jet* jet ) const
   return select;
 }
 
-bool UserAnalysisSelectionTool::isSelected( const Rec::TrackParticle * trackParticle ) const
+bool gmsbSelectionTool::isSelected( const Rec::TrackParticle * trackParticle ) const
 {
   bool select = false;
   if ( !trackParticle ) return select;
@@ -234,7 +234,7 @@ bool UserAnalysisSelectionTool::isSelected( const Rec::TrackParticle * trackPart
   return select;
 }
 
-bool UserAnalysisSelectionTool::isSelected( const CaloCluster* caloCluster ) const
+bool gmsbSelectionTool::isSelected( const CaloCluster* caloCluster ) const
 {
   bool select = false;
   if ( !caloCluster ) return select;
@@ -245,7 +245,7 @@ bool UserAnalysisSelectionTool::isSelected( const CaloCluster* caloCluster ) con
   return select;
 }
 
-bool UserAnalysisSelectionTool::isSelected( const Analysis::TauJet * tauJet ) const {
+bool gmsbSelectionTool::isSelected( const Analysis::TauJet * tauJet ) const {
 
   bool select = false;
   if ( !tauJet ) return select;
@@ -267,7 +267,7 @@ bool UserAnalysisSelectionTool::isSelected( const Analysis::TauJet * tauJet ) co
 
 }
 
-bool UserAnalysisSelectionTool::isBJet( const Jet * jet ) const {
+bool gmsbSelectionTool::isBJet( const Jet * jet ) const {
 
   /** first check that it is a selected jet */
   if ( !jet ) return false;
