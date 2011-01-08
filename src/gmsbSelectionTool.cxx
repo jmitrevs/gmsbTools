@@ -54,7 +54,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   /** Photon selection */
   declareProperty("PhotonPt",   m_photonPt=20*GeV);
   declareProperty("PhotonEta",  m_photonEta=1.81);
-  declareProperty("PhotonIsEM", m_photonIsEM = egammaPID::PhotonTight);
+  declareProperty("PhotonIsEM", m_photonIsEM = egammaPID::PhotonTightAR);
   declareProperty("DoPhotonEtaWindowCut", m_doPhotonEtaWindCut = true);
   declareProperty("PhotonEtaWindowMin", m_photonEtaWindMin = 1.37);
   declareProperty("PhotonEtaWindowMax", m_photonEtaWindMax = 1.52);
