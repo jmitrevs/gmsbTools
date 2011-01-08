@@ -116,7 +116,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron ) const
 
   if (!select) return false;
 
-  const double absClusEta = fabs(electron->cluster()->eta());
+  const double absClusEta = fabs(electron->cluster()->etaBE(2));
   const double pt = electron->pt();
 
   if ( m_isAtlfast ) {
@@ -160,7 +160,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon ) const
   bool select = false;
   if ( !photon ) return select;
 
-  const double absClusEta = fabs(photon->cluster()->eta());
+  const double absClusEta = fabs(photon->cluster()->etaBE(2));
   const double pt = photon->pt();
 
   if ( m_isAtlfast ) {

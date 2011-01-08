@@ -32,7 +32,7 @@ gmsbOverlapCheckingTool::gmsbOverlapCheckingTool( const std::string& type,
   
   declareInterface<gmsbOverlapCheckingTool>( this );
 
-  declareProperty("OverlapDeltaR",          m_deltaR=0.1);
+  declareProperty("OverlapDeltaR",          m_deltaR=0.01);
   declareProperty("OverlapDeltaRWithJets",  m_deltaRWithJets=0.2);
 
 }
