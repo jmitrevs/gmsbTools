@@ -84,8 +84,8 @@ protected:
 private:
 
   /** container preparation */
-  StatusCode electronPreparation( std::string key );
-  StatusCode photonPreparation( std::string key );
+  StatusCode electronPreparation( std::string key, int runNum );
+  StatusCode photonPreparation( std::string key, int runNum );
   StatusCode muonPreparation( std::string key );
   StatusCode tauJetPreparation( std::string key );
   StatusCode jetPreparation( std::string key );
@@ -133,6 +133,9 @@ private:
 
   /** on first event */
   bool m_first;
+
+  /** run number to use for OQ: -1 means use event run number */
+  int m_OQRunNum;
 
 };
 

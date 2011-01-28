@@ -62,15 +62,17 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("PhotonEtcone20ovEt", m_photonEtcone20ovEt=0.1);
 
   /** Muon selection */
-  declareProperty("MuonPt",                 m_muonPt=3.0*GeV);
-  declareProperty("MuonEta",                m_muonEta=2.7);
-  declareProperty("AuthorHighPtOnly",       m_authorHighPtOnly=false);
-  declareProperty("DoMuonIsolation",        m_doMuonIsolation=true);
-  declareProperty("MuonIsolationConeIndex", m_muonIsolationConeIndex=1);
-  declareProperty("MuonIsolationEt",        m_muonIsolationEt=10*GeV);
-  declareProperty("UseMatchChi2",           m_useMatchChi2=false);
-  declareProperty("MuonMatchChi2",          m_muonMatchChi2=100);
-  declareProperty("NormalizedMuonIsolationEt",m_normMuonIsolEt=0.2);
+  declareProperty("MuonPt", m_muonPt = 20.0*GeV);
+  declareProperty("MuonEta", m_muonEta = 2.4);
+  declareProperty("MuonMatchChi2Max", m_matchChi2Max = 150.0);
+  declareProperty("SelectCombined", m_sel_combined=true);
+  declareProperty("SelectSegmentTag", m_sel_seg_tag=true);
+  declareProperty("DoMuonIsoCut",m_do_iso_cut = false);
+  declareProperty("DoMuonFlatIsoCut",m_do_flat_iso_cut = true);
+  declareProperty("MuonFlatIsoCut",m_flat_isolation_cut = 10.*GeV);
+  declareProperty("MuonIsoCut",m_isolation_cut = 0.1);
+  declareProperty("MuonSpecPtLimit", m_ms_pt_limit = 50.*GeV);
+  declareProperty("MuonSegMomDiffLimit", m_ms_p_diff_limit = -0.4);
 
   /** TauJet selection */
   declareProperty("TauJetPt",           m_tauJetPt=20*GeV);
@@ -89,6 +91,10 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 StatusCode gmsbSelectionTool::initialize() {
 
   ATH_MSG_DEBUG("in initialize()");
+
+  // initialize the OQ 
+  m_OQ.initialize();
+
   return StatusCode::SUCCESS;
 }
 
@@ -104,7 +110,7 @@ StatusCode gmsbSelectionTool::finalize() {
 gmsbSelectionTool::~gmsbSelectionTool()
 {}
 
-bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron ) const
+bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int runNum ) const
 {
   ATH_MSG_DEBUG("in electron isSelected(), with electron = " << electron);
 
@@ -138,6 +144,9 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron ) const
 
   ATH_MSG_DEBUG("after crack, select is now " << select);
 
+  // check OQ
+  const bool badOQ = m_OQ.checkOQClusterElectron(runNum, electron->cluster()->eta(), electron->cluster()->phi())==3;
+  select == select && !badOQ;
 
   if ( m_doElectronIsolation ) {
     const EMShower* egdetail = electron->detail<EMShower>();
@@ -153,7 +162,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron ) const
   return select;
 }
 
-bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon ) const 
+bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum ) const 
 {
   ATH_MSG_DEBUG("in photon isSelected()");
 
@@ -177,6 +186,9 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon ) const
     select = select && !isCrack;
   }
 
+  // check OQ
+  const bool badOQ = m_OQ.checkOQClusterPhoton(runNum, photon->cluster()->eta(), photon->cluster()->phi())==3;
+  select == select && !badOQ;
 
   if ( m_doPhotonIsolation ) {
     const EMShower* egdetail = photon->detail<EMShower>();
@@ -201,13 +213,53 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   }
 
   select = muon->pt()>m_muonPt && fabs(muon->eta())<m_muonEta;
-  if ( m_authorHighPtOnly ) select = select && muon->isHighPt();
-  if ( m_useMatchChi2 && muon->isCombinedMuon() ) select = select && muon->matchChi2() < m_muonMatchChi2;
-  if ( m_doMuonIsolation ) {
-    double etIsol = muon->parameter( static_cast<MuonParameters::ParamDef>(m_muonIsolationConeIndex) );
-    select = select && ( etIsol < m_muonIsolationEt );
-    if ( muon->pt() ) select = select && ( (etIsol/muon->pt()) < m_normMuonIsolEt );
- 
+
+  // do iso cut
+  if (m_do_iso_cut) {
+    if (m_do_flat_iso_cut) {
+      select = select && muon->parameter(MuonParameters::etcone20)<m_flat_isolation_cut;
+    } else {
+      select = select && muon->parameter(MuonParameters::etcone20)/muon->et()<m_isolation_cut;
+    }
+  }
+
+  // do ID cut
+  select = select && (m_sel_combined && muon->isCombinedMuon() ||
+		      m_sel_seg_tag && muon->isLowPtReconstructedMuon());
+  
+  if (m_sel_combined && muon->isCombinedMuon()) {
+    select = select && muon->matchChi2() < m_matchChi2Max;
+    double ms_pt=0.;
+    const Rec::TrackParticle* msTrkParticle = muon->muonSpectrometerTrackParticle();
+    if (msTrkParticle) {
+      ms_pt = msTrkParticle->pt();
+    }
+    if (ms_pt < m_ms_pt_limit) {
+      double p_ms_ex=0;
+      double p_id=0;
+      const Rec::TrackParticle* msExTrkParticle = muon->muonExtrapolatedTrackParticle();
+      if (msExTrkParticle) {
+	p_ms_ex = msExTrkParticle->p();
+      }
+      const Rec::TrackParticle* idTrkParticle = muon->inDetTrackParticle();
+      if (idTrkParticle) {
+	p_id = idTrkParticle->p();
+      }
+      select = select && p_ms_ex-p_id > -0.4*p_id;
+    }
+  }
+
+  // do track cuts
+  select = select && muon->numberOfPixelHits() >= 1 && muon->numberOfSCTHits() >= 6;
+  const int nTRTOutliers = muon->numberOfTRTOutliers();
+  const int nTRTTotal = muon->numberOfTRTHits() + muon->numberOfTRTOutliers();
+  const Rec::TrackParticle* idTrkParticle = muon->inDetTrackParticle();
+  const double mu_eta = (idTrkParticle) ? idTrkParticle->eta() : muon->eta();
+  if (mu_eta < 1.9) {
+    select = select && nTRTTotal > 5;
+  }
+  if (nTRTTotal > 5) {
+    select = select && nTRTOutliers < 0.9*nTRTTotal;
   }
 
   return select;

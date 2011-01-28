@@ -11,8 +11,8 @@ print      gmsbSelectionTool
 
 gmsbCrackSelectionTool = ConfiguredUserSelectionTool(
     name = "gmsbCrackSelectionTool",
-    ElectronPt = 10.0*GeV,
-    PhotonPt = 10.0*GeV,
+    ElectronPt = 20.0*GeV,
+    PhotonPt = 20.0*GeV,
     DoElectronIsolation = False,
     DoPhotonIsolation = False,
     PhotonEtaWindowMin = 0,

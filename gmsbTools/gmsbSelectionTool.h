@@ -31,6 +31,8 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 
 #include "gmsbTools/EMJESfix.h"
 
+#include "egammaOQUtils/checkOQ.h"
+
 #include <string>
 #include <map>
 #include <vector>
@@ -54,8 +56,8 @@ public:
   virtual StatusCode finalize();
 
   /** pre-selections */
-  bool isSelected( const Analysis::Electron * electron ) const;
-  bool isSelected( const Analysis::Photon * photon ) const;
+  bool isSelected( const Analysis::Electron * electron, int runNum ) const;
+  bool isSelected( const Analysis::Photon * photon, int runNum ) const;
   bool isSelected( const Analysis::Muon * muon ) const;
   bool isSelected( const Analysis::TauJet * tauJet ) const;
   bool isSelected( const Jet* jet ) const;
@@ -100,13 +102,15 @@ private:
   /** Muon selection */
   double m_muonPt;
   double m_muonEta;
-  bool   m_authorHighPtOnly;
-  bool   m_doMuonIsolation;
-  int    m_muonIsolationConeIndex;
-  double m_muonIsolationEt;
-  bool   m_useMatchChi2;
-  double m_muonMatchChi2;
-  double m_normMuonIsolEt;  // normalised muon isolation ET: EtCone/Pt
+  double m_matchChi2Max;
+  bool m_sel_combined;
+  bool m_sel_seg_tag;
+  bool m_do_iso_cut;
+  bool m_do_flat_iso_cut;
+  float m_flat_isolation_cut;
+  float m_isolation_cut;
+  float m_ms_pt_limit;
+  float m_ms_p_diff_limit;
 
   /** TauJet selection */
   double m_tauJetPt;
@@ -127,6 +131,10 @@ private:
 
 
   EMJESFixer m_jetEMJESfixer;
+
+  // the OQ utility
+  egammaOQ m_OQ;
+
 };
 
 #endif // GMSBTOOLS_GMSBSELECTIONTOOL_H 

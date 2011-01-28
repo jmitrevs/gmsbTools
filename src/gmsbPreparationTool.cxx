@@ -11,6 +11,8 @@ Purpose : User Analysis Preparation - see gmsbPreparationTool.h for details
 
 // Accessing data:
 #include "CLHEP/Units/PhysicalConstants.h"
+#include "EventInfo/EventInfo.h"
+#include "EventInfo/EventID.h"
 
 // User Tools
 #include "gmsbTools/gmsbPreparationTool.h"
@@ -37,6 +39,9 @@ gmsbPreparationTool::gmsbPreparationTool( const std::string& type,
   declareProperty("InputContainerKeys",     m_inputContainerKeys);
   declareProperty("OutputContainerKeys",    m_outputContainerKeys);
   declareProperty("IsAtlfastData",          m_isAtlfast=false);
+
+  // for the OQ
+  declareProperty("OQRunNum", m_OQRunNum = 167521);
 
   /** initialize counters */
   m_numElectrons      = std::make_pair(0,0);
@@ -98,19 +103,32 @@ StatusCode gmsbPreparationTool::execute() {
     }
   }
   
+  int runNum = m_OQRunNum;
+  if (m_OQRunNum < 0) {
+    const EventInfo*  evtInfo = 0;
+    sc = evtStore()->retrieve(evtInfo);
+    if(sc.isFailure() || !evtInfo) {
+      ATH_MSG_ERROR("could not retrieve event info");
+      return StatusCode::RECOVERABLE;
+    }
+    
+    runNum = evtInfo->event_ID()->run_number();
+  }
+
+
   /** now object preparation with selection */
   for ( unsigned int i=0; i<m_inputContainerKeys.size(); ++i ) {
 
     std::string::size_type loc = m_inputContainerKeys[i].find( "Electron", 0);
     if ( loc != std::string::npos ) { 
       if ( m_first ) m_outputElectronKey = m_outputContainerKeys[i]; 
-      sc = this->electronPreparation( m_inputContainerKeys[i] );
+      sc = this->electronPreparation( m_inputContainerKeys[i], runNum );
     }
 
     loc = m_inputContainerKeys[i].find( "Photon", 0);
     if ( loc != std::string::npos ) {
       if ( m_first ) m_outputPhotonKey = m_outputContainerKeys[i];       
-      sc = this->photonPreparation( m_inputContainerKeys[i] );
+      sc = this->photonPreparation( m_inputContainerKeys[i], runNum );
     }
 
     loc = m_inputContainerKeys[i].find( "Muon", 0);
@@ -220,7 +238,7 @@ const CaloClusterContainer * gmsbPreparationTool::selectedCaloClusters() {
 }
 
   /** container preparation */
-StatusCode gmsbPreparationTool::electronPreparation( std::string key ) {
+StatusCode gmsbPreparationTool::electronPreparation( std::string key, int runNum ) {
   ATH_MSG_DEBUG("in electronPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -246,7 +264,7 @@ StatusCode gmsbPreparationTool::electronPreparation( std::string key ) {
   ElectronContainer::const_iterator elecItrE = aod_electrons->end();
 
   for (; elecItr != elecItrE; ++elecItr) {
-    if ( m_userSelectionTool->isSelected( *elecItr ) ) electrons->push_back( *elecItr );
+    if ( m_userSelectionTool->isSelected( *elecItr, runNum ) ) electrons->push_back( *elecItr );
   }
   m_numElectrons.second += electrons->size();
 
@@ -258,7 +276,7 @@ StatusCode gmsbPreparationTool::electronPreparation( std::string key ) {
   return sc;
 }
 
-StatusCode gmsbPreparationTool::photonPreparation( std::string key ) {
+StatusCode gmsbPreparationTool::photonPreparation( std::string key, int runNum ) {
   ATH_MSG_DEBUG("in photonPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -285,7 +303,7 @@ StatusCode gmsbPreparationTool::photonPreparation( std::string key ) {
 
   /** check if this electron passes pre-selection */
   for (; photItr != photItrE; ++photItr) {
-    if ( m_userSelectionTool->isSelected( *photItr ) ) photons->push_back( *photItr );
+    if ( m_userSelectionTool->isSelected( *photItr, runNum ) ) photons->push_back( *photItr );
   }
   m_numPhotons.second += photons->size();
 
