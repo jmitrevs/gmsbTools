@@ -146,7 +146,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
 
   // check OQ
   const bool badOQ = m_OQ.checkOQClusterElectron(runNum, electron->cluster()->eta(), electron->cluster()->phi())==3;
-  select == select && !badOQ;
+  select = select && !badOQ;
 
   if ( m_doElectronIsolation ) {
     const EMShower* egdetail = electron->detail<EMShower>();
@@ -188,7 +188,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
 
   // check OQ
   const bool badOQ = m_OQ.checkOQClusterPhoton(runNum, photon->cluster()->eta(), photon->cluster()->phi())==3;
-  select == select && !badOQ;
+  select = select && !badOQ;
 
   if ( m_doPhotonIsolation ) {
     const EMShower* egdetail = photon->detail<EMShower>();

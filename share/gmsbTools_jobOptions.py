@@ -38,6 +38,7 @@ gmsbPreparationTool = ConfiguredgmsbPreparationTool(
     # thelist of the input container keys - the order does not matter
     InputContainerKeys=[ "PhotonAODCollection",
                          "ElectronAODCollection",
+                         "StacoMuonCollection",
                          "AntiKt4TopoJets"
                          ],
     
@@ -47,6 +48,7 @@ gmsbPreparationTool = ConfiguredgmsbPreparationTool(
     # The order matter::Should follow the same order as the input container keys above
     OutputContainerKeys=[ "SelectedPhotonAODCollection",
                           "SelectedElectronAODCollection",
+                          "SelectedMuonCollection",
                           "SelectedAntiKt4TopoJets"
                           ],
     #OutputLevel = DEBUG
@@ -165,6 +167,7 @@ gmsbOverlapRemovalTool2 = ConfiguredgmsbOverlapRemovalTool(
     InputContainerKeys=[  "IntermediateJetCollection",
                           "IntermediatePhotonCollection",
                           "IntermediateElectronCollection",
+                          "SelectedMuonCollection"
                           ],
     
     

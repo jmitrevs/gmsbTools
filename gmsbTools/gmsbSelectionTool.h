@@ -133,7 +133,7 @@ private:
   EMJESFixer m_jetEMJESfixer;
 
   // the OQ utility
-  egammaOQ m_OQ;
+  mutable egammaOQ m_OQ;
 
 };
 

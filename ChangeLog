@@ -1,4 +1,10 @@
 2011-01-28 Jovan Mitrevski <Jovan.Mitrevski@cern.ch>
+	* share/gmsbTools_jobOptions.py: added muon support
+	* gmsbTools/gmsbSelectionTool.h: make OQ mutable
+	* src/gmsbSelectionTool.cxx: bug fixes in applying OQ
+	* tagging gmsbTools-00-00-02
+
+2011-01-28 Jovan Mitrevski <Jovan.Mitrevski@cern.ch>
 	* added OQ and muon selection, raised defaults to 20 GeV
 	* tagging gmsbTools-00-00-01
 
