@@ -224,8 +224,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   }
 
   // do ID cut
-  select = select && (m_sel_combined && muon->isCombinedMuon() ||
-		      m_sel_seg_tag && muon->isLowPtReconstructedMuon());
+  select = select && ((m_sel_combined && muon->isCombinedMuon()) ||
+		      (m_sel_seg_tag && muon->isLowPtReconstructedMuon()));
   
   if (m_sel_combined && muon->isCombinedMuon()) {
     select = select && muon->matchChi2() < m_matchChi2Max;
