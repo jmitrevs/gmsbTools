@@ -15,6 +15,7 @@ use TrkSegment			TrkSegment-*			Tracking/TrkEvent
 use MuonSegment         	MuonSegment-*	        	MuonSpectrometer/MuonReconstruction/MuonRecEvent
 
 use egammaEvent			egammaEvent-*			Reconstruction/egamma
+use egammaInterfaces		egammaInterfaces-*		Reconstruction/egamma
 use muonEvent			muonEvent-*			Reconstruction/MuonIdentification
 use tauEvent			tauEvent-*			Reconstruction
 use Particle			Particle-*			Reconstruction

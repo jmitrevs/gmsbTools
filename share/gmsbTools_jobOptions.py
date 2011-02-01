@@ -86,7 +86,7 @@ from gmsbTools.gmsbToolsConf import \
      gmsbOverlapCheckingTool as ConfiguredgmsbOverlapCheckingTool
 gmsbOverlapCheckingTool1 = ConfiguredgmsbOverlapCheckingTool(
     name = "gmsbOverlapCheckingTool1",
-    OverlapDeltaRWithJets=0.2 
+    OverlapDeltaRWithJets=0.2
     )
 
 ToolSvc += gmsbOverlapCheckingTool1
@@ -106,42 +106,42 @@ from gmsbTools.gmsbToolsConf import \
 gmsbOverlapRemovalTool1 = ConfiguredgmsbOverlapRemovalTool(
     name = "gmsbOverlapRemovalTool1",
 
-  # define the pre-selection tools - used here only to check if a jet is a b-jet
-  UserSelectionTool = gmsbSelectionTool,
-
-  # Whether to check overlap in same container or not. 
-  # For example, muon overlapping with muon?
-  # Currently when set to False, it applies to all contianers. 
-  RemoveOverlapInSameContainer = True,
-
-  # define the overlap checking tools
-  UserOverlapCheckingTool = gmsbOverlapCheckingTool1,
-
-  # thelist of the input container keys - the order is important: the overlap removing will be done in that order
-  
-  InputContainerKeys=[  "SelectedPhotonAODCollection",
-                        "SelectedElectronAODCollection",
-                        "SelectedAntiKt4TopoJets"
-                       ],
-
-
-  IsAtlfastData=False, # set this to true if running on Atlfast AOD 
-                       # Only deltaR overlap removal is done for Atlfast, no cluster/TrackParticle overlap
-                       # and Cell/Hit overlap not done in the case of Atlfast 
-
-  # the list of the output container keys - 
-  OuputObjectKey         = "IntermediateObjectCollection",
-  OutputLeptonKey        = "IntermediateLeptonCollection",
-  OutputPhotonKey        = "IntermediatePhotonCollection",
-  OutputElectronKey      = "IntermediateElectronCollection",
-  OutputMuonKey          = "IntermediateMuonCollection",
-  OutputTauJetKey        = "IntermediateTauCollection",
-  OutputCalloClusterKey  = "IntermediateCaloClusterCollection",
-  OutputTrackParticleKey = "IntermediateTrackParticleCollection",
-  OutputJetKey           = "IntermediateJetCollection",
-  OutputBJetKey          = "IntermediateBJetCollection",
-  OutputLightJetKey      = "IntermediateLightJetCollection",
-
+    # define the pre-selection tools - used here only to check if a jet is a b-jet
+    UserSelectionTool = gmsbSelectionTool,
+    
+    # Whether to check overlap in same container or not. 
+    # For example, muon overlapping with muon?
+    # Currently when set to False, it applies to all contianers. 
+    RemoveOverlapInSameContainer = True,
+    
+    # define the overlap checking tools
+    UserOverlapCheckingTool = gmsbOverlapCheckingTool1,
+    
+    # thelist of the input container keys - the order is important: the overlap removing will be done in that order
+    
+    InputContainerKeys=[  "SelectedPhotonAODCollection",
+                          "SelectedElectronAODCollection",
+                          "SelectedAntiKt4TopoJets"
+                          ],
+    
+    
+    IsAtlfastData=False, # set this to true if running on Atlfast AOD 
+    # Only deltaR overlap removal is done for Atlfast, no cluster/TrackParticle overlap
+    # and Cell/Hit overlap not done in the case of Atlfast 
+    
+    # the list of the output container keys - 
+    OuputObjectKey         = "IntermediateObjectCollection",
+    OutputLeptonKey        = "IntermediateLeptonCollection",
+    OutputPhotonKey        = "IntermediatePhotonCollection",
+    OutputElectronKey      = "IntermediateElectronCollection",
+    OutputMuonKey          = "IntermediateMuonCollection",
+    OutputTauJetKey        = "IntermediateTauCollection",
+    OutputCalloClusterKey  = "IntermediateCaloClusterCollection",
+    OutputTrackParticleKey = "IntermediateTrackParticleCollection",
+    OutputJetKey           = "IntermediateJetCollection",
+    OutputBJetKey          = "IntermediateBJetCollection",
+    OutputLightJetKey      = "IntermediateLightJetCollection",
+    
     # OutputLevel = DEBUG
     )
 
@@ -188,7 +188,7 @@ gmsbOverlapRemovalTool2 = ConfiguredgmsbOverlapRemovalTool(
     OutputBJetKey          = "FinalStateBJetCollection",
     OutputLightJetKey      = "FinalStateLightJetCollection",
     
-    #OutputLevel = DEBUG
+    # OutputLevel = DEBUG
     )
 
 ToolSvc += gmsbOverlapRemovalTool2
