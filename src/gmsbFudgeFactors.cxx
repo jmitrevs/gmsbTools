@@ -138,8 +138,8 @@ StatusCode gmsbFudgeFactors::execute()
       const double raphad1_fix = raphad1 + rhad1_FF[ieta][ipt];
       const double raphad_fix = raphad + rhad_FF[ieta][ipt];
 
-      shower->set_ethad(raphad_fix * et);
-      shower->set_ethad1(raphad1_fix * et);
+      shower->set_parameter(egammaParameters::ethad, raphad_fix * et, true);
+      shower->set_parameter(egammaParameters::ethad1, raphad1_fix * et, true);
 
       // reta, rphi
 
@@ -153,26 +153,26 @@ StatusCode gmsbFudgeFactors::execute()
       const double Reta37_fix = Reta37 + reta_FF[ieta][ipt];
       const double Rphi33_fix = Rphi33 + rphi_FF[ieta][ipt];
       
-      shower->set_e233(Rphi33_fix * e237);
+      shower->set_parameter(egammaParameters::e233, Rphi33_fix * e237, true);
       if (Reta37_fix != 0) {
-	shower->set_e277(1.0/Rphi33_fix * e237);
+	shower->set_parameter(egammaParameters::e277, 1.0/Reta37_fix * e237, true);
       }
 
       // weta2
-      shower->set_weta2(shower->weta2() + weta2_FF[ieta][ipt]);
+      shower->set_parameter(egammaParameters::weta2, shower->weta2() + weta2_FF[ieta][ipt], true);
 
       // w1
-      shower->set_weta1(shower->weta1() + w1_FF[ieta][ipt]);
+      shower->set_parameter(egammaParameters::weta1, shower->weta1() + w1_FF[ieta][ipt], true);
       
       // wtot
-      shower->set_wtots1(shower->wtots1() + wtot_FF[ieta][ipt]);
+      shower->set_parameter(egammaParameters::wtots1, shower->wtots1() + wtot_FF[ieta][ipt], true);
 
       // fracm
-      shower->set_fracs1(shower->fracs1() + fracm_FF[ieta][ipt]);
+      shower->set_parameter(egammaParameters::fracs1, shower->fracs1() + fracm_FF[ieta][ipt], true);
 
       // deltae and demaxs1
       // for detae
-      shower->set_emins1(shower->emins1() - deltae_FF[ieta][ipt]); // note -
+      shower->set_parameter(egammaParameters::emins1, shower->emins1() - deltae_FF[ieta][ipt], true); // note -
 
       //  E of 2nd max between max and min in strips
       const double emax2  = shower->e2tsts1();
@@ -181,12 +181,13 @@ StatusCode gmsbFudgeFactors::execute()
 
       const double sum = emax + emax2;
       
-      const double dmax = - (eratio_FF[ieta][ipt] * sum * sum)/
-	(eratio_FF[ieta][ipt] * sum - 2 * emax2);
+      const double dmax_denom = eratio_FF[ieta][ipt] * sum - 2 * emax2;
+      if (dmax_denom != 0) {
+	const double dmax = - (eratio_FF[ieta][ipt] * sum * sum)/dmax_denom;
 
-      // (Emax1-Emax2)/(Emax1+Emax2)
-      shower->set_emaxs1(dmax);      
-
+	// (Emax1-Emax2)/(Emax1+Emax2)
+	shower->set_parameter(egammaParameters::emaxs1, emax + dmax, true);      
+      }
     }
 
     if (m_doEMPID) {
