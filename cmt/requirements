@@ -28,7 +28,8 @@ use JetEvent			JetEvent-*			Reconstruction/Jet
 use NavFourMom			NavFourMom-*			Event
 use AnalysisTools		AnalysisTools-*			PhysicsAnalysis/AnalysisCommon
 
-use egammaOQUtils      egammaOQUtils-*          Reconstruction/egamma/egammaAnalysis
+use egammaOQUtils               egammaOQUtils-*                 Reconstruction/egamma/egammaAnalysis
+use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/egamma/egammaAnalysis
 
 apply_pattern dual_use_library files=*.cxx
 

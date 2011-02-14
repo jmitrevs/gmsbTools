@@ -32,6 +32,7 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 #include "gmsbTools/EMJESfix.h"
 
 #include "egammaOQUtils/checkOQ.h"
+#include "egammaAnalysisUtils/EnergyRescaler.h"
 
 #include <string>
 #include <map>
@@ -75,6 +76,12 @@ private:
 
   /** this is Atlfast data */
   bool m_isAtlfast;
+
+
+  /** MC */
+  bool m_isMC;
+  bool m_MCHasConstantTerm;
+  int m_randomSeed;
 
   /** Electron selection */
   double m_electronPt;
@@ -135,6 +142,7 @@ private:
   // the OQ utility
   mutable egammaOQ m_OQ;
 
+  EnergyRescaler m_eRescale;
 };
 
 #endif // GMSBTOOLS_GMSBSELECTIONTOOL_H 

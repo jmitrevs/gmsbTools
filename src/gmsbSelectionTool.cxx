@@ -34,6 +34,10 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 
   declareProperty("IsAtlfastData",          m_isAtlfast=false);
 
+  declareProperty("IsMC", m_isMC=false);
+  declareProperty("MCHasConstantTerm", m_MCHasConstantTerm = true);
+  declareProperty("RandomSeed", m_randomSeed = 0);
+
   /** caloCluster selection */
   declareProperty("CaloClusterE", m_caloClusterE=1.0*GeV);
 
@@ -94,6 +98,8 @@ StatusCode gmsbSelectionTool::initialize() {
 
   // initialize the OQ 
   m_OQ.initialize();
+  m_eRescale.useDefaultCalibConstants();
+  m_eRescale.SetRandomSeed(m_randomSeed);
 
   return StatusCode::SUCCESS;
 }
@@ -123,7 +129,29 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
   if (!select) return false;
 
   const double absClusEta = fabs(electron->cluster()->etaBE(2));
-  const double pt = electron->pt();
+
+  const double eta = (electron->trackParticle()) ? electron->trackParticle()->eta() : electron->eta();
+
+  const double uncorrectedE = electron->cluster()->e();
+  const double uncorrectedEt = uncorrectedE/cosh(eta);
+
+  double energy = uncorrectedE;
+  
+  if (m_isMC) {
+    energy *= m_eRescale.getSmearingCorrection(electron->cluster()->eta(),
+					       uncorrectedE,
+					       EnergyRescaler::NOMINAL,
+					       m_MCHasConstantTerm);
+  } else {
+    energy = m_eRescale.applyEnergyCorrection(electron->cluster()->eta(), 
+					      electron->cluster()->phi(), 
+					      uncorrectedE,
+					      uncorrectedEt,
+					      EnergyRescaler::NOMINAL,
+					      "ELECTRON");
+  }
+
+  const double pt = energy/cosh(eta);
 
   if ( m_isAtlfast ) {
     select = pt > m_electronPt && absClusEta < m_electronEta;
@@ -170,7 +198,24 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
   if ( !photon ) return select;
 
   const double absClusEta = fabs(photon->cluster()->etaBE(2));
-  const double pt = photon->pt();
+
+  double energy;
+  if (m_isMC) {
+    energy = photon->e() * m_eRescale.getSmearingCorrection(photon->cluster()->eta(),
+							    photon->e(),
+							    EnergyRescaler::NOMINAL,
+							    m_MCHasConstantTerm);
+  } else { 
+    energy = m_eRescale.applyEnergyCorrection(photon->cluster()->eta(), 
+					      photon->cluster()->phi(), 
+					      photon->e(),
+					      photon->et(),
+					      EnergyRescaler::NOMINAL,
+					      (photon->conversion()) ? 
+					      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
+  }
+
+  const double pt = energy/cosh(photon->eta());
 
   if ( m_isAtlfast ) {
     select = pt >m_photonPt && absClusEta < m_photonEta;
