@@ -6,6 +6,7 @@ author Jovan Mitrevski <Jovan.Mitrevski@cern.ch>
 use AtlasPolicy	       AtlasPolicy-*
 use GaudiInterface     GaudiInterface-*		External
 use AthenaBaseComps    AthenaBaseComps-*   	Control
+use AthenaKernel       AthenaKernel-*           Control
 
 use AtlasCLHEP			AtlasCLHEP-00-*			External
 use AtlasROOT			AtlasROOT-*			External

@@ -34,6 +34,8 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 #include "egammaOQUtils/checkOQ.h"
 #include "egammaAnalysisUtils/EnergyRescaler.h"
 
+#include "AthenaKernel/IUserDataSvc.h"
+
 #include <string>
 #include <map>
 #include <vector>
@@ -80,6 +82,7 @@ private:
 
   /** MC */
   bool m_isMC;
+  bool m_smearMC;
   bool m_MCHasConstantTerm;
   int m_randomSeed;
 
@@ -138,6 +141,9 @@ private:
 
 
   EMJESFixer m_jetEMJESfixer;
+
+  // user data
+  ServiceHandle<IUserDataSvc> m_userdatasvc;
 
   // the OQ utility
   mutable egammaOQ m_OQ;

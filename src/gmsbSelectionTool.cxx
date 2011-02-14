@@ -29,12 +29,13 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
                                                       const std::string& name, 
                                                       const IInterface* parent )
-  : AthAlgTool( type, name, parent ) {
+  : AthAlgTool( type, name, parent ), m_userdatasvc("UserDataSvc", name) {
   declareInterface<gmsbSelectionTool>( this );
 
   declareProperty("IsAtlfastData",          m_isAtlfast=false);
 
   declareProperty("IsMC", m_isMC=false);
+  declareProperty("SmearMC", m_smearMC = false);
   declareProperty("MCHasConstantTerm", m_MCHasConstantTerm = true);
   declareProperty("RandomSeed", m_randomSeed = 0);
 
@@ -96,6 +97,11 @@ StatusCode gmsbSelectionTool::initialize() {
 
   ATH_MSG_DEBUG("in initialize()");
 
+  if ( !m_userdatasvc.retrieve().isSuccess() ) {
+    ATH_MSG_ERROR("Unable to retrieve pointer to UserDataSvc");
+    return StatusCode::FAILURE;
+  }
+  
   // initialize the OQ 
   m_OQ.initialize();
   m_eRescale.useDefaultCalibConstants();
@@ -138,10 +144,12 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
   double energy = uncorrectedE;
   
   if (m_isMC) {
-    energy *= m_eRescale.getSmearingCorrection(electron->cluster()->eta(),
-					       uncorrectedE,
-					       EnergyRescaler::NOMINAL,
-					       m_MCHasConstantTerm);
+    if (m_smearMC) {
+      energy *= m_eRescale.getSmearingCorrection(electron->cluster()->eta(),
+						 uncorrectedE,
+						 EnergyRescaler::NOMINAL,
+						 m_MCHasConstantTerm);
+    } 
   } else {
     energy = m_eRescale.applyEnergyCorrection(electron->cluster()->eta(), 
 					      electron->cluster()->phi(), 
@@ -151,7 +159,15 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
 					      "ELECTRON");
   }
 
-  const double pt = energy/cosh(eta);
+  double pt = energy/cosh(eta);
+
+  // add this as a barcode
+  if (m_userdatasvc->decorateElement(*electron, std::string("corrPt"), pt)
+      != StatusCode::SUCCESS) {
+    ATH_MSG_ERROR("Error in electron decoration");
+    return false;
+  }
+
 
   if ( m_isAtlfast ) {
     select = pt > m_electronPt && absClusEta < m_electronEta;
@@ -201,10 +217,14 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
 
   double energy;
   if (m_isMC) {
-    energy = photon->e() * m_eRescale.getSmearingCorrection(photon->cluster()->eta(),
-							    photon->e(),
-							    EnergyRescaler::NOMINAL,
-							    m_MCHasConstantTerm);
+    if (m_smearMC) {
+      energy = photon->e() * m_eRescale.getSmearingCorrection(photon->cluster()->eta(),
+							      photon->e(),
+							      EnergyRescaler::NOMINAL,
+							      m_MCHasConstantTerm);
+    } else {
+      energy = photon->e();
+    }
   } else { 
     energy = m_eRescale.applyEnergyCorrection(photon->cluster()->eta(), 
 					      photon->cluster()->phi(), 
@@ -215,7 +235,14 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
 					      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
   }
 
-  const double pt = energy/cosh(photon->eta());
+  double pt = energy/cosh(photon->eta());
+
+  // add this as a barcode
+  if (m_userdatasvc->decorateElement(*photon, std::string("corrPt"), pt)
+      != StatusCode::SUCCESS) {
+    ATH_MSG_ERROR("Error in photon decoration");
+    return false;
+  }
 
   if ( m_isAtlfast ) {
     select = pt >m_photonPt && absClusEta < m_photonEta;
