@@ -3,7 +3,7 @@ from gmsbTools.gmsbToolsConf import \
     gmsbSelectionTool as ConfiguredUserSelectionTool
 gmsbSelectionTool = ConfiguredUserSelectionTool(
     name = "gmsbSelectionTool",
-    #OutputLevel = DEBUG
+    OutputLevel = DEBUG
 )
 
 ToolSvc += gmsbSelectionTool

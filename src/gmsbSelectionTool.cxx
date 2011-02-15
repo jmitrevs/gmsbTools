@@ -161,7 +161,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
 
   double pt = energy/cosh(eta);
 
-  // add this as a barcode
+  // add this as user data
   if (m_userdatasvc->decorateElement(*electron, std::string("corrPt"), pt)
       != StatusCode::SUCCESS) {
     ATH_MSG_ERROR("Error in electron decoration");
@@ -244,12 +244,27 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
     return false;
   }
 
+  ATH_MSG_DEBUG("Original pt = " << photon->pt() << ", corrected photon pt = " << pt);
+
+  // // for test
+  // // get the user data
+  // double readBackPt;
+  // if (m_userdatasvc->getInMemElementDecoration(*photon, std::string("corrPt"), readBackPt)
+  //     != StatusCode::SUCCESS) {
+  //   ATH_MSG_ERROR("Error in geting photon decoration");
+  //   return StatusCode::FAILURE;
+  // }
+
+  // ATH_MSG_DEBUG("Original Written photon pt = " << pt << ", read back = " << readBackPt); 
+
   if ( m_isAtlfast ) {
     select = pt >m_photonPt && absClusEta < m_photonEta;
     return select;
   }
  
   select = pt > m_photonPt && absClusEta < m_photonEta && photon->isPhoton(m_photonIsEM);
+
+  ATH_MSG_DEBUG("after pt, eta, and isEM cut, select = " << select);
 
   // check if photon is in bad eta region
 
@@ -270,6 +285,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
     }
     select = select && isol < m_photonEtcone20ovEt;
   }
+
+  ATH_MSG_DEBUG("photon select = " << select);
 
   return select;
 }
