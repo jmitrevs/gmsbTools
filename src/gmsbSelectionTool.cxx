@@ -196,7 +196,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
     const EMShower* egdetail = electron->detail<EMShower>();
     double isol = 1000;
     if(egdetail && pt > 0.0) {
-      isol = egdetail->etcone20() / pt;
+      isol = egdetail->etcone20() / uncorrectedEt;
     }
     select = select && isol < m_electronEtcone20ovEt;
   }
@@ -281,7 +281,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
     const EMShower* egdetail = photon->detail<EMShower>();
     double isol = 1000;
     if(egdetail && pt > 0.0) {
-      isol = egdetail->etcone20() / pt;
+      isol = egdetail->etcone20() / photon->pt();
     }
     select = select && isol < m_photonEtcone20ovEt;
   }
