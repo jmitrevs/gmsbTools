@@ -38,6 +38,8 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("SmearMC", m_smearMC = false);
   declareProperty("MCHasConstantTerm", m_MCHasConstantTerm = true);
   declareProperty("RandomSeed", m_randomSeed = 0);
+  declareProperty("EgammaScaleShift", m_egammaScaleShift = EnergyRescaler::NOMINAL);
+  declareProperty("MCEtconeShift", m_mcEtconeShift = 314.0);
 
   /** caloCluster selection */
   declareProperty("CaloClusterE", m_caloClusterE=1.0*GeV);
@@ -147,7 +149,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
     if (m_smearMC) {
       energy *= m_eRescale.getSmearingCorrection(electron->cluster()->eta(),
 						 uncorrectedE,
-						 EnergyRescaler::NOMINAL,
+						 m_egammaScaleShift,
 						 m_MCHasConstantTerm);
     } 
   } else {
@@ -155,7 +157,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
 					      electron->cluster()->phi(), 
 					      uncorrectedE,
 					      uncorrectedEt,
-					      EnergyRescaler::NOMINAL,
+					      m_egammaScaleShift,
 					      "ELECTRON");
   }
 
@@ -196,7 +198,11 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
     const EMShower* egdetail = electron->detail<EMShower>();
     double isol = 1000;
     if(egdetail && pt > 0.0) {
-      isol = egdetail->etcone20() / uncorrectedEt;
+      double etcone = egdetail->etcone20();
+      if (m_isMC) {
+	etcone += m_mcEtconeShift;
+      }
+      isol = etcone / uncorrectedEt;
     }
     select = select && isol < m_electronEtcone20ovEt;
   }
@@ -220,7 +226,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
     if (m_smearMC) {
       energy = photon->e() * m_eRescale.getSmearingCorrection(photon->cluster()->eta(),
 							      photon->e(),
-							      EnergyRescaler::NOMINAL,
+							      m_egammaScaleShift,
 							      m_MCHasConstantTerm);
     } else {
       energy = photon->e();
@@ -230,7 +236,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
 					      photon->cluster()->phi(), 
 					      photon->e(),
 					      photon->et(),
-					      EnergyRescaler::NOMINAL,
+					      m_egammaScaleShift,
 					      (photon->conversion()) ? 
 					      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
   }
@@ -281,7 +287,11 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
     const EMShower* egdetail = photon->detail<EMShower>();
     double isol = 1000;
     if(egdetail && pt > 0.0) {
-      isol = egdetail->etcone20() / photon->pt();
+      double etcone = egdetail->etcone20();
+      if (m_isMC) {
+	etcone += m_mcEtconeShift;
+      }
+      isol = etcone / photon->pt();
     }
     select = select && isol < m_photonEtcone20ovEt;
   }
