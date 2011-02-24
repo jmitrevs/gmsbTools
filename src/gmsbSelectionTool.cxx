@@ -149,8 +149,19 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
     if (m_smearMC) {
       energy *= m_eRescale.getSmearingCorrection(electron->cluster()->eta(),
 						 uncorrectedE,
-						 m_egammaScaleShift,
+						 EnergyRescaler::NOMINAL,
 						 m_MCHasConstantTerm);
+      double er_up=-1,er_do=-1;
+      m_eRescale.getError(electron->cluster()->eta(), energy/cosh(eta), er_up, er_do,
+			  "ELECTRON");
+
+
+      if (m_egammaScaleShift == EnergyRescaler::ERR_UP) {
+	energy *= (1+er_up);
+      } else if (m_egammaScaleShift == EnergyRescaler::ERR_DOWN) {
+	energy *= (1+er_do);
+      }
+
     } 
   } else {
     energy = m_eRescale.applyEnergyCorrection(electron->cluster()->eta(), 
@@ -226,8 +237,19 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
     if (m_smearMC) {
       energy = photon->e() * m_eRescale.getSmearingCorrection(photon->cluster()->eta(),
 							      photon->e(),
-							      m_egammaScaleShift,
+							      EnergyRescaler::NOMINAL,
 							      m_MCHasConstantTerm);
+
+      double er_up=-1,er_do=-1;
+      m_eRescale.getError(photon->cluster()->eta(), energy/cosh(photon->eta()), er_up, er_do,
+			  (photon->conversion()) ? "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
+
+
+      if (m_egammaScaleShift == EnergyRescaler::ERR_UP) {
+	energy *= (1+er_up);
+      } else if (m_egammaScaleShift == EnergyRescaler::ERR_DOWN) {
+	energy *= (1+er_do);
+      }
     } else {
       energy = photon->e();
     }
