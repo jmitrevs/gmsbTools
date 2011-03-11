@@ -301,15 +301,20 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
     select = select && !isCrack;
   }
 
+  ATH_MSG_DEBUG("after crack cut, select = " << select);
+
   // check OQ
   const bool badOQ = m_OQ.checkOQClusterPhoton(runNum, photon->cluster()->eta(), photon->cluster()->phi())==3;
   select = select && !badOQ;
+
+  ATH_MSG_DEBUG("after OTX, select = " << select);
 
   if ( m_doPhotonIsolation ) {
     const EMShower* egdetail = photon->detail<EMShower>();
     double isol = 1000;
     if(egdetail && pt > 0.0) {
       double etcone = egdetail->etcone20();
+      ATH_MSG_DEBUG("etcone20 = " << etcone);
       if (m_isMC) {
 	etcone += m_mcEtconeShift;
       }
