@@ -396,13 +396,20 @@ bool gmsbSelectionTool::isSelected( const Jet* jet ) const
   bool select = false;
   if ( !jet ) return select;
 
-  double emJESfactor = jet->getMoment("EMJES");
-  if (emJESfactor == 0) {
-    emJESfactor = m_jetEMJESfixer.fixAntiKt4H1Topo(jet->pt(), jet->eta());
-  }
-  Jet::hlv_t jet4MomJES =  emJESfactor * jet->hlv(P4SignalState::JETEMSCALE);
+  // double emJESfactor = jet->getMoment("EMJES");
+  // if (emJESfactor == 0) {
+  //   emJESfactor = m_jetEMJESfixer.fixAntiKt4H1Topo(jet->pt(), jet->eta());
+  // }
+  // Jet::hlv_t jet4MomJES =  emJESfactor * jet->hlv(P4SignalState::JETEMSCALE);
 
-  select = jet4MomJES.perp() > m_jetPt && fabs(jet4MomJES.eta()) < m_jetEta;
+  // select = jet4MomJES.perp() > m_jetPt && fabs(jet4MomJES.eta()) < m_jetEta;
+
+  // if (emJESfactor == 0) {
+  //   emJESfactor = m_jetEMJESfixer.fixAntiKt4H1Topo(jet->pt(), jet->eta());
+  // }
+  // Jet::hlv_t jet4MomJES =  emJESfactor * jet->hlv(P4SignalState::JETEMSCALE);
+
+  select = jet->pt() > m_jetPt && fabs(jet->eta()) < m_jetEta;
 
   return select;
 }

@@ -39,7 +39,7 @@ gmsbPreparationTool = ConfiguredgmsbPreparationTool(
     InputContainerKeys=[ "PhotonAODCollection",
                          "ElectronAODCollection",
                          "StacoMuonCollection",
-                         "AntiKt4TopoJets"
+                         "AntiKt4TopoEMJets"
                          ],
     
     
@@ -49,7 +49,7 @@ gmsbPreparationTool = ConfiguredgmsbPreparationTool(
     OutputContainerKeys=[ "SelectedPhotonAODCollection",
                           "SelectedElectronAODCollection",
                           "SelectedMuonCollection",
-                          "SelectedAntiKt4TopoJets"
+                          "SelectedAntiKt4TopoEMJets"
                           ],
     #OutputLevel = DEBUG
     
@@ -121,7 +121,7 @@ gmsbOverlapRemovalTool1 = ConfiguredgmsbOverlapRemovalTool(
     
     InputContainerKeys=[  "SelectedPhotonAODCollection",
                           "SelectedElectronAODCollection",
-                          "SelectedAntiKt4TopoJets"
+                          "SelectedAntiKt4TopoEMJets"
                           ],
     
     
