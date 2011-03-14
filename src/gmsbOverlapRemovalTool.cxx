@@ -313,7 +313,7 @@ StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
 	    if (eg) {
 	      overlap = m_userOverlapCheckingTool->overlap((*elecItr)->cluster(), eg->cluster());
 	    } else {	      
-	      overlap = m_userOverlapCheckingTool->overlap(*elecItr, *nav4MomItr);
+	      overlap = m_userOverlapCheckingTool->overlap((*elecItr)->trackParticle(), *nav4MomItr);
 	    }
 	  }
           /** get out of the loop as soon as an overlap is found */
@@ -561,8 +561,14 @@ StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
       for (; nav4MomItr != nav4MomItrE; ++nav4MomItr) {
           /** overlap checking */
           const Jet * jet = dynamic_cast<const Jet*>(*nav4MomItr);
-          if ( !jet || ( jet && m_removeOverlapInSameContainer ) )  
-             overlap = m_userOverlapCheckingTool->overlap(*jetItr, *nav4MomItr);
+          const Electron * electron = dynamic_cast<const Electron*>(*nav4MomItr);
+          if ( !jet || ( jet && m_removeOverlapInSameContainer ) ) {
+	    if (electron) {
+	      overlap = m_userOverlapCheckingTool->overlap(*jetItr, electron->trackParticle());
+	    } else {
+	      overlap = m_userOverlapCheckingTool->overlap(*jetItr, *nav4MomItr);
+	    }
+	  }
           /** get out of the loop as soon as an overlap is found */
           if ( overlap ) break;
       }

@@ -147,13 +147,13 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
   
   if (m_isMC) {
     if (m_smearMC) {
-      energy *= m_eRescale.getSmearingCorrection(electron->cluster()->eta(),
-						 uncorrectedE,
-						 EnergyRescaler::NOMINAL,
-						 m_MCHasConstantTerm);
+      energy *= m_eRescale.getSmearingCorrectionMeV(electron->cluster()->eta(),
+						    uncorrectedE,
+						    EnergyRescaler::NOMINAL,
+						    m_MCHasConstantTerm);
       double er_up=-1,er_do=-1;
-      m_eRescale.getError(electron->cluster()->eta(), energy/cosh(eta), er_up, er_do,
-			  "ELECTRON");
+      m_eRescale.getErrorMeV(electron->cluster()->eta(), energy/cosh(eta), er_up, er_do,
+			     "ELECTRON");
 
 
       if (m_egammaScaleShift == EnergyRescaler::ERR_UP) {
@@ -164,12 +164,12 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
 
     } 
   } else {
-    energy = m_eRescale.applyEnergyCorrection(electron->cluster()->eta(), 
-					      electron->cluster()->phi(), 
-					      uncorrectedE,
-					      uncorrectedEt,
-					      m_egammaScaleShift,
-					      "ELECTRON");
+    energy = m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(), 
+						 electron->cluster()->phi(), 
+						 uncorrectedE,
+						 uncorrectedEt,
+						 m_egammaScaleShift,
+						 "ELECTRON");
   }
 
   double pt = energy/cosh(eta);
@@ -235,14 +235,14 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
   double energy;
   if (m_isMC) {
     if (m_smearMC) {
-      energy = photon->e() * m_eRescale.getSmearingCorrection(photon->cluster()->eta(),
-							      photon->e(),
-							      EnergyRescaler::NOMINAL,
-							      m_MCHasConstantTerm);
+      energy = photon->e() * m_eRescale.getSmearingCorrectionMeV(photon->cluster()->eta(),
+								 photon->e(),
+								 EnergyRescaler::NOMINAL,
+								 m_MCHasConstantTerm);
 
       double er_up=-1,er_do=-1;
-      m_eRescale.getError(photon->cluster()->eta(), energy/cosh(photon->eta()), er_up, er_do,
-			  (photon->conversion()) ? "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
+      m_eRescale.getErrorMeV(photon->cluster()->eta(), energy/cosh(photon->eta()), er_up, er_do,
+			     (photon->conversion()) ? "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
 
 
       if (m_egammaScaleShift == EnergyRescaler::ERR_UP) {
@@ -254,13 +254,13 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
       energy = photon->e();
     }
   } else { 
-    energy = m_eRescale.applyEnergyCorrection(photon->cluster()->eta(), 
-					      photon->cluster()->phi(), 
-					      photon->e(),
-					      photon->et(),
-					      m_egammaScaleShift,
-					      (photon->conversion()) ? 
-					      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
+    energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(), 
+						 photon->cluster()->phi(), 
+						 photon->e(),
+						 photon->et(),
+						 m_egammaScaleShift,
+						 (photon->conversion()) ? 
+						 "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
   }
 
   double pt = energy/cosh(photon->eta());
