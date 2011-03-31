@@ -86,7 +86,7 @@ private:
   bool m_MCHasConstantTerm;
   int m_randomSeed;
   int m_egammaScaleShift;
-  double m_mcEtconeShift;
+  double m_mcEtconeScale;
 
   /** Electron selection */
   double m_electronPt;

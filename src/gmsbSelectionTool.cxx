@@ -39,7 +39,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("MCHasConstantTerm", m_MCHasConstantTerm = true);
   declareProperty("RandomSeed", m_randomSeed = 0);
   declareProperty("EgammaScaleShift", m_egammaScaleShift = EnergyRescaler::NOMINAL);
-  declareProperty("MCEtconeShift", m_mcEtconeShift = 314.0);
+  declareProperty("MCEtconeScale", m_mcEtconeScale = 1.5);
 
   /** caloCluster selection */
   declareProperty("CaloClusterE", m_caloClusterE=1.0*GeV);
@@ -211,7 +211,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
     if(egdetail && pt > 0.0) {
       double etcone = egdetail->etcone20();
       if (m_isMC) {
-	etcone += m_mcEtconeShift;
+	etcone *= m_mcEtconeScale;
       }
       isol = etcone / uncorrectedEt;
     }
@@ -316,7 +316,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
       double etcone = egdetail->etcone20();
       ATH_MSG_DEBUG("etcone20 = " << etcone);
       if (m_isMC) {
-	etcone += m_mcEtconeShift;
+	etcone *= m_mcEtconeScale;
       }
       isol = etcone / photon->pt();
     }
