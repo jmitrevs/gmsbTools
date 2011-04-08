@@ -87,6 +87,7 @@ private:
   int m_randomSeed;
   int m_egammaScaleShift;
   double m_mcEtconeScale;
+  bool m_useAltIsoCorrection;
 
   /** Electron selection */
   double m_electronPt;

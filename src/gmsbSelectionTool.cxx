@@ -40,6 +40,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("RandomSeed", m_randomSeed = 0);
   declareProperty("EgammaScaleShift", m_egammaScaleShift = EnergyRescaler::NOMINAL);
   declareProperty("MCEtconeScale", m_mcEtconeScale = 1.5);
+  declareProperty("MCUseAltIsoCorrection", m_useAltIsoCorrection = false);
 
   /** caloCluster selection */
   declareProperty("CaloClusterE", m_caloClusterE=1.0*GeV);
@@ -211,7 +212,17 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
     if(egdetail && pt > 0.0) {
       double etcone = egdetail->etcone20();
       if (m_isMC) {
-	etcone *= m_mcEtconeScale;
+	if (!m_useAltIsoCorrection) {
+	  etcone *= m_mcEtconeScale;
+	} else {
+	  if (absClusEta < 0.6) {
+	    etcone += 0.007 * uncorrectedEt;
+	  } else if (absClusEta < 1.37) {
+	    etcone += 0.009 * uncorrectedEt;
+	  } else {
+	    etcone += 0.008 * uncorrectedEt;
+	  }
+	}
       }
       isol = etcone / uncorrectedEt;
     }
@@ -316,7 +327,17 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
       double etcone = egdetail->etcone20();
       ATH_MSG_DEBUG("etcone20 = " << etcone);
       if (m_isMC) {
-	etcone *= m_mcEtconeScale;
+	if (!m_useAltIsoCorrection) {
+	  etcone *= m_mcEtconeScale;
+	} else {
+	  if (absClusEta < 0.6) {
+	    etcone += 0.007 * photon->pt();
+	  } else if (absClusEta < 1.37) {
+	    etcone += 0.009 * photon->pt();
+	  } else {
+	    etcone += 0.008 * photon->pt();
+	  }
+	}
       }
       isol = etcone / photon->pt();
     }
