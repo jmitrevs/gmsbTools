@@ -49,7 +49,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("TrackParticlePt", m_trackParticlePt=1.0*GeV);
 
   /** Electron selection */
-  declareProperty("ElectronPt",       m_electronPt=20*GeV);
+  declareProperty("ElectronPt",       m_electronPt=25*GeV);
   declareProperty("ElectronEta",      m_electronEta=2.47);
   declareProperty("ElectronIsEM", m_electronIsEM = egammaPID::ElectronMedium_WithTrackMatch);
   declareProperty("AuthorEgammaOnly", m_authorEgammaOnly=true);
@@ -60,7 +60,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("ElectronEtcone20ovEt", m_electronEtcone20ovEt=0.15);
 
   /** Photon selection */
-  declareProperty("PhotonPt",   m_photonPt=20*GeV);
+  declareProperty("PhotonPt",   m_photonPt=25*GeV);
   declareProperty("PhotonEta",  m_photonEta=1.81);
   declareProperty("PhotonIsEM", m_photonIsEM = egammaPID::PhotonTightAR);
   declareProperty("DoPhotonEtaWindowCut", m_doPhotonEtaWindCut = true);
@@ -105,8 +105,6 @@ StatusCode gmsbSelectionTool::initialize() {
     return StatusCode::FAILURE;
   }
   
-  // initialize the OQ 
-  m_OQ.initialize();
   m_eRescale.useDefaultCalibConstants();
   m_eRescale.SetRandomSeed(m_randomSeed);
 
@@ -165,12 +163,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
 
     } 
   } else {
-    energy = m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(), 
-						 electron->cluster()->phi(), 
-						 uncorrectedE,
-						 uncorrectedEt,
-						 m_egammaScaleShift,
-						 "ELECTRON");
+    energy = uncorrectedE;
   }
 
   double pt = energy/cosh(eta);
@@ -203,7 +196,11 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
   ATH_MSG_DEBUG("after crack, select is now " << select);
 
   // check OQ
-  const bool badOQ = m_OQ.checkOQClusterElectron(runNum, electron->cluster()->eta(), electron->cluster()->phi())==3;
+  bool badOQ = electron->isgoodoq(egammaPID::BADCLUSELECTRON); // 0 == good
+  if (m_isMC) {
+    badOQ = badOQ || 
+      m_OQ.checkOQClusterElectron(runNum, electron->cluster()->eta(), electron->cluster()->phi())==3;
+  }
   select = select && !badOQ;
 
   if ( m_doElectronIsolation ) {
@@ -265,13 +262,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
       energy = photon->e();
     }
   } else { 
-    energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(), 
-						 photon->cluster()->phi(), 
-						 photon->e(),
-						 photon->et(),
-						 m_egammaScaleShift,
-						 (photon->conversion()) ? 
-						 "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
+    energy = photon->e();
   }
 
   double pt = energy/cosh(photon->eta());
@@ -315,7 +306,11 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
   ATH_MSG_DEBUG("after crack cut, select = " << select);
 
   // check OQ
-  const bool badOQ = m_OQ.checkOQClusterPhoton(runNum, photon->cluster()->eta(), photon->cluster()->phi())==3;
+  bool badOQ = photon->isgoodoq(egammaPID::BADCLUSPHOTON); // 0 == good
+  if (m_isMC) {
+    badOQ = badOQ || 
+      m_OQ.checkOQClusterPhoton(runNum, photon->cluster()->eta(), photon->cluster()->phi(), photon->conversion())==3;
+  }
   select = select && !badOQ;
 
   ATH_MSG_DEBUG("after OTX, select = " << select);
@@ -416,19 +411,6 @@ bool gmsbSelectionTool::isSelected( const Jet* jet ) const
 {
   bool select = false;
   if ( !jet ) return select;
-
-  // double emJESfactor = jet->getMoment("EMJES");
-  // if (emJESfactor == 0) {
-  //   emJESfactor = m_jetEMJESfixer.fixAntiKt4H1Topo(jet->pt(), jet->eta());
-  // }
-  // Jet::hlv_t jet4MomJES =  emJESfactor * jet->hlv(P4SignalState::JETEMSCALE);
-
-  // select = jet4MomJES.perp() > m_jetPt && fabs(jet4MomJES.eta()) < m_jetEta;
-
-  // if (emJESfactor == 0) {
-  //   emJESfactor = m_jetEMJESfixer.fixAntiKt4H1Topo(jet->pt(), jet->eta());
-  // }
-  // Jet::hlv_t jet4MomJES =  emJESfactor * jet->hlv(P4SignalState::JETEMSCALE);
 
   select = jet->pt() > m_jetPt && fabs(jet->eta()) < m_jetEta;
 

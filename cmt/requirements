@@ -9,28 +9,27 @@ use AthenaBaseComps    AthenaBaseComps-*   	Control
 use AthenaKernel       AthenaKernel-*           Control
 
 use AtlasCLHEP			AtlasCLHEP-00-*			External
-use AtlasROOT			AtlasROOT-*			External
 
-use McParticleEvent		McParticleEvent-*		PhysicsAnalysis/TruthParticleID
 use TrkSegment			TrkSegment-*			Tracking/TrkEvent
-use MuonSegment         	MuonSegment-*	        	MuonSpectrometer/MuonReconstruction/MuonRecEvent
 
 use egammaEvent			egammaEvent-*			Reconstruction/egamma
-use egammaInterfaces		egammaInterfaces-*		Reconstruction/egamma
 use muonEvent			muonEvent-*			Reconstruction/MuonIdentification
 use tauEvent			tauEvent-*			Reconstruction
 use Particle			Particle-*			Reconstruction
-use TrkEventPrimitives  	TrkEventPrimitives-*		Tracking/TrkEvent
 use VxVertex             	VxVertex-*                  	Tracking/TrkEvent
 use MissingETEvent		MissingETEvent-*		Reconstruction
 use CaloEvent			CaloEvent-*			Calorimeter
 use JetEvent			JetEvent-*			Reconstruction/Jet
 
 use NavFourMom			NavFourMom-*			Event
-use AnalysisTools		AnalysisTools-*			PhysicsAnalysis/AnalysisCommon
+use FourMomUtils		FourMomUtils-*			Event
 
-use egammaOQUtils               egammaOQUtils-*                 Reconstruction/egamma/egammaAnalysis
 use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/egamma/egammaAnalysis
+
+private
+use AnalysisUtils               AnalysisUtils-*                 PhysicsAnalysis/AnalysisCommon
+use EventInfo                   EventInfo-*                     Event
+end_private
 
 apply_pattern dual_use_library files=*.cxx
 

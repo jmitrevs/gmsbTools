@@ -41,7 +41,7 @@ gmsbPreparationTool::gmsbPreparationTool( const std::string& type,
   declareProperty("IsAtlfastData",          m_isAtlfast=false);
 
   // for the OQ
-  declareProperty("OQRunNum", m_OQRunNum = 167521);
+  declareProperty("OQRunNum", m_OQRunNum = -1);
 
   /** initialize counters */
   m_numElectrons      = std::make_pair(0,0);

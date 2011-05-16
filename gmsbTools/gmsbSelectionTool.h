@@ -29,9 +29,7 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 #include "NavFourMom/IParticleContainer.h"
 #include "NavFourMom/INavigable4MomentumCollection.h"
 
-#include "gmsbTools/EMJESfix.h"
-
-#include "egammaOQUtils/checkOQ.h"
+#include "egammaAnalysisUtils/checkOQ.h"
 #include "egammaAnalysisUtils/EnergyRescaler.h"
 
 #include "AthenaKernel/IUserDataSvc.h"
@@ -143,13 +141,11 @@ private:
   double m_trackParticlePt;
 
 
-  EMJESFixer m_jetEMJESfixer;
-
   // user data
   ServiceHandle<IUserDataSvc> m_userdatasvc;
 
   // the OQ utility
-  mutable egammaOQ m_OQ;
+  egammaOQ m_OQ;
 
   EnergyRescaler m_eRescale;
 };

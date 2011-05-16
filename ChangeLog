@@ -1,4 +1,12 @@
 2011-01-28 Jovan Mitrevski <Jovan.Mitrevski@cern.ch>
+	* updates for 2011 analysis
+	* tagging gmsbTools-00-02-00
+
+2011-05-01 Jovan Mitrevski <Jovan.Mitrevski@cern.ch>
+	* version for 2010 note
+	* tagging gmsbTools-00-01-00
+
+2011-01-28 Jovan Mitrevski <Jovan.Mitrevski@cern.ch>
 	* share/gmsbTools_jobOptions.py: added muon support
 	* gmsbTools/gmsbSelectionTool.h: make OQ mutable
 	* src/gmsbSelectionTool.cxx: bug fixes in applying OQ
