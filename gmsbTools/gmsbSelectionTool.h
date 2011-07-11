@@ -31,6 +31,7 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 
 #include "egammaAnalysisUtils/checkOQ.h"
 #include "egammaAnalysisUtils/EnergyRescaler.h"
+using namespace::eg2011;
 
 #include "AthenaKernel/IUserDataSvc.h"
 
