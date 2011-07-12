@@ -17,6 +17,8 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 // User Tools
 #include "gmsbTools/gmsbSelectionTool.h"
 
+#include "egammaAnalysisUtils/CaloIsoCorrection.h"
+
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -57,8 +59,10 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("DoElectronEtaWindowCut", m_doElectronEtaWindCut = true);
   declareProperty("ElectronEtaWindowMin", m_electronEtaWindMin = 1.37);
   declareProperty("ElectronEtaWindowMax", m_electronEtaWindMax = 1.52);
-  declareProperty("DoElectronIsolation", m_doElectronIsolation = true);
+  declareProperty("DoOldElectronIsolation", m_doOldElectronIsolation = false);
   declareProperty("ElectronEtcone20ovEt", m_electronEtcone20ovEt=0.15);
+  declareProperty("DoNewElectronIsolation", m_doNewElectronIsolation = true);
+  declareProperty("ElectronEtcone20corrected", m_electronEtcone20corrected=5*GeV);
 
   /** Photon selection */
   declareProperty("PhotonPt",   m_photonPt=25*GeV);
@@ -67,11 +71,13 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("DoPhotonEtaWindowCut", m_doPhotonEtaWindCut = true);
   declareProperty("PhotonEtaWindowMin", m_photonEtaWindMin = 1.37);
   declareProperty("PhotonEtaWindowMax", m_photonEtaWindMax = 1.52);
-  declareProperty("DoPhotonIsolation", m_doPhotonIsolation = true);
+  declareProperty("DoOldPhotonIsolation", m_doOldPhotonIsolation = false);
   declareProperty("PhotonEtcone20ovEt", m_photonEtcone20ovEt=0.1);
+  declareProperty("DoNewPhotonIsolation", m_doNewPhotonIsolation = true);
+  declareProperty("PhotonEtcone20corrected", m_photonEtcone20corrected=5*GeV);
 
   /** Muon selection */
-  declareProperty("MuonPt", m_muonPt = 20.0*GeV);
+  declareProperty("MuonPt", m_muonPt = 10.0*GeV);
   declareProperty("MuonEta", m_muonEta = 2.4);
   declareProperty("MuonMatchChi2Max", m_matchChi2Max = 150.0);
   declareProperty("SelectCombined", m_sel_combined=true);
@@ -124,7 +130,9 @@ StatusCode gmsbSelectionTool::finalize() {
 gmsbSelectionTool::~gmsbSelectionTool()
 {}
 
-bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int runNum ) const
+bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, 
+				    int runNum, 
+				    unsigned int nPV ) const
 {
   ATH_MSG_DEBUG("in electron isSelected(), with electron = " << electron);
 
@@ -136,7 +144,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
 
   if (!select) return false;
 
-  const double absClusEta = fabs(electron->cluster()->etaBE(2));
+  const double eta2 = electron->cluster()->etaBE(2);
+  const double absClusEta = fabs(eta2);
 
   const double eta = (electron->trackParticle()) ? electron->trackParticle()->eta() : electron->eta();
 
@@ -204,9 +213,9 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
   }
   select = select && !badOQ;
 
-  if ( m_doElectronIsolation ) {
+  if ( m_doOldElectronIsolation ) {
     const EMShower* egdetail = electron->detail<EMShower>();
-    double isol = 1000;
+    double isol = 10000000;
     if(egdetail && pt > 0.0) {
       double etcone = egdetail->etcone20();
       if (m_isMC) {
@@ -227,19 +236,40 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, int run
     select = select && isol < m_electronEtcone20ovEt;
   }
 
+  if ( m_doNewElectronIsolation ) {
+    const EMShower* egdetail = electron->detail<EMShower>();
+    float isol = 1000000;
+    if(egdetail && pt > 0.0) {
+      isol = CaloIsoCorrection::GetPtNPVCorrectedIsolation(nPV,
+							   uncorrectedE,
+							   eta2,
+							   egdetail->parameter(egammaParameters::etap),
+							   electron->cluster()->eta(),
+							   20,
+							   m_isMC,
+							   egdetail->etcone20(),
+							   false,
+							   CaloIsoCorrection::ELECTRON);
+    }
+    select = select && isol < m_electronEtcone20corrected;
+  }
+
   ATH_MSG_DEBUG("after iso, select is now " << select);
 
   return select;
 }
 
-bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum ) const 
+bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, 
+				    int runNum,
+				    unsigned int nPV) const 
 {
   ATH_MSG_DEBUG("in photon isSelected()");
 
   bool select = false;
   if ( !photon ) return select;
 
-  const double absClusEta = fabs(photon->cluster()->etaBE(2));
+  const double eta2 = photon->cluster()->etaBE(2);
+  const double absClusEta = fabs(eta2);
 
   double energy;
   if (m_isMC) {
@@ -316,9 +346,9 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
 
   ATH_MSG_DEBUG("after OTX, select = " << select);
 
-  if ( m_doPhotonIsolation ) {
+  if ( m_doOldPhotonIsolation ) {
     const EMShower* egdetail = photon->detail<EMShower>();
-    double isol = 1000;
+    double isol = 10000000;
     if(egdetail && pt > 0.0) {
       double etcone = egdetail->etcone20();
       ATH_MSG_DEBUG("etcone20 = " << etcone);
@@ -338,6 +368,24 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, int runNum 
       isol = etcone / photon->pt();
     }
     select = select && isol < m_photonEtcone20ovEt;
+  }
+
+  if ( m_doNewPhotonIsolation ) {
+    const EMShower* egdetail = photon->detail<EMShower>();
+    float isol = 1000000;
+    if(egdetail && pt > 0.0) {
+      isol = CaloIsoCorrection::GetPtNPVCorrectedIsolation(nPV,
+							   photon->e(),
+							   eta2,
+							   egdetail->parameter(egammaParameters::etap),
+							   photon->cluster()->eta(),
+							   20,
+							   m_isMC,
+							   egdetail->etcone20(),
+							   photon->conversion(),
+							   CaloIsoCorrection::PHOTON);
+    }
+    select = select && isol < m_photonEtcone20corrected;
   }
 
   ATH_MSG_DEBUG("photon select = " << select);
@@ -370,40 +418,22 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   select = select && ((m_sel_combined && muon->isCombinedMuon()) ||
 		      (m_sel_seg_tag && muon->isLowPtReconstructedMuon()));
   
-  if (m_sel_combined && muon->isCombinedMuon()) {
-    select = select && muon->matchChi2() < m_matchChi2Max;
-    double ms_pt=0.;
-    const Rec::TrackParticle* msTrkParticle = muon->muonSpectrometerTrackParticle();
-    if (msTrkParticle) {
-      ms_pt = msTrkParticle->pt();
-    }
-    if (ms_pt < m_ms_pt_limit) {
-      double p_ms_ex=0;
-      double p_id=0;
-      const Rec::TrackParticle* msExTrkParticle = muon->muonExtrapolatedTrackParticle();
-      if (msExTrkParticle) {
-	p_ms_ex = msExTrkParticle->p();
-      }
-      const Rec::TrackParticle* idTrkParticle = muon->inDetTrackParticle();
-      if (idTrkParticle) {
-	p_id = idTrkParticle->p();
-      }
-      select = select && p_ms_ex-p_id > -0.4*p_id;
-    }
-  }
+  select = select && muon->isLoose();
 
   // do track cuts
-  select = select && muon->numberOfPixelHits() >= 1 && muon->numberOfSCTHits() >= 6;
-  const int nTRTOutliers = muon->numberOfTRTOutliers();
-  const int nTRTTotal = muon->numberOfTRTHits() + muon->numberOfTRTOutliers();
-  const Rec::TrackParticle* idTrkParticle = muon->inDetTrackParticle();
-  const double mu_eta = (idTrkParticle) ? idTrkParticle->eta() : muon->eta();
-  if (mu_eta < 1.9) {
-    select = select && nTRTTotal > 5;
-  }
-  if (nTRTTotal > 5) {
-    select = select && nTRTOutliers < 0.9*nTRTTotal;
-  }
+  const Rec::TrackParticle* id_trk_part = muon->inDetTrackParticle();
+  if(!id_trk_part) return false;
+  const Trk::TrackSummary* id_trk_sum = id_trk_part->trackSummary();
+  if(!id_trk_sum) return false;
+  if(id_trk_sum->get(Trk::expectBLayerHit) && id_trk_sum->get(Trk::numberOfBLayerHits) == 0) return false;
+  if (id_trk_sum->get(Trk::numberOfPixelHits) + id_trk_sum->get(Trk::numberOfPixelDeadSensors) <= 1) return false;
+  if (id_trk_sum->get(Trk::numberOfSCTHits) + id_trk_sum->get(Trk::numberOfSCTDeadSensors) < 6) return false;
+  if (id_trk_sum->get(Trk::numberOfPixelHoles) + id_trk_sum->get(Trk::numberOfSCTHoles) >= 2) return false;
+  const int nTRTOutliers = id_trk_sum->get(Trk::numberOfTRTOutliers);
+  const int nTRTTotal    = nTRTOutliers + id_trk_sum->get(Trk::numberOfTRTHits);
+  const float trackEta   = id_trk_part->eta();
+  if (fabs(trackEta) < 1.9 && nTRTTotal <= 5) return false;
+  if (nTRTTotal > 5 && nTRTOutliers >= 0.9*nTRTTotal) return false;
 
   return select;
 }

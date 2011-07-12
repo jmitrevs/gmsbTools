@@ -39,6 +39,10 @@ gmsbPreparationTool::gmsbPreparationTool( const std::string& type,
   declareProperty("InputContainerKeys",     m_inputContainerKeys);
   declareProperty("OutputContainerKeys",    m_outputContainerKeys);
   declareProperty("IsAtlfastData",          m_isAtlfast=false);
+  // Name of the primary vertex candidates
+  declareProperty("PrimaryVertexCandidates",
+		  m_vxCandidatesName="VxPrimaryCandidate",
+		  "Name of the primary vertex candidates");
 
   // for the OQ
   declareProperty("OQRunNum", m_OQRunNum = -1);
@@ -116,19 +120,41 @@ StatusCode gmsbPreparationTool::execute() {
   }
 
 
+  // retrieve the container of Vertex
+  const VxContainer* vxContainer(0);
+  sc = evtStore()->retrieve(vxContainer, m_vxCandidatesName);
+  if (sc != StatusCode::SUCCESS) {
+    ATH_MSG_ERROR("no primary vertex container for this egamma, vxContainer: "<<vxContainer);
+    return StatusCode::RECOVERABLE;
+  }
+
+  unsigned int nPV = 0;
+
+  // check the primary vertex
+  for (VxContainer::const_iterator vx = vxContainer->begin();
+       vx != vxContainer->end();
+       vx++) {
+    const std::vector<Trk::VxTrackAtVertex*>* vxtracks = 
+      (*vx)->vxTrackAtVertex();
+    
+    if (vxtracks->size() >= 2) {
+      nPV++;
+    }
+  }
+
   /** now object preparation with selection */
   for ( unsigned int i=0; i<m_inputContainerKeys.size(); ++i ) {
 
     std::string::size_type loc = m_inputContainerKeys[i].find( "Electron", 0);
     if ( loc != std::string::npos ) { 
       if ( m_first ) m_outputElectronKey = m_outputContainerKeys[i]; 
-      sc = this->electronPreparation( m_inputContainerKeys[i], runNum );
+      sc = this->electronPreparation( m_inputContainerKeys[i], runNum, nPV );
     }
 
     loc = m_inputContainerKeys[i].find( "Photon", 0);
     if ( loc != std::string::npos ) {
       if ( m_first ) m_outputPhotonKey = m_outputContainerKeys[i];       
-      sc = this->photonPreparation( m_inputContainerKeys[i], runNum );
+      sc = this->photonPreparation( m_inputContainerKeys[i], runNum, nPV );
     }
 
     loc = m_inputContainerKeys[i].find( "Muon", 0);
@@ -238,7 +264,7 @@ const CaloClusterContainer * gmsbPreparationTool::selectedCaloClusters() {
 }
 
   /** container preparation */
-StatusCode gmsbPreparationTool::electronPreparation( std::string key, int runNum ) {
+StatusCode gmsbPreparationTool::electronPreparation( std::string key, int runNum, unsigned int nPV ) {
   ATH_MSG_DEBUG("in electronPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -264,7 +290,7 @@ StatusCode gmsbPreparationTool::electronPreparation( std::string key, int runNum
   ElectronContainer::const_iterator elecItrE = aod_electrons->end();
 
   for (; elecItr != elecItrE; ++elecItr) {
-    if ( m_userSelectionTool->isSelected( *elecItr, runNum ) ) electrons->push_back( *elecItr );
+    if ( m_userSelectionTool->isSelected( *elecItr, runNum, nPV ) ) electrons->push_back( *elecItr );
   }
   m_numElectrons.second += electrons->size();
 
@@ -276,7 +302,7 @@ StatusCode gmsbPreparationTool::electronPreparation( std::string key, int runNum
   return sc;
 }
 
-StatusCode gmsbPreparationTool::photonPreparation( std::string key, int runNum ) {
+StatusCode gmsbPreparationTool::photonPreparation( std::string key, int runNum, unsigned int nPV ) {
   ATH_MSG_DEBUG("in photonPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -303,7 +329,7 @@ StatusCode gmsbPreparationTool::photonPreparation( std::string key, int runNum )
 
   /** check if this electron passes pre-selection */
   for (; photItr != photItrE; ++photItr) {
-    if ( m_userSelectionTool->isSelected( *photItr, runNum ) ) photons->push_back( *photItr );
+    if ( m_userSelectionTool->isSelected( *photItr, runNum, nPV ) ) photons->push_back( *photItr );
   }
   m_numPhotons.second += photons->size();
 

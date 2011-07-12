@@ -84,8 +84,12 @@ protected:
 private:
 
   /** container preparation */
-  StatusCode electronPreparation( std::string key, int runNum );
-  StatusCode photonPreparation( std::string key, int runNum );
+  StatusCode electronPreparation( std::string key, 
+				  int runNum, 
+				  unsigned int nPV );
+  StatusCode photonPreparation( std::string key, 
+				int runNum,
+				unsigned int nPV );
   StatusCode muonPreparation( std::string key );
   StatusCode tauJetPreparation( std::string key );
   StatusCode jetPreparation( std::string key );
@@ -99,6 +103,9 @@ private:
 
   /** a handle on selection */
   ToolHandle <gmsbSelectionTool> m_userSelectionTool;
+
+  /** primary vertex container */
+  std::string m_vxCandidatesName;
 
   /** should contain the StoreGate keys to be passed in job options */ 
   std::vector<std::string> m_inputContainerKeys;

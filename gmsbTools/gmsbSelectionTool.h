@@ -58,8 +58,12 @@ public:
   virtual StatusCode finalize();
 
   /** pre-selections */
-  bool isSelected( const Analysis::Electron * electron, int runNum ) const;
-  bool isSelected( const Analysis::Photon * photon, int runNum ) const;
+  bool isSelected( const Analysis::Electron * electron, 
+		   int runNum,
+		   unsigned int nPV) const;
+  bool isSelected( const Analysis::Photon * photon, 
+		   int runNum,
+		   unsigned int nPV) const;
   bool isSelected( const Analysis::Muon * muon ) const;
   bool isSelected( const Analysis::TauJet * tauJet ) const;
   bool isSelected( const Jet* jet ) const;
@@ -94,22 +98,26 @@ private:
   std::string m_egDetailContainerName;
   std::string m_electronIsEMFlag;
   int    m_electronIsEM;
-  bool   m_doElectronIsolation;
+  bool   m_doOldElectronIsolation;
+  bool   m_doNewElectronIsolation;
   bool   m_authorEgammaOnly;
   bool   m_doElectronEtaWindCut;/// apply (or not) eta cut in bad region window  
   double m_electronEtaWindMin;
   double m_electronEtaWindMax;
-  double m_electronEtcone20ovEt;  // normalised electron isolation ET: EtCone/Pt
+  double m_electronEtcone20ovEt;  // for old
+  double m_electronEtcone20corrected; // for new
 
   /** Photon selection */
   double m_photonPt;
   double m_photonEta;
   double m_photonIsEM;
-  bool   m_doPhotonIsolation;
+  bool   m_doOldPhotonIsolation;
+  bool   m_doNewPhotonIsolation;
   bool   m_doPhotonEtaWindCut;/// apply (or not) eta cut in bad region window  
   double m_photonEtaWindMin;
   double m_photonEtaWindMax;
-  double m_photonEtcone20ovEt;  // normalised photon isolation ET: EtCone/Pt
+  double m_photonEtcone20ovEt;  // for old
+  double m_photonEtcone20corrected;  // for new
 
   /** Muon selection */
   double m_muonPt;
