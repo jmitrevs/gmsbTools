@@ -41,7 +41,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("SmearMC", m_smearMC = false);
   declareProperty("MCHasConstantTerm", m_MCHasConstantTerm = true);
   declareProperty("RandomSeed", m_randomSeed = 0);
-  declareProperty("EgammaScaleShift", m_egammaScaleShift = EnergyRescaler::NOMINAL);
+  declareProperty("EgammaScaleShift", m_egammaScaleShift = eg2011::EnergyRescaler::NOMINAL);
   declareProperty("MCEtconeScale", m_mcEtconeScale = 1.5);
   declareProperty("MCUseAltIsoCorrection", m_useAltIsoCorrection = false);
 
@@ -158,16 +158,16 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
     if (m_smearMC) {
       energy *= m_eRescale.getSmearingCorrectionMeV(electron->cluster()->eta(),
 						    uncorrectedE,
-						    EnergyRescaler::NOMINAL,
+						    eg2011::EnergyRescaler::NOMINAL,
 						    m_MCHasConstantTerm);
       double er_up=-1,er_do=-1;
       m_eRescale.getErrorMeV(electron->cluster()->eta(), energy/cosh(eta), er_up, er_do,
 			     "ELECTRON");
 
 
-      if (m_egammaScaleShift == EnergyRescaler::ERR_UP) {
+      if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_UP) {
 	energy *= (1+er_up);
-      } else if (m_egammaScaleShift == EnergyRescaler::ERR_DOWN) {
+      } else if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_DOWN) {
 	energy *= (1+er_do);
       }
 
@@ -276,7 +276,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
     if (m_smearMC) {
       energy = photon->e() * m_eRescale.getSmearingCorrectionMeV(photon->cluster()->eta(),
 								 photon->e(),
-								 EnergyRescaler::NOMINAL,
+								 eg2011::EnergyRescaler::NOMINAL,
 								 m_MCHasConstantTerm);
 
       double er_up=-1,er_do=-1;
@@ -284,9 +284,9 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 			     (photon->conversion()) ? "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
 
 
-      if (m_egammaScaleShift == EnergyRescaler::ERR_UP) {
+      if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_UP) {
 	energy *= (1+er_up);
-      } else if (m_egammaScaleShift == EnergyRescaler::ERR_DOWN) {
+      } else if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_DOWN) {
 	energy *= (1+er_do);
       }
     } else {
