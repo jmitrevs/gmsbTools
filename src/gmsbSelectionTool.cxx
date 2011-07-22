@@ -30,9 +30,12 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 
 //------------------------------------------------------------------------------
 gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
-                                                      const std::string& name, 
-                                                      const IInterface* parent )
-  : AthAlgTool( type, name, parent ), m_userdatasvc("UserDataSvc", name) {
+				      const std::string& name, 
+				      const IInterface* parent )
+  : AthAlgTool( type, name, parent ), 
+    m_userdatasvc("UserDataSvc", name),
+    m_muonSmear("staco")
+{
   declareInterface<gmsbSelectionTool>( this );
 
   declareProperty("IsAtlfastData",          m_isAtlfast=false);
@@ -40,7 +43,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("IsMC", m_isMC=false);
   declareProperty("SmearMC", m_smearMC = false);
   declareProperty("MCHasConstantTerm", m_MCHasConstantTerm = true);
-  declareProperty("RandomSeed", m_randomSeed = 0);
+  //  declareProperty("RandomSeed", m_randomSeed = 0); // use SUSY prescription
   declareProperty("EgammaScaleShift", m_egammaScaleShift = eg2011::EnergyRescaler::NOMINAL);
   declareProperty("MCEtconeScale", m_mcEtconeScale = 1.5);
   declareProperty("MCUseAltIsoCorrection", m_useAltIsoCorrection = false);
@@ -113,7 +116,9 @@ StatusCode gmsbSelectionTool::initialize() {
   }
   
   m_eRescale.useDefaultCalibConstants();
-  m_eRescale.SetRandomSeed(m_randomSeed);
+  // m_eRescale.SetRandomSeed(m_randomSeed);
+
+  m_muonSmear.UseScale(1);
 
   return StatusCode::SUCCESS;
 }
@@ -156,6 +161,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
   
   if (m_isMC) {
     if (m_smearMC) {
+      m_eRescale.SetRandomSeed(int(1.e+5*fabs(electron->cluster()->phi())));
       energy *= m_eRescale.getSmearingCorrectionMeV(electron->cluster()->eta(),
 						    uncorrectedE,
 						    eg2011::EnergyRescaler::NOMINAL,
@@ -173,7 +179,12 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 
     } 
   } else {
-    energy = uncorrectedE;
+    energy = m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
+						 electron->cluster()->phi(),  
+						 uncorrectedE, 
+						 uncorrectedEt, 
+						 m_egammaScaleShift, 
+						 "ELECTRON"); 
   }
 
   double pt = energy/cosh(eta);
@@ -207,7 +218,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 
   // check OQ
   bool badOQ = electron->isgoodoq(egammaPID::BADCLUSELECTRON); // 0 == good
-  if (m_isMC) {
+  if (m_isMC && runNum > 180481) {
     badOQ = badOQ || 
       m_OQ.checkOQClusterElectron(runNum, electron->cluster()->eta(), electron->cluster()->phi())==3;
   }
@@ -241,7 +252,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
     float isol = 1000000;
     if(egdetail && pt > 0.0) {
       isol = CaloIsoCorrection::GetPtNPVCorrectedIsolation(nPV,
-							   uncorrectedE,
+							   energy,
 							   eta2,
 							   egdetail->parameter(egammaParameters::etap),
 							   electron->cluster()->eta(),
@@ -274,6 +285,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
   double energy;
   if (m_isMC) {
     if (m_smearMC) {
+      m_eRescale.SetRandomSeed(int(1.e+5*fabs(photon->cluster()->phi())));
       energy = photon->e() * m_eRescale.getSmearingCorrectionMeV(photon->cluster()->eta(),
 								 photon->e(),
 								 eg2011::EnergyRescaler::NOMINAL,
@@ -293,7 +305,14 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
       energy = photon->e();
     }
   } else { 
-    energy = photon->e();
+    energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
+						 photon->cluster()->phi(),  
+						 photon->e(), 
+						 photon->et(), 
+						 m_egammaScaleShift, 
+						 (photon->conversion()) ?  
+						 "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
+    
   }
 
   double pt = energy/cosh(photon->eta());
@@ -325,7 +344,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
  
   select = pt > m_photonPt && absClusEta < m_photonEta && photon->isPhoton(m_photonIsEM);
 
-  ATH_MSG_DEBUG("after pt, eta, and isEM cut, select = " << select);
+  ATH_MSG_DEBUG("after pt, eta (= " << eta2 << "), and isEM cut, select = " << select);
 
   // check if photon is in bad eta region
 
@@ -338,7 +357,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 
   // check OQ
   bool badOQ = photon->isgoodoq(egammaPID::BADCLUSPHOTON); // 0 == good
-  if (m_isMC) {
+  if (m_isMC && runNum > 180481) {
     badOQ = badOQ || 
       m_OQ.checkOQClusterPhoton(runNum, photon->cluster()->eta(), photon->cluster()->phi(), photon->conversion())==3;
   }
@@ -375,7 +394,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
     float isol = 1000000;
     if(egdetail && pt > 0.0) {
       isol = CaloIsoCorrection::GetPtNPVCorrectedIsolation(nPV,
-							   photon->e(),
+							   energy,
 							   eta2,
 							   egdetail->parameter(egammaParameters::etap),
 							   photon->cluster()->eta(),
@@ -403,7 +422,19 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
     return select;
   }
 
-  select = muon->pt()>m_muonPt && fabs(muon->eta())<m_muonEta;
+  double pt = (muon->isCombinedMuon()) ? muon->pt() : muon->inDetTrackParticle()->pt(); ;
+
+  if (m_isMC && m_smearMC) {
+    m_muonSmear.SetSeed(int(1.e+5*fabs(muon->phi())));
+    m_muonSmear.Event(muon->muonExtrapolatedTrackParticle()->pt(),
+		      muon->inDetTrackParticle()->pt(),
+		      muon->pt(),
+		      muon->eta());
+    pt = (muon->isCombinedMuon()) ? m_muonSmear.pTCB() : m_muonSmear.pTID();
+  }
+    
+
+  select = pt >m_muonPt && fabs(muon->eta())<m_muonEta;
 
   // do iso cut
   if (m_do_iso_cut) {

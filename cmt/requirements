@@ -25,6 +25,8 @@ use NavFourMom			NavFourMom-*			Event
 use FourMomUtils		FourMomUtils-*			Event
 
 use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/egamma/egammaAnalysis
+use MuonMomentumCorrections     MuonMomentumCorrections-*       PhysicsAnalysis/MuonID/MuonIDAnalysis
+
 
 private
 use AnalysisUtils               AnalysisUtils-*                 PhysicsAnalysis/AnalysisCommon

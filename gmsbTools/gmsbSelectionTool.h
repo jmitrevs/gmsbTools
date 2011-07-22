@@ -32,7 +32,10 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 #include "egammaAnalysisUtils/checkOQ.h"
 #include "egammaAnalysisUtils/EnergyRescaler.h"
 
+#include "MuonMomentumCorrections/SmearingClass.h"
+
 #include "AthenaKernel/IUserDataSvc.h"
+
 
 #include <string>
 #include <map>
@@ -86,7 +89,7 @@ private:
   bool m_isMC;
   bool m_smearMC;
   bool m_MCHasConstantTerm;
-  int m_randomSeed;
+  // int m_randomSeed; // use SUSY prescription
   int m_egammaScaleShift;
   double m_mcEtconeScale;
   bool m_useAltIsoCorrection;
@@ -155,7 +158,10 @@ private:
   // the OQ utility
   egammaOQ m_OQ;
 
-  eg2011::EnergyRescaler m_eRescale;
+  mutable eg2011::EnergyRescaler m_eRescale;
+
+  mutable SmearingClass m_muonSmear;
+
 };
 
 #endif // GMSBTOOLS_GMSBSELECTIONTOOL_H 
