@@ -57,7 +57,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   /** Electron selection */
   declareProperty("ElectronPt",       m_electronPt=25*GeV);
   declareProperty("ElectronEta",      m_electronEta=2.47);
-  declareProperty("ElectronIsEM", m_electronIsEM = egammaPID::ElectronMedium_WithTrackMatch);
+  declareProperty("ElectronIsEM", m_electronIsEM = egammaPID::ElectronMedium);
   declareProperty("AuthorEgammaOnly", m_authorEgammaOnly=true);
   declareProperty("DoElectronEtaWindowCut", m_doElectronEtaWindCut = true);
   declareProperty("ElectronEtaWindowMin", m_electronEtaWindMin = 1.37);
@@ -414,6 +414,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 
 bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
 {
+  ATH_MSG_DEBUG("in muon isSelected(), with muon = " << muon);
+
   bool select = false;
   if ( !muon ) return select;
 
@@ -422,17 +424,34 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
     return select;
   }
 
+  ATH_MSG_DEBUG("Here");
+
+  // do ID cut
+  select = select && ((m_sel_combined && muon->isCombinedMuon()) ||
+		      (m_sel_seg_tag && muon->isLowPtReconstructedMuon()));
+  
+  select = select && muon->isLoose();
+
+  if (!select) return select;
+
+  ATH_MSG_DEBUG("Here 1");
+
   double pt = (muon->isCombinedMuon()) ? muon->pt() : muon->inDetTrackParticle()->pt(); ;
 
+  ATH_MSG_DEBUG("Here 2");
   if (m_isMC && m_smearMC) {
+    ATH_MSG_DEBUG("Here 2a");
     m_muonSmear.SetSeed(int(1.e+5*fabs(muon->phi())));
+    ATH_MSG_DEBUG("Here 2b");
     m_muonSmear.Event(muon->muonExtrapolatedTrackParticle()->pt(),
 		      muon->inDetTrackParticle()->pt(),
 		      muon->pt(),
 		      muon->eta());
+    ATH_MSG_DEBUG("Here 2c");
     pt = (muon->isCombinedMuon()) ? m_muonSmear.pTCB() : m_muonSmear.pTID();
   }
     
+  ATH_MSG_DEBUG("Here3");
 
   select = pt >m_muonPt && fabs(muon->eta())<m_muonEta;
 
@@ -445,11 +464,9 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
     }
   }
 
-  // do ID cut
-  select = select && ((m_sel_combined && muon->isCombinedMuon()) ||
-		      (m_sel_seg_tag && muon->isLowPtReconstructedMuon()));
-  
-  select = select && muon->isLoose();
+  ATH_MSG_DEBUG("Here4");
+
+  ATH_MSG_DEBUG("Here5");
 
   // do track cuts
   const Rec::TrackParticle* id_trk_part = muon->inDetTrackParticle();
@@ -465,6 +482,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   const float trackEta   = id_trk_part->eta();
   if (fabs(trackEta) < 1.9 && nTRTTotal <= 5) return false;
   if (nTRTTotal > 5 && nTRTOutliers >= 0.9*nTRTTotal) return false;
+
+  ATH_MSG_DEBUG("Here6");
 
   return select;
 }
