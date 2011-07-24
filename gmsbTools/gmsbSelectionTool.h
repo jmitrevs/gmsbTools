@@ -98,8 +98,6 @@ private:
   /** Electron selection */
   double m_electronPt;
   double m_electronEta;
-  std::string m_egDetailContainerName;
-  std::string m_electronIsEMFlag;
   int    m_electronIsEM;
   bool   m_doOldElectronIsolation;
   bool   m_doNewElectronIsolation;
