@@ -44,9 +44,6 @@ gmsbPreparationTool::gmsbPreparationTool( const std::string& type,
 		  m_vxCandidatesName="VxPrimaryCandidate",
 		  "Name of the primary vertex candidates");
 
-  // for the OQ
-  declareProperty("OQRunNum", m_OQRunNum = -1);
-
   /** initialize counters */
   m_numElectrons      = std::make_pair(0,0);
   m_numPhotons        = std::make_pair(0,0);
@@ -90,7 +87,7 @@ gmsbPreparationTool::~gmsbPreparationTool()
 {}
 
 //-------------------------------------------------------------------------------
-StatusCode gmsbPreparationTool::execute() {
+StatusCode gmsbPreparationTool::execute(unsigned int runNum) {
   ATH_MSG_DEBUG("in execute()");
 
   /** check that the input and the output containers are defined */
@@ -107,19 +104,6 @@ StatusCode gmsbPreparationTool::execute() {
     }
   }
   
-  int runNum = m_OQRunNum;
-  if (m_OQRunNum < 0) {
-    const EventInfo*  evtInfo = 0;
-    sc = evtStore()->retrieve(evtInfo);
-    if(sc.isFailure() || !evtInfo) {
-      ATH_MSG_ERROR("could not retrieve event info");
-      return StatusCode::RECOVERABLE;
-    }
-    
-    runNum = evtInfo->event_ID()->run_number();
-  }
-
-
   // retrieve the container of Vertex
   const VxContainer* vxContainer(0);
   sc = evtStore()->retrieve(vxContainer, m_vxCandidatesName);
@@ -264,7 +248,7 @@ const CaloClusterContainer * gmsbPreparationTool::selectedCaloClusters() {
 }
 
   /** container preparation */
-StatusCode gmsbPreparationTool::electronPreparation( std::string key, int runNum, unsigned int nPV ) {
+StatusCode gmsbPreparationTool::electronPreparation( std::string key, unsigned int runNum, unsigned int nPV ) {
   ATH_MSG_DEBUG("in electronPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 
@@ -302,7 +286,7 @@ StatusCode gmsbPreparationTool::electronPreparation( std::string key, int runNum
   return sc;
 }
 
-StatusCode gmsbPreparationTool::photonPreparation( std::string key, int runNum, unsigned int nPV ) {
+StatusCode gmsbPreparationTool::photonPreparation( std::string key, unsigned int runNum, unsigned int nPV ) {
   ATH_MSG_DEBUG("in photonPreparation() ");
   StatusCode sc = StatusCode::SUCCESS;
 

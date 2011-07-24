@@ -53,7 +53,7 @@ public:
 
   /** Overriding initialize, finalize, and execute */
   virtual StatusCode initialize();
-  virtual StatusCode execute();
+  virtual StatusCode execute(unsigned int runNum);
   virtual StatusCode finalize();
 
   /** access to containers after preparation */
@@ -85,10 +85,10 @@ private:
 
   /** container preparation */
   StatusCode electronPreparation( std::string key, 
-				  int runNum, 
+				  unsigned int runNum, 
 				  unsigned int nPV );
   StatusCode photonPreparation( std::string key, 
-				int runNum,
+				unsigned int runNum,
 				unsigned int nPV );
   StatusCode muonPreparation( std::string key );
   StatusCode tauJetPreparation( std::string key );
@@ -140,9 +140,6 @@ private:
 
   /** on first event */
   bool m_first;
-
-  /** run number to use for OQ: -1 means use event run number */
-  int m_OQRunNum;
 
 };
 

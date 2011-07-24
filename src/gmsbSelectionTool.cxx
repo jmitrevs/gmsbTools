@@ -136,7 +136,7 @@ gmsbSelectionTool::~gmsbSelectionTool()
 {}
 
 bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, 
-				    int runNum, 
+				    unsigned int runNum, 
 				    unsigned int nPV ) const
 {
   ATH_MSG_DEBUG("in electron isSelected(), with electron = " << electron);
@@ -218,7 +218,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 
   // check OQ
   bool badOQ = electron->isgoodoq(egammaPID::BADCLUSELECTRON); // 0 == good
-  if (m_isMC && runNum > 180481) {
+  if (m_isMC && runNum > LAST_RUN_BEFORE_HOLE) {
     badOQ = badOQ || 
       m_OQ.checkOQClusterElectron(runNum, electron->cluster()->eta(), electron->cluster()->phi())==3;
   }
@@ -271,7 +271,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 }
 
 bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, 
-				    int runNum,
+				    unsigned int runNum,
 				    unsigned int nPV) const 
 {
   ATH_MSG_DEBUG("in photon isSelected()");
@@ -357,7 +357,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 
   // check OQ
   bool badOQ = photon->isgoodoq(egammaPID::BADCLUSPHOTON); // 0 == good
-  if (m_isMC && runNum > 180481) {
+  if (m_isMC && runNum > LAST_RUN_BEFORE_HOLE) {
     badOQ = badOQ || 
       m_OQ.checkOQClusterPhoton(runNum, photon->cluster()->eta(), photon->cluster()->phi(), photon->conversion())==3;
   }

@@ -41,6 +41,9 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 #include <map>
 #include <vector>
 
+
+const unsigned int LAST_RUN_BEFORE_HOLE = 180481;
+
 /** Interface ID */  
 static const InterfaceID IID_gmsbSelectionTool("gmsbSelectionTool", 1, 0);
 
@@ -61,10 +64,10 @@ public:
 
   /** pre-selections */
   bool isSelected( const Analysis::Electron * electron, 
-		   int runNum,
+		   unsigned int runNum,
 		   unsigned int nPV) const;
   bool isSelected( const Analysis::Photon * photon, 
-		   int runNum,
+		   unsigned int runNum,
 		   unsigned int nPV) const;
   bool isSelected( const Analysis::Muon * muon ) const;
   bool isSelected( const Analysis::TauJet * tauJet ) const;
