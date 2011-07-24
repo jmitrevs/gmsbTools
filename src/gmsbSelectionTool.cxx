@@ -218,7 +218,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 
   // check OQ
   bool badOQ = electron->isgoodoq(egammaPID::BADCLUSELECTRON); // 0 == good
-  if (m_isMC && runNum > LAST_RUN_BEFORE_HOLE) {
+  if (m_isMC) {
     badOQ = badOQ || 
       m_OQ.checkOQClusterElectron(runNum, electron->cluster()->eta(), electron->cluster()->phi())==3;
   }
@@ -357,7 +357,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 
   // check OQ
   bool badOQ = photon->isgoodoq(egammaPID::BADCLUSPHOTON); // 0 == good
-  if (m_isMC && runNum > LAST_RUN_BEFORE_HOLE) {
+  if (m_isMC) {
     badOQ = badOQ || 
       m_OQ.checkOQClusterPhoton(runNum, photon->cluster()->eta(), photon->cluster()->phi(), photon->conversion())==3;
   }

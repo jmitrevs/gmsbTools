@@ -42,8 +42,6 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 #include <vector>
 
 
-const unsigned int LAST_RUN_BEFORE_HOLE = 180481;
-
 /** Interface ID */  
 static const InterfaceID IID_gmsbSelectionTool("gmsbSelectionTool", 1, 0);
 
