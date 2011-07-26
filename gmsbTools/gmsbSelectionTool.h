@@ -143,6 +143,7 @@ private:
   double m_jetPt;
   double m_jetEta;
   double m_bJetLikelihood;
+  double m_rejNegEJets;		// reject jets with neg E
 
   /** caloCluster selection */
   double m_caloClusterE;

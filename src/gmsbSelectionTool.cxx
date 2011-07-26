@@ -101,6 +101,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   /** Jet selection */
   declareProperty("JetPt",          m_jetPt=20*GeV);
   declareProperty("JetEta",         m_jetEta=100);
+  declareProperty("rejectNegativeEnergyJets", m_rejNegEJets = true); 
   declareProperty("BJetLikelihood", m_bJetLikelihood=6.0);
 
 }
@@ -251,6 +252,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
     const EMShower* egdetail = electron->detail<EMShower>();
     float isol = 1000000;
     if(egdetail && pt > 0.0) {
+
       isol = CaloIsoCorrection::GetPtNPVCorrectedIsolation(nPV,
 							   energy,
 							   eta2,
@@ -393,6 +395,17 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
     const EMShower* egdetail = photon->detail<EMShower>();
     float isol = 1000000;
     if(egdetail && pt > 0.0) {
+      // ATH_MSG_DEBUG("arguments to GetPtNPVCorrectedIsolation: " << nPV << ", " <<
+      // 		    energy << ", " <<
+      // 		    eta2 << ", " <<
+      // 		    egdetail->parameter(egammaParameters::etap) << ", " <<
+      // 		    photon->cluster()->eta() << ", " <<
+      // 		    20 << ", " <<
+      // 		    m_isMC << ", " <<
+      // 		    egdetail->etcone20() << ", " <<
+      // 		    photon->conversion() << ", " <<
+      // 		    CaloIsoCorrection::PHOTON);
+
       isol = CaloIsoCorrection::GetPtNPVCorrectedIsolation(nPV,
 							   energy,
 							   eta2,
@@ -416,23 +429,21 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
 {
   ATH_MSG_DEBUG("in muon isSelected(), with muon = " << muon);
 
-  bool select = false;
-  if ( !muon ) return select;
+  if ( !muon ) return false;
 
   if ( m_isAtlfast ) {
-    select = muon->pt()>m_muonPt && fabs(muon->eta())<m_muonEta;
-    return select;
+    return (muon->pt()>m_muonPt && fabs(muon->eta())<m_muonEta);
   }
 
   ATH_MSG_DEBUG("Here");
 
   // do ID cut
-  select = select && ((m_sel_combined && muon->isCombinedMuon()) ||
-		      (m_sel_seg_tag && muon->isLowPtReconstructedMuon()));
+  bool select = ((m_sel_combined && muon->isCombinedMuon()) ||
+		 (m_sel_seg_tag && muon->isLowPtReconstructedMuon()));
   
   select = select && muon->isLoose();
 
-  if (!select) return select;
+  if (!select) return false;
 
   ATH_MSG_DEBUG("Here 1");
 
@@ -443,16 +454,27 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
     ATH_MSG_DEBUG("Here 2a");
     m_muonSmear.SetSeed(int(1.e+5*fabs(muon->phi())));
     ATH_MSG_DEBUG("Here 2b");
-    m_muonSmear.Event(muon->muonExtrapolatedTrackParticle()->pt(),
-		      muon->inDetTrackParticle()->pt(),
-		      muon->pt(),
-		      muon->eta());
-    ATH_MSG_DEBUG("Here 2c");
-    pt = (muon->isCombinedMuon()) ? m_muonSmear.pTCB() : m_muonSmear.pTID();
+    ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
+		  << muon->inDetTrackParticle() << ", "
+		  << muon->pt() << ", "
+		  <<  muon->eta());
+
+    if (muon->isCombinedMuon()) {
+      m_muonSmear.Event(muon->muonExtrapolatedTrackParticle()->pt(),
+			muon->inDetTrackParticle()->pt(),
+			muon->pt(),
+			muon->eta());
+      pt = m_muonSmear.pTCB();
+    } else {
+      m_muonSmear.Event(muon->inDetTrackParticle()->pt(),
+			muon->eta(), "ID");
+      pt = m_muonSmear.pTID();
+    }
   }
     
   ATH_MSG_DEBUG("Here3");
 
+  // select must be true before in order to get here, so can overwrite
   select = pt >m_muonPt && fabs(muon->eta())<m_muonEta;
 
   // do iso cut
@@ -464,9 +486,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
     }
   }
 
-  ATH_MSG_DEBUG("Here4");
-
-  ATH_MSG_DEBUG("Here5");
+  if (!select) return false;
 
   // do track cuts
   const Rec::TrackParticle* id_trk_part = muon->inDetTrackParticle();
@@ -476,26 +496,30 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   if(id_trk_sum->get(Trk::expectBLayerHit) && id_trk_sum->get(Trk::numberOfBLayerHits) == 0) return false;
   if (id_trk_sum->get(Trk::numberOfPixelHits) + id_trk_sum->get(Trk::numberOfPixelDeadSensors) <= 1) return false;
   if (id_trk_sum->get(Trk::numberOfSCTHits) + id_trk_sum->get(Trk::numberOfSCTDeadSensors) < 6) return false;
-  if (id_trk_sum->get(Trk::numberOfPixelHoles) + id_trk_sum->get(Trk::numberOfSCTHoles) >= 2) return false;
+  if (id_trk_sum->get(Trk::numberOfPixelHoles) + id_trk_sum->get(Trk::numberOfSCTHoles) >= 3) return false;
   const int nTRTOutliers = id_trk_sum->get(Trk::numberOfTRTOutliers);
   const int nTRTTotal    = nTRTOutliers + id_trk_sum->get(Trk::numberOfTRTHits);
   const float trackEta   = id_trk_part->eta();
-  if (fabs(trackEta) < 1.9 && nTRTTotal <= 5) return false;
-  if (nTRTTotal > 5 && nTRTOutliers >= 0.9*nTRTTotal) return false;
-
-  ATH_MSG_DEBUG("Here6");
-
+  if (fabs(trackEta) < 1.9) {
+    select = (nTRTTotal > 5 &&  nTRTOutliers < 0.9 * nTRTTotal);
+  } else if (nTRTTotal > 5) {
+    select = nTRTOutliers < 0.9*nTRTTotal;
+  }
+  ATH_MSG_DEBUG("Here6, select = " << select);
+  
   return select;
 }
 
 bool gmsbSelectionTool::isSelected( const Jet* jet ) const
 {
-  bool select = false;
-  if ( !jet ) return select;
+  if ( !jet ) return false;
 
-  select = jet->pt() > m_jetPt && fabs(jet->eta()) < m_jetEta;
+  if (m_rejNegEJets && jet->e() < 0) {
+    return false;
+  }
 
-  return select;
+  return (jet->pt() > m_jetPt && fabs(jet->eta()) < m_jetEta);
+
 }
 
 bool gmsbSelectionTool::isSelected( const Rec::TrackParticle * trackParticle ) const
