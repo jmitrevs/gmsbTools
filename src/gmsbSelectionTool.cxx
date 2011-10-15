@@ -33,8 +33,8 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 				      const std::string& name, 
 				      const IInterface* parent )
   : AthAlgTool( type, name, parent ), 
-    m_userdatasvc("UserDataSvc", name),
-    m_muonSmear("staco")
+    m_userdatasvc("UserDataSvc", name)
+    //    m_muonSmear("staco")
 {
   declareInterface<gmsbSelectionTool>( this );
 
@@ -119,7 +119,7 @@ StatusCode gmsbSelectionTool::initialize() {
   m_eRescale.useDefaultCalibConstants();
   // m_eRescale.SetRandomSeed(m_randomSeed);
 
-  m_muonSmear.UseScale(1);
+  // m_muonSmear.UseScale(1);
 
   return StatusCode::SUCCESS;
 }
@@ -431,15 +431,15 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
 
   if ( !muon ) return false;
 
-  if ( m_isAtlfast ) {
+  //if ( m_isAtlfast ) {
     return (muon->pt()>m_muonPt && fabs(muon->eta())<m_muonEta);
-  }
+    //}
 
   ATH_MSG_DEBUG("Here");
 
   // do ID cut
   bool select = ((m_sel_combined && muon->isCombinedMuon()) ||
-		 (m_sel_seg_tag && muon->isLowPtReconstructedMuon()));
+		 (m_sel_seg_tag));
   
   select = select && muon->isLoose();
 
@@ -449,28 +449,28 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
 
   double pt = (muon->isCombinedMuon()) ? muon->pt() : muon->inDetTrackParticle()->pt(); ;
 
-  ATH_MSG_DEBUG("Here 2");
-  if (m_isMC && m_smearMC) {
-    ATH_MSG_DEBUG("Here 2a");
-    m_muonSmear.SetSeed(int(1.e+5*fabs(muon->phi())));
-    ATH_MSG_DEBUG("Here 2b");
-    ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
-		  << muon->inDetTrackParticle() << ", "
-		  << muon->pt() << ", "
-		  <<  muon->eta());
+  // ATH_MSG_DEBUG("Here 2");
+  // if (m_isMC && m_smearMC) {
+  //   ATH_MSG_DEBUG("Here 2a");
+  //   m_muonSmear.SetSeed(int(1.e+5*fabs(muon->phi())));
+  //   ATH_MSG_DEBUG("Here 2b");
+  //   ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
+  // 		  << muon->inDetTrackParticle() << ", "
+  // 		  << muon->pt() << ", "
+  // 		  <<  muon->eta());
 
-    if (muon->isCombinedMuon()) {
-      m_muonSmear.Event(muon->muonExtrapolatedTrackParticle()->pt(),
-			muon->inDetTrackParticle()->pt(),
-			muon->pt(),
-			muon->eta());
-      pt = m_muonSmear.pTCB();
-    } else {
-      m_muonSmear.Event(muon->inDetTrackParticle()->pt(),
-			muon->eta(), "ID");
-      pt = m_muonSmear.pTID();
-    }
-  }
+  //   if (muon->isCombinedMuon()) {
+  //     m_muonSmear.Event(muon->muonExtrapolatedTrackParticle()->pt(),
+  // 			muon->inDetTrackParticle()->pt(),
+  // 			muon->pt(),
+  // 			muon->eta());
+  //     pt = m_muonSmear.pTCB();
+  //   } else {
+  //     m_muonSmear.Event(muon->inDetTrackParticle()->pt(),
+  // 			muon->eta(), "ID");
+  //     pt = m_muonSmear.pTID();
+  //   }
+  // }
     
   ATH_MSG_DEBUG("Here3");
 
@@ -486,6 +486,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
     }
   }
 
+  ATH_MSG_DEBUG("Here4");
+
   if (!select) return false;
 
   // do track cuts
@@ -493,6 +495,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   if(!id_trk_part) return false;
   const Trk::TrackSummary* id_trk_sum = id_trk_part->trackSummary();
   if(!id_trk_sum) return false;
+  ATH_MSG_DEBUG("Here4");
+
   if(id_trk_sum->get(Trk::expectBLayerHit) && id_trk_sum->get(Trk::numberOfBLayerHits) == 0) return false;
   if (id_trk_sum->get(Trk::numberOfPixelHits) + id_trk_sum->get(Trk::numberOfPixelDeadSensors) <= 1) return false;
   if (id_trk_sum->get(Trk::numberOfSCTHits) + id_trk_sum->get(Trk::numberOfSCTDeadSensors) < 6) return false;
@@ -528,8 +532,6 @@ bool gmsbSelectionTool::isSelected( const Rec::TrackParticle * trackParticle ) c
   if ( !trackParticle ) return select;
   select = trackParticle->pt() > m_trackParticlePt; 
 
-  if ( m_isAtlfast ) return select;
-
   return select;
 }
 
@@ -539,28 +541,26 @@ bool gmsbSelectionTool::isSelected( const CaloCluster* caloCluster ) const
   if ( !caloCluster ) return select;
   select = caloCluster->e() > m_caloClusterE;
 
-  if ( m_isAtlfast ) return select;
-
   return select;
 }
 
 bool gmsbSelectionTool::isSelected( const Analysis::TauJet * tauJet ) const {
 
   bool select = false;
-  if ( !tauJet ) return select;
+  // if ( !tauJet ) return select;
 
-  int numTrack = tauJet->numTrack();
-  select = tauJet->pt()>m_tauJetPt &&
-           fabs(tauJet->eta())<m_tauJetEta &&
-           fabs(tauJet->charge())==1.0 &&
-           (numTrack==1 || numTrack==3);
+  // int numTrack = tauJet->numTrack();
+  // select = tauJet->pt()>m_tauJetPt &&
+  //          fabs(tauJet->eta())<m_tauJetEta &&
+  //          fabs(tauJet->charge())==1.0 &&
+  //          (numTrack==1 || numTrack==3);
 
-  const Analysis::TauPID* tauId = tauJet->tauID();
-  if ( tauId ) {
-    select = select &&
-             tauId->discriminant( TauJetParameters::Likelihood ) > m_tauJetLikelihood &&
-             tauId->discriminant( TauJetParameters::TauElTauLikelihood )< m_tauElTauLikelihood;
-  }
+  // const Analysis::TauPID* tauId = tauJet->tauID();
+  // if ( tauId ) {
+  //   select = select &&
+  //            tauId->discriminant( TauJetParameters::Likelihood ) > m_tauJetLikelihood &&
+  //            tauId->discriminant( TauJetParameters::TauElTauLikelihood )< m_tauElTauLikelihood;
+  // }
 
   return select;
 

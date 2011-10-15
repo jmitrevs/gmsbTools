@@ -32,7 +32,7 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 #include "egammaAnalysisUtils/checkOQ.h"
 #include "egammaAnalysisUtils/EnergyRescaler.h"
 
-#include "MuonMomentumCorrections/SmearingClass.h"
+//#include "MuonMomentumCorrections/SmearingClass.h"
 
 #include "AthenaKernel/IUserDataSvc.h"
 
@@ -160,7 +160,7 @@ private:
 
   mutable eg2011::EnergyRescaler m_eRescale;
 
-  mutable SmearingClass m_muonSmear;
+  //mutable SmearingClass m_muonSmear;
 
 };
 
