@@ -98,7 +98,7 @@ private:
   /** Electron selection */
   double m_electronPt;
   double m_electronEta;
-  int    m_electronIsEM;
+  int    m_electronID;
   bool   m_doOldElectronIsolation;
   bool   m_doNewElectronIsolation;
   bool   m_authorEgammaOnly;
@@ -111,7 +111,7 @@ private:
   /** Photon selection */
   double m_photonPt;
   double m_photonEta;
-  double m_photonIsEM;
+  int    m_photonID;
   bool   m_doOldPhotonIsolation;
   bool   m_doNewPhotonIsolation;
   bool   m_doPhotonEtaWindCut;/// apply (or not) eta cut in bad region window  

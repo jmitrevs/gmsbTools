@@ -57,7 +57,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   /** Electron selection */
   declareProperty("ElectronPt",       m_electronPt=25*GeV);
   declareProperty("ElectronEta",      m_electronEta=2.47);
-  declareProperty("ElectronIsEM", m_electronIsEM = egammaPID::ElectronMedium);
+  declareProperty("ElectronID", m_electronID = egammaPID::ElectronIDMediumPP);
   declareProperty("AuthorEgammaOnly", m_authorEgammaOnly=true);
   declareProperty("DoElectronEtaWindowCut", m_doElectronEtaWindCut = true);
   declareProperty("ElectronEtaWindowMin", m_electronEtaWindMin = 1.37);
@@ -70,7 +70,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   /** Photon selection */
   declareProperty("PhotonPt",   m_photonPt=25*GeV);
   declareProperty("PhotonEta",  m_photonEta=1.81);
-  declareProperty("PhotonIsEM", m_photonIsEM = egammaPID::PhotonTightAR);
+  declareProperty("PhotonID", m_photonID = egammaPID::PhotonIDTightAR);
   declareProperty("DoPhotonEtaWindowCut", m_doPhotonEtaWindCut = true);
   declareProperty("PhotonEtaWindowMin", m_photonEtaWindMin = 1.37);
   declareProperty("PhotonEtaWindowMax", m_photonEtaWindMax = 1.52);
@@ -203,7 +203,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
     return select;
   }
 
-  select = electron->isElectron(m_electronIsEM); 
+  select = electron->passID(static_cast<egammaPID::egammaIDQuality>(m_electronID)); 
 
   select = select && pt > m_electronPt && absClusEta <m_electronEta;
   ATH_MSG_DEBUG("select is now " << select);
@@ -344,7 +344,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
     return select;
   }
  
-  select = pt > m_photonPt && absClusEta < m_photonEta && photon->isPhoton(m_photonIsEM);
+  select = pt > m_photonPt && absClusEta < m_photonEta && photon->passID(static_cast<egammaPID::egammaIDQuality>(m_photonID)); 
+
 
   ATH_MSG_DEBUG("after pt, eta (= " << eta2 << "), and isEM cut, select = " << select);
 
@@ -431,21 +432,21 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
 
   if ( !muon ) return false;
 
-  //if ( m_isAtlfast ) {
+  if ( m_isAtlfast ) {
     return (muon->pt()>m_muonPt && fabs(muon->eta())<m_muonEta);
-    //}
+  }
 
   ATH_MSG_DEBUG("Here");
 
   // do ID cut
   bool select = ((m_sel_combined && muon->isCombinedMuon()) ||
-		 (m_sel_seg_tag));
+		 (m_sel_seg_tag && muon->isSegmentTaggedMuon()));
   
   select = select && muon->isLoose();
 
   if (!select) return false;
 
-  ATH_MSG_DEBUG("Here 1");
+  // ATH_MSG_DEBUG("Here 1");
 
   double pt = (muon->isCombinedMuon()) ? muon->pt() : muon->inDetTrackParticle()->pt(); ;
 
@@ -472,7 +473,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   //   }
   // }
     
-  ATH_MSG_DEBUG("Here3");
+  // ATH_MSG_DEBUG("Here3");
 
   // select must be true before in order to get here, so can overwrite
   select = pt >m_muonPt && fabs(muon->eta())<m_muonEta;
@@ -486,8 +487,6 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
     }
   }
 
-  ATH_MSG_DEBUG("Here4");
-
   if (!select) return false;
 
   // do track cuts
@@ -495,8 +494,6 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   if(!id_trk_part) return false;
   const Trk::TrackSummary* id_trk_sum = id_trk_part->trackSummary();
   if(!id_trk_sum) return false;
-  ATH_MSG_DEBUG("Here4");
-
   if(id_trk_sum->get(Trk::expectBLayerHit) && id_trk_sum->get(Trk::numberOfBLayerHits) == 0) return false;
   if (id_trk_sum->get(Trk::numberOfPixelHits) + id_trk_sum->get(Trk::numberOfPixelDeadSensors) <= 1) return false;
   if (id_trk_sum->get(Trk::numberOfSCTHits) + id_trk_sum->get(Trk::numberOfSCTDeadSensors) < 6) return false;
@@ -509,7 +506,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   } else if (nTRTTotal > 5) {
     select = nTRTOutliers < 0.9*nTRTTotal;
   }
-  ATH_MSG_DEBUG("Here6, select = " << select);
+  //ATH_MSG_DEBUG("Here6, select = " << select);
   
   return select;
 }
