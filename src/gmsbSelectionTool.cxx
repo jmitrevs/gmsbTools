@@ -38,7 +38,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 {
   declareInterface<gmsbSelectionTool>( this );
 
-  declareProperty("IsAtlfastData",          m_isAtlfast=false);
+  declareProperty("Atlfast",          m_isAtlfast=false);
 
   declareProperty("IsMC", m_isMC=false);
   declareProperty("SmearMC", m_smearMC = false);
@@ -69,7 +69,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 
   /** Photon selection */
   declareProperty("PhotonPt",   m_photonPt=25*GeV);
-  declareProperty("PhotonEta",  m_photonEta=1.81);
+  declareProperty("PhotonEta",  m_photonEta=2.37);
   declareProperty("PhotonID", m_photonID = egammaPID::PhotonIDTightAR);
   declareProperty("DoPhotonEtaWindowCut", m_doPhotonEtaWindCut = true);
   declareProperty("PhotonEtaWindowMin", m_photonEtaWindMin = 1.37);
