@@ -35,7 +35,7 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 //#include "MuonMomentumCorrections/SmearingClass.h"
 
 #include "AthenaKernel/IUserDataSvc.h"
-
+#include "GaudiKernel/ToolHandle.h"
 
 #include <string>
 #include <map>
@@ -44,6 +44,8 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 
 /** Interface ID */  
 static const InterfaceID IID_gmsbSelectionTool("gmsbSelectionTool", 1, 0);
+
+class IMCTruthClassifier;
 
 class gmsbSelectionTool : public AthAlgTool {
 
@@ -88,6 +90,7 @@ private:
 
   /** MC */
   bool m_isMC;
+  bool m_doTruth;		// require electron and photon to be true
   bool m_smearMC;
   bool m_MCHasConstantTerm;
   // int m_randomSeed; // use SUSY prescription
@@ -154,6 +157,8 @@ private:
 
   // user data
   ServiceHandle<IUserDataSvc> m_userdatasvc;
+
+  ToolHandle<IMCTruthClassifier> m_MCTruthClassifier;
 
   // the OQ utility
   egammaOQ m_OQ;

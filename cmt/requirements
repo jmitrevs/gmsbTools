@@ -31,6 +31,7 @@ use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/e
 private
 use AnalysisUtils               AnalysisUtils-*                 PhysicsAnalysis/AnalysisCommon
 use EventInfo                   EventInfo-*                     Event
+use MCTruthClassifier  MCTruthClassifier-*      PhysicsAnalysis
 end_private
 
 apply_pattern dual_use_library files=*.cxx

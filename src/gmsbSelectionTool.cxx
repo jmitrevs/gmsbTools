@@ -19,13 +19,12 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 
 #include "egammaAnalysisUtils/CaloIsoCorrection.h"
 
+#include "MCTruthClassifier/IMCTruthClassifier.h"
+#include "MCTruthClassifier/MCTruthClassifierDefs.h"
+
 #include <sstream>
 #include <iomanip>
 #include <iostream>
-
-//using namespace Analysis;
-//using namespace Rec;
-//using namespace std;
 
 
 //------------------------------------------------------------------------------
@@ -47,6 +46,11 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("EgammaScaleShift", m_egammaScaleShift = eg2011::EnergyRescaler::NOMINAL);
   declareProperty("MCEtconeScale", m_mcEtconeScale = 1.5);
   declareProperty("MCUseAltIsoCorrection", m_useAltIsoCorrection = false);
+
+  declareProperty("MCTruthClassifier", m_MCTruthClassifier);
+
+  declareProperty("DoTruth", m_doTruth = false);
+
 
   /** caloCluster selection */
   declareProperty("CaloClusterE", m_caloClusterE=1.0*GeV);
@@ -116,6 +120,16 @@ StatusCode gmsbSelectionTool::initialize() {
     return StatusCode::FAILURE;
   }
   
+  if (m_isMC && m_doTruth) {
+    if(m_MCTruthClassifier.retrieve().isFailure()) {
+      ATH_MSG_ERROR("Failed to retrieve " << m_MCTruthClassifier);
+      return StatusCode::FAILURE; // why success?
+    }
+    else {
+      ATH_MSG_DEBUG("Retrieved MCTruthClassifier " << m_MCTruthClassifier);   
+    }
+  }
+
   m_eRescale.useDefaultCalibConstants();
   // m_eRescale.SetRandomSeed(m_randomSeed);
 
@@ -149,6 +163,13 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
   if ( m_authorEgammaOnly ) select = select && electron->author(egammaParameters::AuthorElectron);
 
   if (!select) return false;
+
+  if (m_isMC && m_doTruth) {
+    std::pair<MCTruthPartClassifier::ParticleType, MCTruthPartClassifier::ParticleOrigin> res =
+      m_MCTruthClassifier->particleTruthClassifier(electron);
+    if (res.first != MCTruthPartClassifier::IsoElectron) return false;
+  }
+  
 
   const double eta2 = electron->cluster()->etaBE(2);
   const double absClusEta = fabs(eta2);
@@ -283,6 +304,14 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 
   const double eta2 = photon->cluster()->etaBE(2);
   const double absClusEta = fabs(eta2);
+
+    
+  if (m_isMC && m_doTruth) {
+    std::pair<MCTruthPartClassifier::ParticleType, MCTruthPartClassifier::ParticleOrigin> res =
+      m_MCTruthClassifier->particleTruthClassifier(photon);
+    if (res.first != MCTruthPartClassifier::IsoPhoton) return false;
+  }
+
 
   double energy;
   if (m_isMC) {
