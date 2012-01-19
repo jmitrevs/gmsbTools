@@ -8,7 +8,7 @@ use GaudiInterface     GaudiInterface-*		External
 use AthenaBaseComps    AthenaBaseComps-*   	Control
 use AthenaKernel       AthenaKernel-*           Control
 
-use AtlasCLHEP			AtlasCLHEP-00-*			External
+use AtlasROOT                   AtlasROOT-*                     External
 
 use TrkSegment			TrkSegment-*			Tracking/TrkEvent
 
@@ -29,9 +29,12 @@ use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/e
 
 
 private
+use AtlasCLHEP			AtlasCLHEP-*			External
 use AnalysisUtils               AnalysisUtils-*                 PhysicsAnalysis/AnalysisCommon
 use EventInfo                   EventInfo-*                     Event
 use MCTruthClassifier  MCTruthClassifier-*      PhysicsAnalysis
+use GeneratorObjects   GeneratorObjects-*       Generators
+use McParticleEvent    McParticleEvent-*        PhysicsAnalysis/TruthParticleID
 end_private
 
 apply_pattern dual_use_library files=*.cxx
@@ -44,3 +47,5 @@ apply_tag  ROOTSTLDictLibs
 apply_tag  ROOTGraphicsLibs
 apply_tag  ROOTTableLibs
 
+private
+macro_append gmsbTools_use_linkopts " -lEG"
