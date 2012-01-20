@@ -7,8 +7,6 @@
 
 #include "TDatabasePDG.h"
 
-#include <pair>
-
 class Jet;
 namespace Reco  { class ITrackToVertex; }
 

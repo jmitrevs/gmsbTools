@@ -150,7 +150,7 @@ HepMC::GenVertex* TruthStudies::getMCHardInteraction(const HepMC::GenEvent *cons
 // prints the decay products of one vertex, calling itself to to
 // further decay of SUSY particles, t, W, Z, higgses, (gamma? not now).
 // Doesn't continue into Geant particles 
-std::pair<int, double> TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces, int haveSeen)
+void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces, int haveSeen)
 {
   std::vector<const HepMC::GenVertex *> decayVertices;
   std::vector<int> pids;
@@ -172,14 +172,14 @@ std::pair<int, double> TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx
 
       if (haveSeen == 1000022) { // neutralino
 	const HepMC::FourVector p = (*outit)->momentum();
-	const double newPt = p.perp()
+	const double newPt = p.perp();
 	if (abspid == 23) { // Z
 	  if (newPt > pt) { // take the highest pT one 
 	    newHaveSeen = abspid;
 	    pt = newPt;
 	  }
 	} else if (abspid == 22) {
-	  if (p.perp() > pt) { // take the highest pT one 
+	  if (newPt > pt) { // take the highest pT one 
 	    newHaveSeen = abspid;
 	    pt = newPt;
 	  }
@@ -188,7 +188,7 @@ std::pair<int, double> TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx
 	if (abspid == 24) {
 	  newHaveSeen = abspid;
 	}
-      } else if (haveSeen = 23 || haveSeen == 24) {
+      } else if (haveSeen == 23 || haveSeen == 24) {
 	if (abspid == 11 || abspid == 13 || abspid == 15) {
 	  newHaveSeen = abspid;
 	} else if (abspid >= 1 && abspid <= 6) {
@@ -197,7 +197,7 @@ std::pair<int, double> TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx
 	  abspid =1;
 	}
       } else {
-	if (abspid == 1000022 || absbid == 1000024) {
+	if (abspid == 1000022 || abspid == 1000024) {
 	  newHaveSeen = abspid;
 	}
       }
@@ -262,7 +262,7 @@ std::pair<int, double> TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx
 	}
       }
       // have to stop the case when you have seen both a gamma and a Z
-      if (newNaveSeen == 22 && pids.at(index) == 23) {
+      if (newHaveSeen == 22 && pids.at(index) == 23) {
 	pids[index] = 22;
       }
       FollowDecayTree(decayVertices.at(index), index+extraSpaces, pids.at(index));
@@ -359,6 +359,8 @@ void TruthStudies::FillEventType()
     ATH_MSG_DEBUG("Have the following unexpected number of decay types: " << m_decays.size());
     return;
   }
+
+  decayType first, second;
 
   if (m_decays.at(0) <= m_decays.at(1)) {
     first = m_decays.at(0);
