@@ -7,6 +7,8 @@
 
 #include "TDatabasePDG.h"
 
+#include <pair>
+
 class Jet;
 namespace Reco  { class ITrackToVertex; }
 
@@ -26,67 +28,67 @@ class TruthStudies:public AthAlgTool {
 public:
 
   enum EventType {
-    unknown = -999,
+    unknown = 0,
  
-    Wenugamma = 0,
+    Wenugamma = 1,
     Wmunugamma,
     Wtaunugamma,
     Wjjgamma,
     
-    WenuWenu, // = 4
+    WenuWenu, // = 5
     WmunuWenu,
     WtaunuWenu,
     WjjWenu,
     
-    WmunuWmunu, // = 8
+    WmunuWmunu, // = 9
     WtaunuWmunu,
     WjjWmunu,
     
-    WtaunuWtaunu, // = 11
+    WtaunuWtaunu, // = 12
     WjjWtaunu,
     
-    WjjWjj, // = 13
+    WjjWjj, // = 14
     
-    WenuZee, // = 14
+    WenuZee, // = 15
     WmunuZee,
     WtaunuZee,
     WjjZee,
     
-    WenuZmumu, // = 18
+    WenuZmumu, // = 19
     WmunuZmumu,
     WtaunuZmumu,
     WjjZmumu,
     
-    WenuZtautau, // = 22
+    WenuZtautau, // = 23
     WmunuZtautau,
     WtaunuZtautau,
     WjjZtautau,
     
-    WenuZjj, // = 26
+    WenuZjj, // = 27
     WmunuZjj,
     WtaunuZjj,
     WjjZjj,
     
-    Zeegamma, // 30
+    Zeegamma, // 31
     Zmumugamma,
     Ztautaugamma,
     Zjjgamma,
 
-    ZeeZee, // = 34
+    ZeeZee, // = 35
     ZmumuZee,
     ZtautauZee,
     ZjjZee,
     
-    ZmumuZmumu, // = 38
+    ZmumuZmumu, // = 39
     ZtautauZmumu,
     ZjjZmumu,
     
-    ZtautauZtautau, // = 41
+    ZtautauZtautau, // = 42
     ZjjZtautau,
     
-    ZjjZjj, // = 43
+    ZjjZjj, // = 44
 
-    gammagamma, // 44
+    gammagamma, // 45
 
     numEventTypes
   };
@@ -120,13 +122,15 @@ private:
     Wjj
   };
 
-  void FillEventType(decayType d1, decayType d2);
+  void FillEventType();
 
   HepMC::GenVertex* getMCHardInteraction(const HepMC::GenEvent *const ge) const;
 
-  void FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces=0);
+  // haveSeen is the pdgid of what has been seen 
+  // also determines the event type
+  void FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces=0, int haveSeen = 0);
 
-   // also adds the pT of each particle
+   // also adds the pT of each particle. (Doesn't deterimine the event type)
   void FollowDecayTreeAnnotated(const HepMC::GenVertex *vtx, int extraSpaces=0) const;
 
   void DumpEntireTree(const HepMC::GenEvent *ge) const;
@@ -150,7 +154,11 @@ private:
   bool m_useAnnotated;
   bool m_dumpEntireTree;
 
+  // the overall event type
   EventType m_type;
+
+  // where we classify the decay types
+  std::vector<decayType> m_decays;
 
 };
 

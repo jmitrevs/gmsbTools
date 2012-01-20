@@ -45,6 +45,9 @@ StatusCode TruthStudies::execute()
 
   StatusCode sc = StatusCode::SUCCESS;
   
+  m_decays.clear();
+  m_type = unknown;
+
   const HepMC::GenEvent *ge = 0;
 
   /** get the MC truth particle AOD or ESD container from StoreGate */
@@ -83,7 +86,7 @@ StatusCode TruthStudies::execute()
   // //const unsigned lbNum = evtInfo->event_ID()->lumi_block();
   // //const unsigned evNum = evtInfo->event_ID()->event_number();
 
-
+  
   //mLog <<MSG::DEBUG << "ge = " << (unsigned int) ge << endreq;
 
   const HepMC::GenVertex *pvtx = NULL;
@@ -116,6 +119,8 @@ StatusCode TruthStudies::execute()
     
     if (m_dumpEntireTree) DumpEntireTree(ge);
 
+    FillEventType();
+
   }
   
   return StatusCode::SUCCESS;
@@ -145,32 +150,122 @@ HepMC::GenVertex* TruthStudies::getMCHardInteraction(const HepMC::GenEvent *cons
 // prints the decay products of one vertex, calling itself to to
 // further decay of SUSY particles, t, W, Z, higgses, (gamma? not now).
 // Doesn't continue into Geant particles 
-void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces)
+std::pair<int, double> TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces, int haveSeen)
 {
   std::vector<const HepMC::GenVertex *> decayVertices;
+  std::vector<int> pids;
+
+  int newHaveSeen = haveSeen;
+  double pt = 0; 		// for precedence, take higher pT one
 
   for (HepMC::GenVertex::particles_in_const_iterator outit = vtx->particles_out_const_begin();
        outit != vtx->particles_out_const_end();
        outit++) {
     if (StatusGood((*outit)->status())) {
-      msg(MSG::INFO) << std::setw(11) << std::left << m_pdg.GetParticle((*outit)->pdg_id())->GetName();
+      const int pid = (*outit)->pdg_id();
+      int abspid = fabs(pid);
+      if (m_printDecayTree) {
+	msg(MSG::INFO) << std::setw(11) << std::left << m_pdg.GetParticle(pid)->GetName();
+      }
+
+      //msg(MSG::INFO) << std::setw(4) << std::right << round(p.perp()/GeV) << " ";
+
+      if (haveSeen == 1000022) { // neutralino
+	const HepMC::FourVector p = (*outit)->momentum();
+	const double newPt = p.perp()
+	if (abspid == 23) { // Z
+	  if (newPt > pt) { // take the highest pT one 
+	    newHaveSeen = abspid;
+	    pt = newPt;
+	  }
+	} else if (abspid == 22) {
+	  if (p.perp() > pt) { // take the highest pT one 
+	    newHaveSeen = abspid;
+	    pt = newPt;
+	  }
+	}
+      } else if (haveSeen == 1000024) {
+	if (abspid == 24) {
+	  newHaveSeen = abspid;
+	}
+      } else if (haveSeen = 23 || haveSeen == 24) {
+	if (abspid == 11 || abspid == 13 || abspid == 15) {
+	  newHaveSeen = abspid;
+	} else if (abspid >= 1 && abspid <= 6) {
+	  newHaveSeen = 1; // jet
+	  // just to make it easier
+	  abspid =1;
+	}
+      } else {
+	if (abspid == 1000022 || absbid == 1000024) {
+	  newHaveSeen = abspid;
+	}
+      }
+
       const HepMC::GenVertex *nextVertex = FindNextVertex(*outit);
       if (nextVertex) {
-	decayVertices.push_back(FindNextVertex(*outit));
-      } else if ((*outit)->pdg_id() == 22) {
-	//CalcTruthStudies((*outit)->momentum());
+	decayVertices.push_back(nextVertex);
+	pids.push_back(abspid);
       }
     }
   }
-  msg(MSG::INFO) << endreq;
+
+  // can now determine what needs to be sent down of the event type
+  if (haveSeen == 1000022 && newHaveSeen == 22) {
+    m_decays.push_back(gamma);
+  } else if (haveSeen == 23) {
+    switch (newHaveSeen) {
+    case 1:
+      m_decays.push_back(Zjj);
+      break;
+    case 11:
+      m_decays.push_back(Zee);
+      break;
+    case 13:
+      m_decays.push_back(Zmumu);
+      break;
+    case 15:
+      m_decays.push_back(Ztautau);
+      break;
+    default:
+      ATH_MSG_WARNING("Unexpected combination of Z haveSeen and newHaveSeen = " << newHaveSeen);
+      break;
+    }
+  } else if (haveSeen == 24) {
+    switch (newHaveSeen) {
+    case 1:
+      m_decays.push_back(Wjj);
+      break;
+    case 11:
+      m_decays.push_back(Wenu);
+      break;
+    case 13:
+      m_decays.push_back(Wmunu);
+      break;
+    case 15:
+      m_decays.push_back(Wtaunu);
+      break;
+    default:
+      ATH_MSG_WARNING("Unexpected combination of W haveSeen and newHaveSeen = " << newHaveSeen);
+      break;
+    }
+  }
+
+  if (m_printDecayTree) msg(MSG::INFO) << endreq;
   for (int i = decayVertices.size(); i > 0; --i) {
     int index = i-1;
     if (decayVertices.at(index) != NULL) {
-      msg(MSG::INFO) << "                 \t";
-      for (int j = 0; j < index+extraSpaces; j++) {
-	msg(MSG::INFO) << "                ";
+      if (m_printDecayTree) {
+	msg(MSG::INFO) << "                 \t";
+	for (int j = 0; j < index+extraSpaces; j++) {
+	  msg(MSG::INFO) << "                ";
+	}
       }
-      FollowDecayTree(decayVertices.at(index), index+extraSpaces);
+      // have to stop the case when you have seen both a gamma and a Z
+      if (newNaveSeen == 22 && pids.at(index) == 23) {
+	pids[index] = 22;
+      }
+      FollowDecayTree(decayVertices.at(index), index+extraSpaces, pids.at(index));
     }
   }
 }
@@ -182,30 +277,37 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces)
 void TruthStudies::FollowDecayTreeAnnotated(const HepMC::GenVertex *vtx, int extraSpaces) const
 {
   std::vector<const HepMC::GenVertex *> decayVertices;
-  
+
   //std::cout << "Working on vertex with barcode: " << vtx->barcode() << std::endl;
 
   for (HepMC::GenVertex::particles_in_const_iterator outit = vtx->particles_out_const_begin();
        outit != vtx->particles_out_const_end();
        outit++) {
-    //    if (StatusGood((*outit)->status())) {
-    if (1) {
-
-      HepMC::FourVector p = (*outit)->momentum();
-      //msg(MSG::INFO) << std::setw(4) << std::right << round(p.perp()/GeV) << " ";
-      msg(MSG::INFO) << std::setw(4) << std::right << (*outit)->status() << " ";
-      msg(MSG::INFO) << std::setw(11) << std::left << m_pdg.GetParticle((*outit)->pdg_id())->GetName();
-      decayVertices.push_back(FindNextVertex(*outit));
+    if (StatusGood((*outit)->status())) {
+    //if (1) {
+      const int pid = (*outit)->pdg_id();
+      if (m_printDecayTree) {
+	HepMC::FourVector p = (*outit)->momentum();
+	//msg(MSG::INFO) << std::setw(4) << std::right << round(p.perp()/GeV) << " ";
+	msg(MSG::INFO) << std::setw(4) << std::right << (*outit)->status() << " ";
+	msg(MSG::INFO) << std::setw(11) << std::left << m_pdg.GetParticle(pid)->GetName();
+      }
+      const HepMC::GenVertex *nextVertex = FindNextVertex(*outit);
+      if (nextVertex) {
+	decayVertices.push_back(nextVertex);
+      }
     }
   }
   // msg(MSG::INFO) << "\t vertex = " << vtx->barcode();
-  msg(MSG::INFO) << endreq;
+  if (m_printDecayTree) msg(MSG::INFO) << endreq;
   for (int i = decayVertices.size(); i > 0; --i) {
     int index = i-1;
     if (decayVertices.at(index) != NULL) {
-      msg(MSG::INFO) << "                 \t";
-      for (int j = 0; j < index+extraSpaces; j++) {
-	msg(MSG::INFO) << "                ";
+      if (m_printDecayTree) {
+	msg(MSG::INFO) << "                 \t";
+	for (int j = 0; j < index+extraSpaces; j++) {
+	  msg(MSG::INFO) << "                ";
+	}
       }
       FollowDecayTreeAnnotated(decayVertices.at(index), index+extraSpaces);
     }
@@ -250,18 +352,20 @@ void TruthStudies::DumpEntireTree(const HepMC::GenEvent *ge) const
 }
 
 
-void TruthStudies::FillEventType(decayType d1, decayType d2)
+void TruthStudies::FillEventType()
 {
 
-  decayType first;
-  decayType second;
+  if (m_decays.size() != 2) {
+    ATH_MSG_DEBUG("Have the following unexpected number of decay types: " << m_decays.size());
+    return;
+  }
 
-  if (d1 <= d2) {
-    first = d1;
-    second = d2;
+  if (m_decays.at(0) <= m_decays.at(1)) {
+    first = m_decays.at(0);
+    second = m_decays.at(1);
   } else {
-    first = d2;
-    second = d1;
+    first = m_decays.at(1);
+    second = m_decays.at(0);
   }
 
   switch (first) {
