@@ -14,6 +14,7 @@
 #include "FourMomUtils/P4Helpers.h"
 #include "GeneratorObjects/McEventCollection.h"
 
+#include <iostream>
 
 /////////////////////////////////////////////////////////////////////////////
 TruthStudies::TruthStudies(const std::string& type,
@@ -27,7 +28,7 @@ TruthStudies::TruthStudies(const std::string& type,
   declareProperty("McEventCollection", m_mcEventCollectionName = "TruthEvent");
   declareProperty("PrintDecayTree", m_printDecayTree = false);
   declareProperty("UseAnnotated", m_useAnnotated = false);
-  declareProperty("DumpEntierTree", m_dumpEntireTree = false);
+  declareProperty("DumpEntireTree", m_dumpEntireTree = false);
 
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -96,6 +97,7 @@ StatusCode TruthStudies::execute()
     // mLog <<MSG::DEBUG << "pvtx from signal_process_vertex = " << (unsigned int) pvtx << endreq;
 
     if (!pvtx) {
+      ATH_MSG_DEBUG("signal_process_vertex() failed, using getMCHardInteraction");
       pvtx = getMCHardInteraction(ge);
       // mLog <<MSG::DEBUG << "pvtx from getMCHardInteraction = " << (unsigned int) pvtx << endreq;
     }
@@ -139,9 +141,9 @@ HepMC::GenVertex* TruthStudies::getMCHardInteraction(const HepMC::GenEvent *cons
 {
   for (int i = -1; i > -20; --i) {
     HepMC::GenVertex* vtx = ge->barcode_to_vertex(i);
-    if (vtx && vtx->particles_in_size() == 2) {
+    //if (vtx && vtx->particles_in_size() == 2) {
       return vtx;
-    }
+      //}
   }
   return NULL;
 }
@@ -283,8 +285,8 @@ void TruthStudies::FollowDecayTreeAnnotated(const HepMC::GenVertex *vtx, int ext
   for (HepMC::GenVertex::particles_in_const_iterator outit = vtx->particles_out_const_begin();
        outit != vtx->particles_out_const_end();
        outit++) {
-    if (StatusGood((*outit)->status())) {
-    //if (1) {
+    //if (StatusGood((*outit)->status())) {
+    if (1) {
       const int pid = (*outit)->pdg_id();
       if (m_printDecayTree) {
 	HepMC::FourVector p = (*outit)->momentum();
@@ -342,13 +344,17 @@ const HepMC::GenVertex *TruthStudies::FindNextVertex(const HepMC::GenParticle *p
 
 void TruthStudies::DumpEntireTree(const HepMC::GenEvent *ge) const
 {
-  for(HepMC::GenEvent::particle_const_iterator pitr=ge->particles_begin();
-      pitr!=ge->particles_end(); ++pitr ){
-    if( (*pitr)->status()==1 ) {
-      ATH_MSG_INFO("Found particle of type " << m_pdg.GetParticle((*pitr)->pdg_id())->GetName() 
-		   << " with pT = " << (*pitr)->momentum().perp());
-    }
+  ATH_MSG_INFO("***About to dump vertices***");
+  for(HepMC::GenEvent::vertex_const_iterator vitr=ge->vertices_begin();
+      vitr!=ge->vertices_end(); ++vitr ){
+    (*vitr)->print();
+    std::cout << std::flush;
   }
+  // ATH_MSG_INFO("About to dump particles");
+  // for(HepMC::GenEvent::particle_const_iterator pitr=ge->particles_begin();
+  //     pitr!=ge->particles_end(); ++pitr ){
+  //   (*pitr)->print();
+  // }
 }
 
 
