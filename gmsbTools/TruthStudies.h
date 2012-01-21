@@ -105,6 +105,8 @@ public:
 
   EventType GetEventType() const { return m_type; };
 
+  bool isStrong() const {return m_isStrong; };
+
 private:
 
   // this is for one side of the decay
@@ -154,6 +156,8 @@ private:
 
   // the overall event type
   EventType m_type;
+
+  bool m_isStrong;
 
   // where we classify the decay types
   std::vector<decayType> m_decays;

@@ -48,6 +48,7 @@ StatusCode TruthStudies::execute()
   
   m_decays.clear();
   m_type = unknown;
+  m_isStrong = false;
 
   const HepMC::GenEvent *ge = 0;
 
@@ -164,6 +165,7 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
        outit != vtx->particles_out_const_end();
        outit++) {
     if (StatusGood((*outit)->status())) {
+    //if (1) {
       const int pid = (*outit)->pdg_id();
       int abspid = fabs(pid);
       if (m_printDecayTree) {
@@ -201,6 +203,8 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
       } else {
 	if (abspid == 1000022 || abspid == 1000024) {
 	  newHaveSeen = abspid;
+	} else if (abspid == 1000021) {
+	  m_isStrong = true;
 	}
       }
 
@@ -229,6 +233,8 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
     case 15:
       m_decays.push_back(Ztautau);
       break;
+    case 23:
+      break;
     default:
       ATH_MSG_WARNING("Unexpected combination of Z haveSeen and newHaveSeen = " << newHaveSeen);
       break;
@@ -246,6 +252,8 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
       break;
     case 15:
       m_decays.push_back(Wtaunu);
+      break;
+    case 24:
       break;
     default:
       ATH_MSG_WARNING("Unexpected combination of W haveSeen and newHaveSeen = " << newHaveSeen);
@@ -324,6 +332,7 @@ const HepMC::GenVertex *TruthStudies::FindNextVertex(const HepMC::GenParticle *p
 
   if ((pid > 22 && pid < 38) || 
       (pid == 6) ||
+      (pid == 21) ||
       (pid > 1000000 && pid < 1000040) || 
       (pid > 2000000 && pid < 2000016)) { 
 
