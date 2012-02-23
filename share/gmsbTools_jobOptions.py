@@ -119,8 +119,8 @@ gmsbOverlapRemovalTool1 = ConfiguredgmsbOverlapRemovalTool(
     
     # thelist of the input container keys - the order is important: the overlap removing will be done in that order
     
-    InputContainerKeys=[  "SelectedPhotonAODCollection",
-                          "SelectedElectronAODCollection",
+    InputContainerKeys=[  "SelectedElectronAODCollection",
+                          "SelectedPhotonAODCollection",
                           "SelectedAntiKt4TopoEMJets"
                           ],
     

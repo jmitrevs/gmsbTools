@@ -212,6 +212,9 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
       if (nextVertex) {
 	decayVertices.push_back(nextVertex);
 	pids.push_back(abspid);
+      } else {
+	decayVertices.push_back(NULL);
+	pids.push_back(0);
       }
     }
   }
@@ -268,7 +271,7 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
       if (m_printDecayTree) {
 	msg(MSG::INFO) << "                 \t";
 	for (int j = 0; j < index+extraSpaces; j++) {
-	  msg(MSG::INFO) << "                ";
+	  msg(MSG::INFO) << "           ";
 	}
       }
       // have to stop the case when you have seen both a gamma and a Z
@@ -332,6 +335,7 @@ const HepMC::GenVertex *TruthStudies::FindNextVertex(const HepMC::GenParticle *p
 
   if ((pid > 22 && pid < 38) || 
       (pid == 6) ||
+      (pid == 15) ||
       (pid == 21) ||
       (pid > 1000000 && pid < 1000040) || 
       (pid > 2000000 && pid < 2000016)) { 
