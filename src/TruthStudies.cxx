@@ -30,6 +30,9 @@ TruthStudies::TruthStudies(const std::string& type,
   declareProperty("UseAnnotated", m_useAnnotated = false);
   declareProperty("DumpEntireTree", m_dumpEntireTree = false);
 
+  // when counting photons
+  declareProperty("Ptcut",m_Ptmin = 40000.);
+  declareProperty("Etacut",m_EtaRange = 2.50);
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 StatusCode TruthStudies::initialize(){
@@ -122,7 +125,10 @@ StatusCode TruthStudies::execute()
     
     if (m_dumpEntireTree) DumpEntireTree(ge);
 
+    m_nPhotons = findPhoton(ge);
+
     FillEventType();
+    ATH_MSG_DEBUG("Truth type = " << m_type << "; strong = " << m_isStrong << ", num truth photons = " << m_nPhotons);
 
   }
   
@@ -158,7 +164,7 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
   std::vector<const HepMC::GenVertex *> decayVertices;
   std::vector<int> pids;
 
-  int newHaveSeen = haveSeen;
+  int newHaveSeen = 0;
   double pt = 0; 		// for precedence, take higher pT one
 
   for (HepMC::GenVertex::particles_in_const_iterator outit = vtx->particles_out_const_begin();
@@ -602,4 +608,16 @@ void TruthStudies::FillEventType()
     ATH_MSG_FATAL("Received unexpected decay");
     break;
   }
+}
+
+int TruthStudies::findPhoton(const HepMC::GenEvent* genEvt) const
+{
+  int NPhotons = 0;
+  for (HepMC::GenEvent::particle_const_iterator pitr = genEvt->particles_begin(); 
+       pitr != genEvt->particles_end(); ++pitr) {
+    if ((*pitr)->pdg_id() == 22 && (*pitr)->status()==1 &&
+	(*pitr)->momentum().perp() >= m_Ptmin &&
+	fabs((*pitr)->momentum().pseudoRapidity()) <= m_EtaRange) NPhotons++;
+  }
+  return NPhotons;
 }

@@ -107,6 +107,8 @@ public:
 
   bool isStrong() const {return m_isStrong; };
 
+  int nPhotons() const {return m_nPhotons; };
+
 private:
 
   // this is for one side of the decay
@@ -139,6 +141,8 @@ private:
   bool StatusGood(int status) const;
   const HepMC::GenVertex *FindNextVertex(const HepMC::GenParticle *pcl) const;
 
+  int findPhoton(const HepMC::GenEvent* genEvt) const;
+
 
   // a PDG database that can be used to get particle properties
   TDatabasePDG m_pdg;
@@ -154,10 +158,15 @@ private:
   bool m_useAnnotated;
   bool m_dumpEntireTree;
 
+  double m_Ptmin;
+  double m_EtaRange;
+
   // the overall event type
   EventType m_type;
 
   bool m_isStrong;
+  
+  int m_nPhotons;
 
   // where we classify the decay types
   std::vector<decayType> m_decays;
