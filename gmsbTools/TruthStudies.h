@@ -141,8 +141,10 @@ private:
   bool StatusGood(int status) const;
   const HepMC::GenVertex *FindNextVertex(const HepMC::GenParticle *pcl) const;
 
-  int findPhoton(const HepMC::GenEvent* genEvt) const;
+  int findPhotons(const HepMC::GenEvent* genEvt);
 
+  // returns the PID
+  int findParent(const HepMC::GenParticle* pcl) const;
 
   // a PDG database that can be used to get particle properties
   TDatabasePDG m_pdg;
@@ -167,6 +169,7 @@ private:
   bool m_isStrong;
   
   int m_nPhotons;
+  std::vector<int> m_parentPids;
 
   // where we classify the decay types
   std::vector<decayType> m_decays;

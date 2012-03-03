@@ -14,6 +14,9 @@
 #include "FourMomUtils/P4Helpers.h"
 #include "GeneratorObjects/McEventCollection.h"
 
+#include "HepMC/GenParticle.h"
+#include "HepMC/GenVertex.h"
+
 #include <iostream>
 
 /////////////////////////////////////////////////////////////////////////////
@@ -125,7 +128,7 @@ StatusCode TruthStudies::execute()
     
     if (m_dumpEntireTree) DumpEntireTree(ge);
 
-    m_nPhotons = findPhoton(ge);
+    m_nPhotons = findPhotons(ge);
 
     FillEventType();
     ATH_MSG_DEBUG("Truth type = " << m_type << "; strong = " << m_isStrong << ", num truth photons = " << m_nPhotons);
@@ -173,7 +176,7 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
     if (StatusGood((*outit)->status())) {
     //if (1) {
       const int pid = (*outit)->pdg_id();
-      int abspid = fabs(pid);
+      int abspid = abs(pid);
       if (m_printDecayTree) {
 	msg(MSG::INFO) << std::setw(11) << std::left << m_pdg.GetParticle(pid)->GetName();
       }
@@ -610,14 +613,44 @@ void TruthStudies::FillEventType()
   }
 }
 
-int TruthStudies::findPhoton(const HepMC::GenEvent* genEvt) const
+int TruthStudies::findPhotons(const HepMC::GenEvent* genEvt)
 {
   int NPhotons = 0;
+  m_parentPids.clear();
   for (HepMC::GenEvent::particle_const_iterator pitr = genEvt->particles_begin(); 
        pitr != genEvt->particles_end(); ++pitr) {
     if ((*pitr)->pdg_id() == 22 && (*pitr)->status()==1 &&
 	(*pitr)->momentum().perp() >= m_Ptmin &&
-	fabs((*pitr)->momentum().pseudoRapidity()) <= m_EtaRange) NPhotons++;
+	fabs((*pitr)->momentum().pseudoRapidity()) <= m_EtaRange) {
+      ATH_MSG_DEBUG("Found a photon with pT = " << (*pitr)->momentum().perp() 
+		    << ", eta = " << (*pitr)->momentum().pseudoRapidity()
+		    << ", and in particles:");
+      const int pidParent = findParent(*pitr);
+      ATH_MSG_DEBUG("  " << m_pdg.GetParticle(pidParent)->GetName());
+      m_parentPids.push_back(pidParent);
+
+      if (abs(pidParent) < 38) {
+	NPhotons++;
+      }
+    }
   }
   return NPhotons;
+}
+
+// returns the PID
+int TruthStudies::findParent(const HepMC::GenParticle* pcl) const
+{
+  HepMC::GenVertex *prodVx = pcl->production_vertex();
+  const int pinSize = prodVx->particles_in_size();
+  if (pinSize != 1) {
+    ATH_MSG_DEBUG("     Size of input particles = " << prodVx->particles_in_size() 
+		  << ", if > 1 assuming hard scatter photon");
+    return 0;
+  }
+  HepMC::GenVertex::particles_in_const_iterator pit = prodVx->particles_in_const_begin();
+  if ((*pit)->pdg_id() != 22) {
+    return (*pit)->pdg_id();
+  } else {
+    return findParent(*pit);
+  }
 }

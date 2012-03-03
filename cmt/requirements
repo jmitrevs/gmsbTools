@@ -35,6 +35,7 @@ use EventInfo                   EventInfo-*                     Event
 use MCTruthClassifier  MCTruthClassifier-*      PhysicsAnalysis
 use GeneratorObjects   GeneratorObjects-*       Generators
 use McParticleEvent    McParticleEvent-*        PhysicsAnalysis/TruthParticleID
+use AtlasHepMC         AtlasHepMC-*             External
 end_private
 
 apply_pattern dual_use_library files=*.cxx
