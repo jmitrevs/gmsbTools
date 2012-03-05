@@ -144,7 +144,7 @@ private:
   int findPhotons(const HepMC::GenEvent* genEvt);
 
   // returns the PID
-  int findParent(const HepMC::GenParticle* pcl) const;
+  const HepMC::GenParticle* findParent(const HepMC::GenParticle* pcl) const;
 
   // a PDG database that can be used to get particle properties
   TDatabasePDG m_pdg;
@@ -183,7 +183,7 @@ private:
 
 inline bool TruthStudies::StatusGood(int status) const 
 {
-  return (status != 120 && status != 141 && status != 142);
+  return (status != 141 && status != 142);
 } 
 
 

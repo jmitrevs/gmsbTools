@@ -175,6 +175,7 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
        outit++) {
     if (StatusGood((*outit)->status())) {
     //if (1) {
+      // msg(MSG::INFO) << (*outit)->status() << " ";
       const int pid = (*outit)->pdg_id();
       int abspid = abs(pid);
       if (m_printDecayTree) {
@@ -619,14 +620,22 @@ int TruthStudies::findPhotons(const HepMC::GenEvent* genEvt)
   m_parentPids.clear();
   for (HepMC::GenEvent::particle_const_iterator pitr = genEvt->particles_begin(); 
        pitr != genEvt->particles_end(); ++pitr) {
-    if ((*pitr)->pdg_id() == 22 && (*pitr)->status()==1 &&
-	(*pitr)->momentum().perp() >= m_Ptmin &&
+    if ((*pitr)->pdg_id() == 22 && (*pitr)->status()==1 && 
+	(*pitr)->status() < 200000 && // status < 200K means it's not from GEANT 
+ 	(*pitr)->momentum().perp() >= m_Ptmin &&
 	fabs((*pitr)->momentum().pseudoRapidity()) <= m_EtaRange) {
       ATH_MSG_DEBUG("Found a photon with pT = " << (*pitr)->momentum().perp() 
 		    << ", eta = " << (*pitr)->momentum().pseudoRapidity()
+		    << ", status = " << (*pitr)->status()
+		    << ", barcode = " << (*pitr)->barcode()
 		    << ", and in particles:");
-      const int pidParent = findParent(*pitr);
-      ATH_MSG_DEBUG("  " << m_pdg.GetParticle(pidParent)->GetName());
+      const HepMC::GenParticle* parent = findParent(*pitr);
+      const int pidParent = parent->pdg_id();
+      ATH_MSG_DEBUG("  " << m_pdg.GetParticle(pidParent)->GetName() 
+		    << ", pT = " << parent->momentum().perp() 
+		    << ", eta = " << parent->momentum().pseudoRapidity()
+		    << " with status = " << parent->status()
+		    << " and barcode = " << parent->barcode());
       m_parentPids.push_back(pidParent);
 
       if (abs(pidParent) < 38) {
@@ -637,8 +646,8 @@ int TruthStudies::findPhotons(const HepMC::GenEvent* genEvt)
   return NPhotons;
 }
 
-// returns the PID
-int TruthStudies::findParent(const HepMC::GenParticle* pcl) const
+// returns the genparticle
+const HepMC::GenParticle* TruthStudies::findParent(const HepMC::GenParticle* pcl) const
 {
   HepMC::GenVertex *prodVx = pcl->production_vertex();
   const int pinSize = prodVx->particles_in_size();
@@ -649,7 +658,7 @@ int TruthStudies::findParent(const HepMC::GenParticle* pcl) const
   }
   HepMC::GenVertex::particles_in_const_iterator pit = prodVx->particles_in_const_begin();
   if ((*pit)->pdg_id() != 22) {
-    return (*pit)->pdg_id();
+    return (*pit);
   } else {
     return findParent(*pit);
   }
