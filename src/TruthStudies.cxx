@@ -621,7 +621,7 @@ int TruthStudies::findPhotons(const HepMC::GenEvent* genEvt)
   for (HepMC::GenEvent::particle_const_iterator pitr = genEvt->particles_begin(); 
        pitr != genEvt->particles_end(); ++pitr) {
     if ((*pitr)->pdg_id() == 22 && (*pitr)->status()==1 && 
-	(*pitr)->status() < 200000 && // status < 200K means it's not from GEANT 
+	(*pitr)->barcode() < 200000 && // barcode < 200K means it's not from GEANT 
  	(*pitr)->momentum().perp() >= m_Ptmin &&
 	fabs((*pitr)->momentum().pseudoRapidity()) <= m_EtaRange) {
       ATH_MSG_DEBUG("Found a photon with pT = " << (*pitr)->momentum().perp() 
@@ -630,15 +630,21 @@ int TruthStudies::findPhotons(const HepMC::GenEvent* genEvt)
 		    << ", barcode = " << (*pitr)->barcode()
 		    << ", and in particles:");
       const HepMC::GenParticle* parent = findParent(*pitr);
-      const int pidParent = parent->pdg_id();
-      ATH_MSG_DEBUG("  " << m_pdg.GetParticle(pidParent)->GetName() 
-		    << ", pT = " << parent->momentum().perp() 
-		    << ", eta = " << parent->momentum().pseudoRapidity()
-		    << " with status = " << parent->status()
-		    << " and barcode = " << parent->barcode());
-      m_parentPids.push_back(pidParent);
-
-      if (abs(pidParent) < 38) {
+      if (parent) {
+	const int pidParent = parent->pdg_id();
+	ATH_MSG_DEBUG("  " << m_pdg.GetParticle(pidParent)->GetName() 
+		      << ", pT = " << parent->momentum().perp() 
+		      << ", eta = " << parent->momentum().pseudoRapidity()
+		      << " with status = " << parent->status()
+		      << " and barcode = " << parent->barcode());
+	m_parentPids.push_back(pidParent);
+	
+	if (abs(pidParent) < 38) {
+	  NPhotons++;
+	}
+      } else {
+	// directly produced photon
+	m_parentPids.push_back(0);
 	NPhotons++;
       }
     }
