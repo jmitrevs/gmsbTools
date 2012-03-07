@@ -16,6 +16,7 @@
 
 #include "HepMC/GenParticle.h"
 #include "HepMC/GenVertex.h"
+#include "CLHEP/Vector/LorentzVector.h"
 
 #include <iostream>
 
@@ -34,8 +35,13 @@ TruthStudies::TruthStudies(const std::string& type,
   declareProperty("DumpEntireTree", m_dumpEntireTree = false);
 
   // when counting photons
-  declareProperty("Ptcut",m_Ptmin = 40000.);
+  declareProperty("Ptcut",m_Ptmin = 40*GeV);
   declareProperty("Etacut",m_EtaRange = 2.50);
+  declareProperty("doDeltaRLepton", m_doDeltaRLepton = false);
+  declareProperty("doMInv", m_doMInv = false);
+  declareProperty("DeltaRLepton", m_deltaRLepton = 0.5);
+  declareProperty("MInv", m_mInv = 5*GeV);
+
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 StatusCode TruthStudies::initialize(){
@@ -55,6 +61,9 @@ StatusCode TruthStudies::execute()
   m_decays.clear();
   m_type = unknown;
   m_isStrong = false;
+
+  m_leptons.clear();
+  m_lightParticles.clear();
 
   const HepMC::GenEvent *ge = 0;
 
@@ -205,7 +214,12 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
       } else if (haveSeen == 23 || haveSeen == 24) {
 	if (abspid == 11 || abspid == 13 || abspid == 15) {
 	  newHaveSeen = abspid;
+	  m_leptons.push_back(*outit);
+	  m_lightParticles.push_back(*outit);
 	} else if (abspid >= 1 && abspid <= 6) {
+	  if (abspid < 6) {
+	    m_lightParticles.push_back(*outit);
+	  }
 	  newHaveSeen = 1; // jet
 	  // just to make it easier
 	  abspid =1;
@@ -618,6 +632,12 @@ int TruthStudies::findPhotons(const HepMC::GenEvent* genEvt)
 {
   int NPhotons = 0;
   m_parentPids.clear();
+
+  // first check basic requirements
+  if (!passCuts()) {
+    return 0;
+  }
+
   for (HepMC::GenEvent::particle_const_iterator pitr = genEvt->particles_begin(); 
        pitr != genEvt->particles_end(); ++pitr) {
     if ((*pitr)->pdg_id() == 22 && (*pitr)->status()==1 && 
@@ -668,4 +688,64 @@ const HepMC::GenParticle* TruthStudies::findParent(const HepMC::GenParticle* pcl
   } else {
     return findParent(*pit);
   }
+}
+
+bool TruthStudies::passCuts() const
+{
+  if (m_doMInv && m_lightParticles.size() >= 2) {
+    for (std::vector<const HepMC::GenParticle *>::const_iterator it1 = m_lightParticles.begin();
+	 it1 != m_lightParticles.end(); ++it1) {
+      const CLHEP::HepLorentzVector lp1_p((*it1)->momentum().x(), 
+					  (*it1)->momentum().y(),
+					  (*it1)->momentum().z(), 
+					  (*it1)->momentum().t());
+      for (std::vector<const HepMC::GenParticle *>::const_iterator it2 = it1+1;
+	   it2 != m_lightParticles.end(); ++it2) {
+	const CLHEP::HepLorentzVector lp2_p((*it2)->momentum().x(), 
+					    (*it2)->momentum().y(),
+					    (*it2)->momentum().z(), 
+					    (*it2)->momentum().t());
+	if (lp1_p.invariantMass2(lp2_p) < m_mInv*m_mInv) {
+	  return false;
+	}
+      }
+    }
+  }
+
+  return true;
+}
+
+
+bool TruthStudies::passCuts(const HepMC::GenParticle* photon) const
+{
+  const CLHEP::HepLorentzVector ph_p(photon->momentum().x(), 
+				     photon->momentum().y(),
+				     photon->momentum().z(), 
+				     photon->momentum().t());
+  if (m_doDeltaRLepton) {
+    for (std::vector<const HepMC::GenParticle *>::const_iterator it = m_leptons.begin();
+	 it != m_leptons.end(); ++it) {
+      const CLHEP::HepLorentzVector lep_p((*it)->momentum().x(), 
+					  (*it)->momentum().y(),
+					  (*it)->momentum().z(), 
+					  (*it)->momentum().t());
+      if (ph_p.deltaR(lep_p) < m_deltaRLepton) {
+	return false;
+      }
+    }
+  }
+  if (m_doMInv) {
+    for (std::vector<const HepMC::GenParticle *>::const_iterator it = m_lightParticles.begin();
+	 it != m_lightParticles.end(); ++it) {
+      const CLHEP::HepLorentzVector lp_p((*it)->momentum().x(), 
+					 (*it)->momentum().y(),
+					 (*it)->momentum().z(), 
+					 (*it)->momentum().t());
+      if (ph_p.invariantMass2(lp_p) < m_mInv*m_mInv) {
+	return false;
+      }
+    }
+  }
+
+  return true;
 }

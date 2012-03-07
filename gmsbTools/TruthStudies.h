@@ -146,6 +146,8 @@ private:
   // returns the PID
   const HepMC::GenParticle* findParent(const HepMC::GenParticle* pcl) const;
 
+  bool passCuts() const;
+  bool passCuts(const HepMC::GenParticle* photon) const;
   // a PDG database that can be used to get particle properties
   TDatabasePDG m_pdg;
 
@@ -173,6 +175,17 @@ private:
 
   // where we classify the decay types
   std::vector<decayType> m_decays;
+
+
+  bool m_doDeltaRLepton;
+  double m_deltaRLepton;
+  bool m_doMInv;
+  double m_mInv;
+
+  // to match truth filters
+  std::vector<const HepMC::GenParticle *> m_leptons;
+  std::vector<const HepMC::GenParticle *> m_lightParticles;
+  
 
 };
 
