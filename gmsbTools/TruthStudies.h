@@ -181,6 +181,7 @@ private:
   double m_deltaRLepton;
   bool m_doMInv;
   double m_mInv;
+  double m_decayTaus; // only for classification, not for results
 
   // to match truth filters
   std::vector<const HepMC::GenParticle *> m_leptons;

@@ -41,6 +41,7 @@ TruthStudies::TruthStudies(const std::string& type,
   declareProperty("doMInv", m_doMInv = false);
   declareProperty("DeltaRLepton", m_deltaRLepton = 0.5);
   declareProperty("MInv", m_mInv = 5*GeV);
+  declareProperty("decayTaus", m_decayTaus = false);
 
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -278,7 +279,9 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
       m_decays.push_back(Wmunu);
       break;
     case 15:
-      m_decays.push_back(Wtaunu);
+      if (!m_decayTaus) {
+	m_decays.push_back(Wtaunu);
+      }
       break;
     case 24:
       break;
@@ -302,6 +305,11 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
       if (newHaveSeen == 22 && pids.at(index) == 23) {
 	pids[index] = 22;
       }
+
+      if (m_decayTaus && haveSeen == 24 && pids.at(index) == 15) {
+	pids[index] = haveSeen; // ignore the tau from W decay
+      }
+
       FollowDecayTree(decayVertices.at(index), index+extraSpaces, pids.at(index));
     }
   }
