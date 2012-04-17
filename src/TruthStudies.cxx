@@ -125,7 +125,12 @@ StatusCode TruthStudies::execute()
 	for (HepMC::GenVertex::particles_in_const_iterator init = pvtx->particles_in_const_begin();
 	     init != pvtx->particles_in_const_end();
 	     init++) {
-	  msg(MSG::INFO) << std::setw(7) << std::left <<  m_pdg.GetParticle((*init)->pdg_id())->GetName();
+	  const TParticlePDG* pdgpt = m_pdg.GetParticle((*init)->pdg_id());
+	  if (pdgpt) {
+	    msg(MSG::INFO) << std::setw(7) << std::left <<  pdgpt->GetName();
+	  } else {
+	    msg(MSG::INFO) << std::setw(7) << std::left <<  (*init)->pdg_id();
+	  }
 	}
 	msg(MSG::INFO) << " ->\t";
       }
@@ -139,6 +144,8 @@ StatusCode TruthStudies::execute()
     if (m_dumpEntireTree) DumpEntireTree(ge);
 
     m_nPhotons = findPhotons(ge);
+
+    findElectrons(ge);
 
     FillEventType();
     ATH_MSG_DEBUG("Truth type = " << m_type << "; strong = " << m_isStrong << ", num truth photons = " << m_nPhotons);
@@ -189,7 +196,12 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
       const int pid = (*outit)->pdg_id();
       int abspid = abs(pid);
       if (m_printDecayTree) {
-	msg(MSG::INFO) << std::setw(11) << std::left << m_pdg.GetParticle(pid)->GetName();
+	const TParticlePDG* pdgpt = m_pdg.GetParticle(pid);
+	if (pdgpt) {
+	  msg(MSG::INFO) << std::setw(11) << std::left <<  pdgpt->GetName();
+	} else {
+	  msg(MSG::INFO) << std::setw(11) << std::left <<  pid;
+	}
       }
 
       //msg(MSG::INFO) << std::setw(4) << std::right << round(p.perp()/GeV) << " ";
@@ -217,7 +229,7 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
 	  newHaveSeen = abspid;
 	  m_leptons.push_back(*outit);
 	  m_lightParticles.push_back(*outit);
-	} else if (abspid >= 1 && abspid <= 6) {
+	} else if ((abspid >= 1 && abspid <= 6) || abspid > 100) {
 	  if (abspid < 6) {
 	    m_lightParticles.push_back(*outit);
 	  }
@@ -335,7 +347,12 @@ void TruthStudies::FollowDecayTreeAnnotated(const HepMC::GenVertex *vtx, int ext
 	HepMC::FourVector p = (*outit)->momentum();
 	//msg(MSG::INFO) << std::setw(4) << std::right << round(p.perp()/GeV) << " ";
 	msg(MSG::INFO) << std::setw(4) << std::right << (*outit)->status() << " ";
-	msg(MSG::INFO) << std::setw(11) << std::left << m_pdg.GetParticle(pid)->GetName();
+	const TParticlePDG* pdgpt = m_pdg.GetParticle(pid);
+	if (pdgpt) {
+	  msg(MSG::INFO) << std::setw(11) << std::left <<  pdgpt->GetName();
+	} else {
+	  msg(MSG::INFO) << std::setw(11) << std::left <<  pid;
+	}
       }
       const HepMC::GenVertex *nextVertex = FindNextVertex(*outit);
       if (nextVertex) {
@@ -367,8 +384,8 @@ const HepMC::GenVertex *TruthStudies::FindNextVertex(const HepMC::GenParticle *p
 
   if ((pid > 22 && pid < 38) || 
       (pid == 6) ||
-      (pid == 15) ||
-      (pid == 21) ||
+      //(pid == 15) ||
+      //(pid == 21) ||
       (pid > 1000000 && pid < 1000040) || 
       (pid > 2000000 && pid < 2000016)) { 
 
@@ -654,6 +671,54 @@ int TruthStudies::findPhotons(const HepMC::GenEvent* genEvt)
 	fabs((*pitr)->momentum().pseudoRapidity()) <= m_EtaRange) {
       ATH_MSG_DEBUG("Found a photon with pT = " << (*pitr)->momentum().perp() 
 		    << ", eta = " << (*pitr)->momentum().pseudoRapidity()
+		    << ", phi = " << (*pitr)->momentum().phi()
+		    << ", status = " << (*pitr)->status()
+		    << ", barcode = " << (*pitr)->barcode()
+		    << ", and in particles:");
+      const HepMC::GenParticle* parent = findParent(*pitr);
+      if (parent) {
+	const int pidParent = parent->pdg_id();
+	ATH_MSG_DEBUG("  " << m_pdg.GetParticle(pidParent)->GetName() 
+		      << ", pT = " << parent->momentum().perp() 
+		      << ", eta = " << parent->momentum().pseudoRapidity()
+		      << " with status = " << parent->status()
+		      << " and barcode = " << parent->barcode());
+	m_parentPids.push_back(pidParent);
+	
+	if (abs(pidParent) < 38) {
+	  NPhotons++;
+	}
+      } else {
+	// directly produced photon
+	m_parentPids.push_back(0);
+	NPhotons++;
+      }
+    }
+  }
+  return NPhotons;
+}
+
+
+int TruthStudies::findElectrons(const HepMC::GenEvent* genEvt)
+{
+  int NPhotons = 0;
+  m_parentPids.clear();
+
+  // // first check basic requirements
+  // if (!passCuts()) {
+  //   return 0;
+  // }
+
+  for (HepMC::GenEvent::particle_const_iterator pitr = genEvt->particles_begin(); 
+       pitr != genEvt->particles_end(); ++pitr) {
+    if (abs((*pitr)->pdg_id()) == 11 && (*pitr)->status()==1 && 
+	(*pitr)->barcode() < 200000 ) // && // barcode < 200K means it's not from GEANT 
+      //(*pitr)->momentum().perp() >= m_Ptmin &&
+      //fabs((*pitr)->momentum().pseudoRapidity()) <= m_EtaRange) 
+      {
+      ATH_MSG_DEBUG("Found an electron with pT = " << (*pitr)->momentum().perp() 
+		    << ", eta = " << (*pitr)->momentum().pseudoRapidity()
+		    << ", phi = " << (*pitr)->momentum().phi()
 		    << ", status = " << (*pitr)->status()
 		    << ", barcode = " << (*pitr)->barcode()
 		    << ", and in particles:");

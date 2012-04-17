@@ -142,6 +142,7 @@ private:
   const HepMC::GenVertex *FindNextVertex(const HepMC::GenParticle *pcl) const;
 
   int findPhotons(const HepMC::GenEvent* genEvt);
+  int findElectrons(const HepMC::GenEvent* genEvt);
 
   // returns the PID
   const HepMC::GenParticle* findParent(const HepMC::GenParticle* pcl) const;
@@ -181,7 +182,7 @@ private:
   double m_deltaRLepton;
   bool m_doMInv;
   double m_mInv;
-  double m_decayTaus; // only for classification, not for results
+  bool m_decayTaus; // only for classification, not for results
 
   // to match truth filters
   std::vector<const HepMC::GenParticle *> m_leptons;
