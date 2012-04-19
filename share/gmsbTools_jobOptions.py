@@ -9,22 +9,17 @@ gmsbSelectionTool = ConfiguredUserSelectionTool(
 ToolSvc += gmsbSelectionTool
 print      gmsbSelectionTool
 
-gmsbCrackSelectionTool = ConfiguredUserSelectionTool(
-    name = "gmsbCrackSelectionTool",
-    ElectronPt = 20.0*GeV,
-    PhotonPt = 20.0*GeV,
+gmsbFinalSelectionTool = ConfiguredUserSelectionTool(
+    name = "gmsbFinalSelectionTool",
     DoNewElectronIsolation = False,
     DoNewPhotonIsolation = False,
-    PhotonEtaWindowMin = 0,
-    ElectronEtaWindowMin = 0,
-    PhotonEtaWindowMax = 1.37,
-    ElectronEtaWindowMax = 1.37,
-    ElectronEta = 1.52,
-    PhotonEta = 1.52,
+    DoElectronEtaWindowCut = True,
+    DoPhotonEtaWindowCut = True,
+    Simple = True
     )
 
-ToolSvc += gmsbCrackSelectionTool
-print      gmsbCrackSelectionTool
+ToolSvc += gmsbFinalSelectionTool
+print      gmsbFinalSelectionTool
 
 
 from gmsbTools.gmsbToolsConf import \
@@ -57,30 +52,6 @@ gmsbPreparationTool = ConfiguredgmsbPreparationTool(
 
 ToolSvc += gmsbPreparationTool
 print      gmsbPreparationTool
-
-gmsbCrackPreparationTool = ConfiguredgmsbPreparationTool(
-    name = "gmsbCrackPreparationTool",
-    
-    # define the pre-selection tools
-    UserSelectionTool = gmsbCrackSelectionTool,
-    
-    # thelist of the input container keys - the order does not matter
-    InputContainerKeys=[ "PhotonAODCollection",
-                         "ElectronAODCollection"
-                         ],
-
-
-
-    # the list of the output container keys - these containers container the selected objects
-    # The order matter::Should follow the same order as the input container keys above
-    OutputContainerKeys=[ "CrackPhotonCollection",
-                          "CrackElectronCollection"
-                          ]
-    
-  )
-
-ToolSvc += gmsbCrackPreparationTool
-print      gmsbCrackPreparationTool
 
 from gmsbTools.gmsbToolsConf import \
      gmsbOverlapCheckingTool as ConfiguredgmsbOverlapCheckingTool

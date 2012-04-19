@@ -63,19 +63,23 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("ElectronEta",      m_electronEta=2.47);
   declareProperty("ElectronID", m_electronID = egammaPID::ElectronIDMediumPP);
   declareProperty("AuthorEgammaOnly", m_authorEgammaOnly=true);
-  declareProperty("DoElectronEtaWindowCut", m_doElectronEtaWindCut = true);
+  declareProperty("DoElectronEtaWindowCut", m_doElectronEtaWindCut = false);
   declareProperty("ElectronEtaWindowMin", m_electronEtaWindMin = 1.37);
   declareProperty("ElectronEtaWindowMax", m_electronEtaWindMax = 1.52);
   declareProperty("DoOldElectronIsolation", m_doOldElectronIsolation = false);
   declareProperty("ElectronEtcone20ovEt", m_electronEtcone20ovEt=0.15);
   declareProperty("DoNewElectronIsolation", m_doNewElectronIsolation = true);
   declareProperty("ElectronEtcone20corrected", m_electronEtcone20corrected=5*GeV);
+  declareProperty("DoElectronTrackIsolation", m_doElectronTrackIsolation = false);
+  declareProperty("ElectronPtcone20ovEt", m_electronPtcone20ovEt=0.1);
+  declareProperty("Simple", m_simple=false); // don't smear or decorate object
+                                             // (useful for selecting already selected)
 
   /** Photon selection */
   declareProperty("PhotonPt",   m_photonPt=25*GeV);
   declareProperty("PhotonEta",  m_photonEta=2.37);
   declareProperty("PhotonID", m_photonID = egammaPID::PhotonIDTightAR);
-  declareProperty("DoPhotonEtaWindowCut", m_doPhotonEtaWindCut = true);
+  declareProperty("DoPhotonEtaWindowCut", m_doPhotonEtaWindCut = false);
   declareProperty("PhotonEtaWindowMin", m_photonEtaWindMin = 1.37);
   declareProperty("PhotonEtaWindowMax", m_photonEtaWindMax = 1.52);
   declareProperty("DoOldPhotonIsolation", m_doOldPhotonIsolation = false);
@@ -150,9 +154,11 @@ StatusCode gmsbSelectionTool::finalize() {
 gmsbSelectionTool::~gmsbSelectionTool()
 {}
 
+// pt = -1 means use real one
 bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, 
-				    unsigned int runNum, 
-				    unsigned int nPV ) const
+				    unsigned int /* runNum */, 
+				    unsigned int nPV,
+				    double pt) const
 {
   ATH_MSG_DEBUG("in electron isSelected(), with electron = " << electron);
 
@@ -180,44 +186,49 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
   const double uncorrectedEt = uncorrectedE/cosh(eta);
 
   double energy = uncorrectedE;
-  
-  if (m_isMC) {
-    if (m_smearMC) {
-      m_eRescale.SetRandomSeed(int(1.e+5*fabs(electron->cluster()->phi())));
-      energy *= m_eRescale.getSmearingCorrectionMeV(electron->cluster()->eta(),
-						    uncorrectedE,
-						    eg2011::EnergyRescaler::NOMINAL,
-						    m_MCHasConstantTerm);
-      double er_up=-1,er_do=-1;
-      m_eRescale.getErrorMeV(electron->cluster()->eta(), energy/cosh(eta), er_up, er_do,
-			     "ELECTRON");
 
+  if (!m_simple) {
+    if (m_isMC) {
+      if (m_smearMC) {
+	m_eRescale.SetRandomSeed(int(1.e+5*fabs(electron->cluster()->phi())));
+	energy *= m_eRescale.getSmearingCorrectionMeV(electron->cluster()->eta(),
+						      uncorrectedE,
+						      eg2011::EnergyRescaler::NOMINAL,
+						      m_MCHasConstantTerm);
+	double er_up=-1,er_do=-1;
+	m_eRescale.getErrorMeV(electron->cluster()->eta(), energy/cosh(eta), er_up, er_do,
+			       "ELECTRON");
+	
+	
+	if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_UP) {
+	  energy *= (1+er_up);
+	} else if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_DOWN) {
+	  energy *= (1+er_do);
+	}
 
-      if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_UP) {
-	energy *= (1+er_up);
-      } else if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_DOWN) {
-	energy *= (1+er_do);
-      }
-
-    } 
-  } else {
-    energy = m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
-						 electron->cluster()->phi(),  
-						 uncorrectedE, 
-						 uncorrectedEt, 
-						 m_egammaScaleShift, 
-						 "ELECTRON"); 
+      } 
+    } else {
+      energy = m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
+						   electron->cluster()->phi(),  
+						   uncorrectedE, 
+						   uncorrectedEt, 
+						   m_egammaScaleShift, 
+						   "ELECTRON"); 
+    }
   }
 
-  double pt = energy/cosh(eta);
-
-  // add this as user data
-  if (m_userdatasvc->decorateElement(*electron, std::string("corrPt"), pt)
-      != StatusCode::SUCCESS) {
-    ATH_MSG_ERROR("Error in electron decoration");
-    return false;
+  if (pt == -1.0) {
+    pt = energy/cosh(eta);
   }
 
+  if (!m_simple) {
+    // add this as user data
+    if (m_userdatasvc->decorateElement(*electron, std::string("corrPt"), pt)
+	!= StatusCode::SUCCESS) {
+      ATH_MSG_ERROR("Error in electron decoration");
+      return false;
+    }
+  }
 
   if ( m_isAtlfast ) {
     select = pt > m_electronPt && absClusEta < m_electronEta;
@@ -240,10 +251,10 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 
   // check OQ
   bool badOQ = electron->isgoodoq(egammaPID::BADCLUSELECTRON); // 0 == good
-  if (m_isMC) {
-    badOQ = badOQ || 
-      m_OQ.checkOQClusterElectron(runNum, electron->cluster()->eta(), electron->cluster()->phi())==3;
-  }
+  // if (m_isMC) {
+  //   badOQ = badOQ || 
+  //     m_OQ.checkOQClusterElectron(runNum, electron->cluster()->eta(), electron->cluster()->phi())==3;
+  // }
   select = select && !badOQ;
 
   if ( m_doOldElectronIsolation ) {
@@ -288,14 +299,26 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
     select = select && isol < m_electronEtcone20corrected;
   }
 
+  if ( m_doElectronTrackIsolation ) {
+    const EMShower* egdetail = electron->detail<EMShower>();
+    double isol = 10000000;
+    if(egdetail && pt > 0.0) {
+      double ptcone = egdetail->ptcone20();
+      isol = ptcone / uncorrectedEt;
+    }
+    select = select && isol < m_electronPtcone20ovEt;
+  }
+
+
   ATH_MSG_DEBUG("after iso, select is now " << select);
 
   return select;
 }
 
 bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, 
-				    unsigned int runNum,
-				    unsigned int nPV) const 
+				    unsigned int /* runNum */,
+				    unsigned int nPV,
+				    double pt) const 
 {
   ATH_MSG_DEBUG("in photon isSelected()");
 
@@ -313,46 +336,50 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
   }
 
 
-  double energy;
-  if (m_isMC) {
-    if (m_smearMC) {
-      m_eRescale.SetRandomSeed(int(1.e+5*fabs(photon->cluster()->phi())));
-      energy = photon->e() * m_eRescale.getSmearingCorrectionMeV(photon->cluster()->eta(),
-								 photon->e(),
-								 eg2011::EnergyRescaler::NOMINAL,
-								 m_MCHasConstantTerm);
-
-      double er_up=-1,er_do=-1;
-      m_eRescale.getErrorMeV(photon->cluster()->eta(), energy/cosh(photon->eta()), er_up, er_do,
-			     (photon->conversion()) ? "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
-
-
-      if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_UP) {
-	energy *= (1+er_up);
-      } else if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_DOWN) {
-	energy *= (1+er_do);
-      }
-    } else {
-      energy = photon->e();
+  double energy = photon->e();
+  if (!m_simple) {
+    if (m_isMC) {
+      if (m_smearMC) {
+	m_eRescale.SetRandomSeed(int(1.e+5*fabs(photon->cluster()->phi())));
+	energy = photon->e() * m_eRescale.getSmearingCorrectionMeV(photon->cluster()->eta(),
+								   photon->e(),
+								   eg2011::EnergyRescaler::NOMINAL,
+								   m_MCHasConstantTerm);
+	
+	double er_up=-1,er_do=-1;
+	m_eRescale.getErrorMeV(photon->cluster()->eta(), energy/cosh(photon->eta()), er_up, er_do,
+			       (photon->conversion()) ? "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
+	
+	
+	if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_UP) {
+	  energy *= (1+er_up);
+	} else if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_DOWN) {
+	  energy *= (1+er_do);
+	}
+      }  
+    } else { 
+      energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
+						   photon->cluster()->phi(),  
+						   photon->e(), 
+						   photon->et(), 
+						   m_egammaScaleShift, 
+						   (photon->conversion()) ?  
+						   "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
+      
     }
-  } else { 
-    energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
-						 photon->cluster()->phi(),  
-						 photon->e(), 
-						 photon->et(), 
-						 m_egammaScaleShift, 
-						 (photon->conversion()) ?  
-						 "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
-    
   }
 
-  double pt = energy/cosh(photon->eta());
+  if (pt == -1.0) {
+    pt = energy/cosh(photon->eta());
+  }
 
-  // add this as a barcode
-  if (m_userdatasvc->decorateElement(*photon, std::string("corrPt"), pt)
-      != StatusCode::SUCCESS) {
-    ATH_MSG_ERROR("Error in photon decoration");
-    return false;
+  if (!m_simple) {
+    // add this as a barcode
+    if (m_userdatasvc->decorateElement(*photon, std::string("corrPt"), pt)
+	!= StatusCode::SUCCESS) {
+      ATH_MSG_ERROR("Error in photon decoration");
+      return false;
+    }
   }
 
   ATH_MSG_DEBUG("Original pt = " << photon->pt() << ", corrected photon pt = " << pt);
@@ -389,10 +416,10 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 
   // check OQ
   bool badOQ = photon->isgoodoq(egammaPID::BADCLUSPHOTON); // 0 == good
-  if (m_isMC) {
-    badOQ = badOQ || 
-      m_OQ.checkOQClusterPhoton(runNum, photon->cluster()->eta(), photon->cluster()->phi(), photon->conversion())==3;
-  }
+  // if (m_isMC) {
+  //   badOQ = badOQ || 
+  //     m_OQ.checkOQClusterPhoton(runNum, photon->cluster()->eta(), photon->cluster()->phi(), photon->conversion())==3;
+  // }
   select = select && !badOQ;
 
   ATH_MSG_DEBUG("after OTX, select = " << select);
@@ -570,7 +597,7 @@ bool gmsbSelectionTool::isSelected( const CaloCluster* caloCluster ) const
   return select;
 }
 
-bool gmsbSelectionTool::isSelected( const Analysis::TauJet * tauJet ) const {
+bool gmsbSelectionTool::isSelected( const Analysis::TauJet * /* tauJet */ ) const {
 
   bool select = false;
   // if ( !tauJet ) return select;

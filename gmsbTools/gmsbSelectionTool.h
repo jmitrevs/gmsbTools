@@ -64,11 +64,13 @@ public:
 
   /** pre-selections */
   bool isSelected( const Analysis::Electron * electron, 
-		   unsigned int runNum,
-		   unsigned int nPV) const;
+		   unsigned int runNum = 0,
+		   unsigned int nPV = 0,
+		   double pt = -1.0) const;
   bool isSelected( const Analysis::Photon * photon, 
-		   unsigned int runNum,
-		   unsigned int nPV) const;
+		   unsigned int runNum = 0,
+		   unsigned int nPV = 0,
+		   double pt = -1.0) const;
   bool isSelected( const Analysis::Muon * muon ) const;
   bool isSelected( const Analysis::TauJet * tauJet ) const;
   bool isSelected( const Jet* jet ) const;
@@ -87,6 +89,8 @@ private:
   /** this is Atlfast data */
   bool m_isAtlfast;
 
+  bool m_simple; 		// if true, don't smear or decorate event
+
 
   /** MC */
   bool m_isMC;
@@ -104,12 +108,14 @@ private:
   int    m_electronID;
   bool   m_doOldElectronIsolation;
   bool   m_doNewElectronIsolation;
+  bool   m_doElectronTrackIsolation;
   bool   m_authorEgammaOnly;
   bool   m_doElectronEtaWindCut;/// apply (or not) eta cut in bad region window  
   double m_electronEtaWindMin;
   double m_electronEtaWindMax;
   double m_electronEtcone20ovEt;  // for old
   double m_electronEtcone20corrected; // for new
+  double m_electronPtcone20ovEt;  // for track
 
   /** Photon selection */
   double m_photonPt;
