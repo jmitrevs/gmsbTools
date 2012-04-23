@@ -90,15 +90,15 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   /** Muon selection */
   declareProperty("MuonPt", m_muonPt = 10.0*GeV);
   declareProperty("MuonEta", m_muonEta = 2.4);
-  declareProperty("MuonMatchChi2Max", m_matchChi2Max = 150.0);
+  //declareProperty("MuonMatchChi2Max", m_matchChi2Max = 150.0);
   declareProperty("SelectCombined", m_sel_combined=true);
   declareProperty("SelectSegmentTag", m_sel_seg_tag=true);
   declareProperty("DoMuonIsoCut",m_do_iso_cut = false);
   declareProperty("DoMuonFlatIsoCut",m_do_flat_iso_cut = true);
-  declareProperty("MuonFlatIsoCut",m_flat_isolation_cut = 10.*GeV);
+  declareProperty("MuonFlatIsoCut",m_flat_isolation_cut = 1.8*GeV);
   declareProperty("MuonIsoCut",m_isolation_cut = 0.1);
-  declareProperty("MuonSpecPtLimit", m_ms_pt_limit = 50.*GeV);
-  declareProperty("MuonSegMomDiffLimit", m_ms_p_diff_limit = -0.4);
+  //declareProperty("MuonSpecPtLimit", m_ms_pt_limit = 50.*GeV);
+  //declareProperty("MuonSegMomDiffLimit", m_ms_p_diff_limit = -0.4);
 
   /** TauJet selection */
   declareProperty("TauJetPt",           m_tauJetPt=20*GeV);

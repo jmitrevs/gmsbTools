@@ -132,15 +132,15 @@ private:
   /** Muon selection */
   double m_muonPt;
   double m_muonEta;
-  double m_matchChi2Max;
+  // double m_matchChi2Max;
   bool m_sel_combined;
   bool m_sel_seg_tag;
   bool m_do_iso_cut;
   bool m_do_flat_iso_cut;
   float m_flat_isolation_cut;
   float m_isolation_cut;
-  float m_ms_pt_limit;
-  float m_ms_p_diff_limit;
+  //float m_ms_pt_limit;
+  //float m_ms_p_diff_limit;
 
   /** TauJet selection */
   double m_tauJetPt;

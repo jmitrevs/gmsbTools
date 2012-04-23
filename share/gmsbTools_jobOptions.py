@@ -15,6 +15,8 @@ gmsbFinalSelectionTool = ConfiguredUserSelectionTool(
     DoNewPhotonIsolation = False,
     DoElectronEtaWindowCut = True,
     DoPhotonEtaWindowCut = True,
+    DoMuonIsoCut = True,
+    MuonPt = 25*GeV,
     Simple = True
     )
 
