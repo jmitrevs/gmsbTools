@@ -68,9 +68,9 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("ElectronEtaWindowMax", m_electronEtaWindMax = 1.52);
   declareProperty("DoOldElectronIsolation", m_doOldElectronIsolation = false);
   declareProperty("ElectronEtcone20ovEt", m_electronEtcone20ovEt=0.15);
-  declareProperty("DoNewElectronIsolation", m_doNewElectronIsolation = true);
+  declareProperty("DoNewElectronIsolation", m_doNewElectronIsolation = false);
   declareProperty("ElectronEtcone20corrected", m_electronEtcone20corrected=5*GeV);
-  declareProperty("DoElectronTrackIsolation", m_doElectronTrackIsolation = false);
+  declareProperty("DoElectronTrackIsolation", m_doElectronTrackIsolation = true);
   declareProperty("ElectronPtcone20ovEt", m_electronPtcone20ovEt=0.1);
   declareProperty("Simple", m_simple=false); // don't smear or decorate object
                                              // (useful for selecting already selected)
