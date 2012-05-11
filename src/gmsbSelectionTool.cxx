@@ -32,8 +32,8 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 				      const std::string& name, 
 				      const IInterface* parent )
   : AthAlgTool( type, name, parent ), 
-    m_userdatasvc("UserDataSvc", name)
-    //    m_muonSmear("staco")
+    m_userdatasvc("UserDataSvc", name),
+    m_muonSmear("staco")
 {
   declareInterface<gmsbSelectionTool>( this );
 
@@ -137,7 +137,7 @@ StatusCode gmsbSelectionTool::initialize() {
   m_eRescale.useDefaultCalibConstants();
   // m_eRescale.SetRandomSeed(m_randomSeed);
 
-  // m_muonSmear.UseScale(1);
+  m_muonSmear.UseScale(1);
 
   return StatusCode::SUCCESS;
 }
@@ -507,27 +507,27 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   double pt = (muon->isCombinedMuon()) ? muon->pt() : muon->inDetTrackParticle()->pt(); ;
 
   // ATH_MSG_DEBUG("Here 2");
-  // if (m_isMC && m_smearMC) {
-  //   ATH_MSG_DEBUG("Here 2a");
-  //   m_muonSmear.SetSeed(int(1.e+5*fabs(muon->phi())));
-  //   ATH_MSG_DEBUG("Here 2b");
-  //   ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
-  // 		  << muon->inDetTrackParticle() << ", "
-  // 		  << muon->pt() << ", "
-  // 		  <<  muon->eta());
+  if (m_isMC && m_smearMC) {
+    ATH_MSG_DEBUG("Here 2a");
+    m_muonSmear.SetSeed(int(1.e+5*fabs(muon->phi())));
+    ATH_MSG_DEBUG("Here 2b");
+    ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
+  		  << muon->inDetTrackParticle() << ", "
+  		  << muon->pt() << ", "
+  		  <<  muon->eta());
 
-  //   if (muon->isCombinedMuon()) {
-  //     m_muonSmear.Event(muon->muonExtrapolatedTrackParticle()->pt(),
-  // 			muon->inDetTrackParticle()->pt(),
-  // 			muon->pt(),
-  // 			muon->eta());
-  //     pt = m_muonSmear.pTCB();
-  //   } else {
-  //     m_muonSmear.Event(muon->inDetTrackParticle()->pt(),
-  // 			muon->eta(), "ID");
-  //     pt = m_muonSmear.pTID();
-  //   }
-  // }
+    if (muon->isCombinedMuon()) {
+      m_muonSmear.Event(muon->muonExtrapolatedTrackParticle()->pt(),
+  			muon->inDetTrackParticle()->pt(),
+  			muon->pt(),
+  			muon->eta());
+      pt = m_muonSmear.pTCB();
+    } else {
+      m_muonSmear.Event(muon->inDetTrackParticle()->pt(),
+  			muon->eta(), "ID");
+      pt = m_muonSmear.pTID();
+    }
+  }
     
   // ATH_MSG_DEBUG("Here3");
 

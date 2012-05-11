@@ -701,6 +701,8 @@ int TruthStudies::findPhotons(const HepMC::GenEvent* genEvt)
 
 int TruthStudies::findElectrons(const HepMC::GenEvent* genEvt)
 {
+  return 0;
+
   int NPhotons = 0;
   m_parentPids.clear();
 
@@ -748,7 +750,9 @@ int TruthStudies::findElectrons(const HepMC::GenEvent* genEvt)
 // returns the genparticle
 const HepMC::GenParticle* TruthStudies::findParent(const HepMC::GenParticle* pcl) const
 {
+  ATH_MSG_DEBUG("findParent called with pcl = " << pcl);
   HepMC::GenVertex *prodVx = pcl->production_vertex();
+  if (!prodVx) return 0;
   const int pinSize = prodVx->particles_in_size();
   if (pinSize != 1) {
     ATH_MSG_DEBUG("     Size of input particles = " << prodVx->particles_in_size() 
@@ -756,10 +760,14 @@ const HepMC::GenParticle* TruthStudies::findParent(const HepMC::GenParticle* pcl
     return 0;
   }
   HepMC::GenVertex::particles_in_const_iterator pit = prodVx->particles_in_const_begin();
-  if ((*pit)->pdg_id() != 22) {
-    return (*pit);
+  if (pit != prodVx->particles_in_const_end()) {
+    if ((*pit)->pdg_id() != 22) {
+      return (*pit);
+    } else {
+      return findParent(*pit);
+    }
   } else {
-    return findParent(*pit);
+    return 0;
   }
 }
 
