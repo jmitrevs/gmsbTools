@@ -99,6 +99,7 @@ private:
   bool m_MCHasConstantTerm;
   // int m_randomSeed; // use SUSY prescription
   int m_egammaScaleShift;
+  int m_egammaSmearShift;
   double m_mcEtconeScale;
   bool m_useAltIsoCorrection;
 

@@ -33,17 +33,18 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 				      const IInterface* parent )
   : AthAlgTool( type, name, parent ), 
     m_userdatasvc("UserDataSvc", name),
-    m_muonSmear("staco")
+    m_muonSmear("Data11","staco","q_pT","Rel17","")
 {
   declareInterface<gmsbSelectionTool>( this );
 
   declareProperty("Atlfast",          m_isAtlfast=false);
 
   declareProperty("IsMC", m_isMC=false);
-  declareProperty("SmearMC", m_smearMC = false);
-  declareProperty("MCHasConstantTerm", m_MCHasConstantTerm = true);
+  declareProperty("SmearMC", m_smearMC = true);
+  declareProperty("MCHasConstantTerm", m_MCHasConstantTerm = false);
   //  declareProperty("RandomSeed", m_randomSeed = 0); // use SUSY prescription
   declareProperty("EgammaScaleShift", m_egammaScaleShift = eg2011::EnergyRescaler::NOMINAL);
+  declareProperty("EgammaSmearShift", m_egammaSmearShift = eg2011::EnergyRescaler::NOMINAL);
   declareProperty("MCEtconeScale", m_mcEtconeScale = 1.5);
   declareProperty("MCUseAltIsoCorrection", m_useAltIsoCorrection = false);
 
@@ -134,10 +135,11 @@ StatusCode gmsbSelectionTool::initialize() {
     }
   }
 
-  m_eRescale.useDefaultCalibConstants();
+  m_eRescale.useDefaultCalibConstants("2011");
   // m_eRescale.SetRandomSeed(m_randomSeed);
 
   m_muonSmear.UseScale(1);
+  m_muonSmear.UseImprovedCombine();
 
   return StatusCode::SUCCESS;
 }
@@ -188,32 +190,42 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
   double energy = uncorrectedE;
 
   if (!m_simple) {
+    // Energy calibration around the barrel-endcap crack region (both data/MC)
+    energy *= m_eRescale.applyMCCalibrationMeV(electron->cluster()->eta(), uncorrectedEt,"ELECTRON");
+    
     if (m_isMC) {
-      if (m_smearMC) {
-	m_eRescale.SetRandomSeed(int(1.e+5*fabs(electron->cluster()->phi())));
+      if (m_egammaScaleShift) {
+	energy *= m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
+						     electron->cluster()->phi(),  
+						     uncorrectedE, 
+						     uncorrectedEt, 
+						     m_egammaScaleShift, 
+						     "ELECTRON") / 
+	  m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
+					      electron->cluster()->phi(),  
+					      uncorrectedE, 
+					      uncorrectedEt, 
+					      eg2011::EnergyRescaler::NOMINAL, 
+					      "ELECTRON"); 
+      }
+      if (m_smearMC) {	  
+
+	int seed = int(1.e+5*fabs(electron->cluster()->phi()));
+	if (!seed) seed = 1;
+	m_eRescale.SetRandomSeed(seed);
 	energy *= m_eRescale.getSmearingCorrectionMeV(electron->cluster()->eta(),
 						      uncorrectedE,
-						      eg2011::EnergyRescaler::NOMINAL,
-						      m_MCHasConstantTerm);
-	double er_up=-1,er_do=-1;
-	m_eRescale.getErrorMeV(electron->cluster()->eta(), energy/cosh(eta), er_up, er_do,
-			       "ELECTRON");
-	
-	
-	if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_UP) {
-	  energy *= (1+er_up);
-	} else if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_DOWN) {
-	  energy *= (1+er_do);
-	}
-
+						      m_egammaSmeerShift,
+						      m_MCHasConstantTerm,
+						      "2011");
       } 
     } else {
-      energy = m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
-						   electron->cluster()->phi(),  
-						   uncorrectedE, 
-						   uncorrectedEt, 
-						   m_egammaScaleShift, 
-						   "ELECTRON"); 
+      energy *= m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
+						    electron->cluster()->phi(),  
+						    uncorrectedE, 
+						    uncorrectedEt, 
+						    m_egammaScaleShift, 
+						    "ELECTRON") / uncorrectedE; 
     }
   }
 
@@ -339,23 +351,21 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
   double energy = photon->e();
   if (!m_simple) {
     if (m_isMC) {
+      if (m_egammaScaleShift) {
+	energy = m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
+						     electron->cluster()->phi(),  
+						     photon->e(), 
+						     photon->et(), 
+						     m_egammaScaleShift, 
+						     (photon->conversion()) ?  
+						     "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
+      }
       if (m_smearMC) {
 	m_eRescale.SetRandomSeed(int(1.e+5*fabs(photon->cluster()->phi())));
 	energy = photon->e() * m_eRescale.getSmearingCorrectionMeV(photon->cluster()->eta(),
 								   photon->e(),
-								   eg2011::EnergyRescaler::NOMINAL,
+								   m_egammaSmearShift,
 								   m_MCHasConstantTerm);
-	
-	double er_up=-1,er_do=-1;
-	m_eRescale.getErrorMeV(photon->cluster()->eta(), energy/cosh(photon->eta()), er_up, er_do,
-			       (photon->conversion()) ? "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON");
-	
-	
-	if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_UP) {
-	  energy *= (1+er_up);
-	} else if (m_egammaScaleShift == eg2011::EnergyRescaler::ERR_DOWN) {
-	  energy *= (1+er_do);
-	}
       }  
     } else { 
       energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
@@ -509,7 +519,9 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   // ATH_MSG_DEBUG("Here 2");
   if (m_isMC && m_smearMC) {
     ATH_MSG_DEBUG("Here 2a");
-    m_muonSmear.SetSeed(int(1.e+5*fabs(muon->phi())));
+    int seed = int(1.e+5*fabs(muon->phi()));
+    if (!seed) seed = 1;
+    m_muonSmear.SetSeed(seed);
     ATH_MSG_DEBUG("Here 2b");
     ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
   		  << muon->inDetTrackParticle() << ", "
