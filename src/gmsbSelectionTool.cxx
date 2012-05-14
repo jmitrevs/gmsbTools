@@ -100,6 +100,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("MuonIsoCut",m_isolation_cut = 0.1);
   //declareProperty("MuonSpecPtLimit", m_ms_pt_limit = 50.*GeV);
   //declareProperty("MuonSegMomDiffLimit", m_ms_p_diff_limit = -0.4);
+  declareProperty("MuonResSyst", m_muonResSyst = "");
 
   /** TauJet selection */
   declareProperty("TauJetPt",           m_tauJetPt=20*GeV);
@@ -215,7 +216,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 	m_eRescale.SetRandomSeed(seed);
 	energy *= m_eRescale.getSmearingCorrectionMeV(electron->cluster()->eta(),
 						      uncorrectedE,
-						      m_egammaSmeerShift,
+						      m_egammaSmearShift,
 						      m_MCHasConstantTerm,
 						      "2011");
       } 
@@ -352,8 +353,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
   if (!m_simple) {
     if (m_isMC) {
       if (m_egammaScaleShift) {
-	energy = m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
-						     electron->cluster()->phi(),  
+	energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
+						     photon->cluster()->phi(),  
 						     photon->e(), 
 						     photon->et(), 
 						     m_egammaScaleShift, 
@@ -528,16 +529,33 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   		  << muon->pt() << ", "
   		  <<  muon->eta());
 
-    if (muon->isCombinedMuon()) {
-      m_muonSmear.Event(muon->muonExtrapolatedTrackParticle()->pt(),
-  			muon->inDetTrackParticle()->pt(),
-  			muon->pt(),
-  			muon->eta());
-      pt = m_muonSmear.pTCB();
+    // double charge = muon->charge();
+    double eta = muon->eta();
+    double ptcb = muon->pt();
+    double ptms = muon->muonExtrapolatedTrackParticle() ? muon->muonExtrapolatedTrackParticle()->pt() : 0;
+    double ptid = muon->inDetTrackParticle() ? muon->inDetTrackParticle()->pt() : 0;
+
+    m_muonSmear.Event(ptms,ptid,ptcb,eta);
+
+    if (m_muonResSyst == "") {
+      if (muon->isCombinedMuon()) {
+	pt = m_muonSmear.pTCB();
+      } else {
+	pt = m_muonSmear.pTID();
+      }
     } else {
-      m_muonSmear.Event(muon->inDetTrackParticle()->pt(),
-  			muon->eta(), "ID");
-      pt = m_muonSmear.pTID();
+      double pTMS_smeared = 0.;
+      double pTID_smeared = 0.;
+      double pTCB_smeared = 0.;
+      
+      // Valid values for "THESTRING": {"MSLOW", "MSUP", "IDLOW", "IDUP"} 
+      m_muonSmear.PTVar(pTMS_smeared, pTID_smeared, pTCB_smeared, m_muonResSyst);
+      
+      if (muon->isCombinedMuon()) {
+	pt = pTCB_smeared;
+      } else {
+	pt = pTID_smeared;
+      }
     }
   }
     

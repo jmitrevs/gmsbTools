@@ -142,6 +142,7 @@ private:
   float m_isolation_cut;
   //float m_ms_pt_limit;
   //float m_ms_p_diff_limit;
+  std::string m_muonResSyst;  // Valid values: {"MSLOW", "MSUP", "IDLOW", "IDUP"} 
 
   /** TauJet selection */
   double m_tauJetPt;
