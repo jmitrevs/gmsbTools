@@ -22,6 +22,8 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 #include "MCTruthClassifier/IMCTruthClassifier.h"
 #include "MCTruthClassifier/MCTruthClassifierDefs.h"
 
+#include "PhotonAnalysisUtils/IPAUcaloIsolationTool.h"
+
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -48,6 +50,8 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("MCEtconeScale", m_mcEtconeScale = 1.5);
   declareProperty("MCUseAltIsoCorrection", m_useAltIsoCorrection = false);
 
+  declareProperty("PAUcaloIsolationTool", m_PAUcaloIsolationTool);
+
   declareProperty("MCTruthClassifier", m_MCTruthClassifier);
 
   declareProperty("DoTruth", m_doTruth = false);
@@ -71,7 +75,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("ElectronEtcone20ovEt", m_electronEtcone20ovEt=0.15);
   declareProperty("DoNewElectronIsolation", m_doNewElectronIsolation = false);
   declareProperty("ElectronEtcone20corrected", m_electronEtcone20corrected=5*GeV);
-  declareProperty("DoElectronTrackIsolation", m_doElectronTrackIsolation = true);
+  declareProperty("DoElectronTrackIsolation", m_doElectronTrackIsolation = false);
   declareProperty("ElectronPtcone20ovEt", m_electronPtcone20ovEt=0.1);
   declareProperty("Simple", m_simple=false); // don't smear or decorate object
                                              // (useful for selecting already selected)
@@ -85,8 +89,9 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("PhotonEtaWindowMax", m_photonEtaWindMax = 1.52);
   declareProperty("DoOldPhotonIsolation", m_doOldPhotonIsolation = false);
   declareProperty("PhotonEtcone20ovEt", m_photonEtcone20ovEt=0.1);
-  declareProperty("DoNewPhotonIsolation", m_doNewPhotonIsolation = true);
+  declareProperty("DoNewPhotonIsolation", m_doNewPhotonIsolation = false);
   declareProperty("PhotonEtcone20corrected", m_photonEtcone20corrected=5*GeV);
+  declareProperty("DoEDPhotonIsolation", m_doEDPhotonIsolation = true);
 
   /** Muon selection */
   declareProperty("MuonPt", m_muonPt = 10.0*GeV);
@@ -133,6 +138,15 @@ StatusCode gmsbSelectionTool::initialize() {
     }
     else {
       ATH_MSG_DEBUG("Retrieved MCTruthClassifier " << m_MCTruthClassifier);   
+    }
+  }
+
+  if (m_doEDPhotonIsolation) {
+    if(m_PAUcaloIsolationTool.retrieve().isFailure()) {
+      ATH_MSG_ERROR("Failed to retrieve " << m_PAUcaloIsolationTool);
+      return StatusCode::FAILURE;
+    } else {
+      ATH_MSG_DEBUG("Retrieved PAUcaloIsolationTool " << m_PAUcaloIsolationTool);   
     }
   }
 
@@ -232,6 +246,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 
   if (pt == -1.0) {
     pt = energy/cosh(eta);
+  } else {
+    energy = pt * cosh(eta);
   }
 
   if (!m_simple) {
@@ -382,6 +398,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 
   if (pt == -1.0) {
     pt = energy/cosh(photon->eta());
+  } else {
+    energy = pt * cosh(photon->eta());
   }
 
   if (!m_simple) {
@@ -484,6 +502,34 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 							   egdetail->etcone20(),
 							   photon->conversion(),
 							   CaloIsoCorrection::PHOTON);
+    }
+    select = select && isol < m_photonEtcone20corrected;
+  }
+
+  if ( m_doEDPhotonIsolation ) {
+    const EMShower* egdetail = photon->detail<EMShower>();
+    float isol = 1000000;
+    if(egdetail && pt > 0.0) {
+
+      const int removeNHardestJets = 0;  // default value for now
+      const double ED_correction_40 = m_PAUcaloIsolationTool->EtConeCorrectionJetAreas(photon, .40,
+										       removeNHardestJets);
+
+      ATH_MSG_DEBUG("ED_correction_40 = " << ED_correction_40);
+      
+      isol = CaloIsoCorrection::GetPtEDCorrectedIsolation(ED_correction_40, 0.0,
+							  energy,
+							  eta2,
+							  egdetail->parameter(egammaParameters::etap),
+							  photon->cluster()->eta(),
+							  20,
+							  m_isMC,
+							  egdetail->etcone20(),
+							  photon->conversion(),
+							  CaloIsoCorrection::PHOTON);
+
+      ATH_MSG_DEBUG("ptcone20 = " << egdetail->etcone20() << ", pt_corrected = " << egdetail->etcone20_ptcorrected() << ", +ED = " << isol);
+
     }
     select = select && isol < m_photonEtcone20corrected;
   }

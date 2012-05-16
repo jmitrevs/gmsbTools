@@ -1,9 +1,25 @@
 
+from PhotonAnalysisUtils.LowPtJetFinder import LowPtJetFinder
+mygetter2 = LowPtJetFinder() # will insert the alg into the AlgSequence()
+print mygetter2
+
+from egammaCaloTools.egammaIsoPtCorrectionToolBase import egammaIsoPtCorrectionToolBase
+theegammaisoptcorrection=egammaIsoPtCorrectionToolBase("egammaIsoPtCorrection")
+ToolSvc+=theegammaisoptcorrection
+
+from PhotonAnalysisUtils.PhotonAnalysisUtilsConf import PAUcaloIsolationTool
+mycaloisolationtool = PAUcaloIsolationTool(DoAreaCorrections = True,
+                                           EMCaloIsoPtCorrectionTool = theegammaisoptcorrection,
+                                           # OutputLevel = DEBUG
+                                           )
+ToolSvc += mycaloisolationtool
+
 from gmsbTools.gmsbToolsConf import \
     gmsbSelectionTool as ConfiguredUserSelectionTool
 gmsbSelectionTool = ConfiguredUserSelectionTool(
     name = "gmsbSelectionTool",
-    # OutputLevel = DEBUG
+    PAUcaloIsolationTool = mycaloisolationtool,
+    #OutputLevel = DEBUG
 )
 
 ToolSvc += gmsbSelectionTool
@@ -11,10 +27,8 @@ print      gmsbSelectionTool
 
 gmsbFinalSelectionTool = ConfiguredUserSelectionTool(
     name = "gmsbFinalSelectionTool",
-    DoNewElectronIsolation = False,
-    DoNewPhotonIsolation = False,
-    DoElectronEtaWindowCut = True,
-    DoPhotonEtaWindowCut = True,
+    DoElectronTrackIsolation = True,
+    DoEDPhotonIsolation = False, # already done
     DoMuonIsoCut = True,
     MuonPt = 25*GeV,
     Simple = True

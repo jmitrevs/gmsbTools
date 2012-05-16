@@ -41,6 +41,8 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 #include <map>
 #include <vector>
 
+class IPAUcaloIsolationTool;
+
 
 /** Interface ID */  
 static const InterfaceID IID_gmsbSelectionTool("gmsbSelectionTool", 1, 0);
@@ -124,6 +126,7 @@ private:
   int    m_photonID;
   bool   m_doOldPhotonIsolation;
   bool   m_doNewPhotonIsolation;
+  bool   m_doEDPhotonIsolation;
   bool   m_doPhotonEtaWindCut;/// apply (or not) eta cut in bad region window  
   double m_photonEtaWindMin;
   double m_photonEtaWindMax;
@@ -167,6 +170,9 @@ private:
   ServiceHandle<IUserDataSvc> m_userdatasvc;
 
   ToolHandle<IMCTruthClassifier> m_MCTruthClassifier;
+
+  /** @brief Tool handle for corrected isolation */
+  ToolHandle<IPAUcaloIsolationTool> m_PAUcaloIsolationTool;
 
   // the OQ utility
   egammaOQ m_OQ;

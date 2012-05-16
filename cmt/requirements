@@ -36,6 +36,7 @@ use MCTruthClassifier  MCTruthClassifier-*      PhysicsAnalysis
 use GeneratorObjects   GeneratorObjects-*       Generators
 use McParticleEvent    McParticleEvent-*        PhysicsAnalysis/TruthParticleID
 use AtlasHepMC         AtlasHepMC-*             External
+use PhotonAnalysisUtils        PhotonAnalysisUtils-*           PhysicsAnalysis/StandardModelPhys
 end_private
 
 apply_pattern dual_use_library files=*.cxx
