@@ -34,7 +34,7 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 
 #include "MuonMomentumCorrections/SmearingClass.h"
 
-#include "AthenaKernel/IUserDataSvc.h"
+//#include "AthenaKernel/IUserDataSvc.h"
 #include "GaudiKernel/ToolHandle.h"
 
 #include <string>
@@ -67,12 +67,10 @@ public:
   /** pre-selections */
   bool isSelected( const Analysis::Electron * electron, 
 		   unsigned int runNum = 0,
-		   unsigned int nPV = 0,
-		   double pt = -1.0) const;
+		   unsigned int nPV = 0) const;
   bool isSelected( const Analysis::Photon * photon, 
 		   unsigned int runNum = 0,
-		   unsigned int nPV = 0,
-		   double pt = -1.0) const;
+		   unsigned int nPV = 0) const;
   bool isSelected( const Analysis::Muon * muon ) const;
   bool isSelected( const Analysis::TauJet * tauJet ) const;
   bool isSelected( const Jet* jet ) const;
@@ -167,7 +165,7 @@ private:
 
 
   // user data
-  ServiceHandle<IUserDataSvc> m_userdatasvc;
+  //ServiceHandle<IUserDataSvc> m_userdatasvc;
 
   ToolHandle<IMCTruthClassifier> m_MCTruthClassifier;
 

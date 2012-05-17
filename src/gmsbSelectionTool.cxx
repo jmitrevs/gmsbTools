@@ -34,7 +34,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 				      const std::string& name, 
 				      const IInterface* parent )
   : AthAlgTool( type, name, parent ), 
-    m_userdatasvc("UserDataSvc", name),
+    //m_userdatasvc("UserDataSvc", name),
     m_muonSmear("Data11","staco","q_pT","Rel17","")
 {
   declareInterface<gmsbSelectionTool>( this );
@@ -126,10 +126,10 @@ StatusCode gmsbSelectionTool::initialize() {
 
   ATH_MSG_DEBUG("in initialize()");
 
-  if ( !m_userdatasvc.retrieve().isSuccess() ) {
-    ATH_MSG_ERROR("Unable to retrieve pointer to UserDataSvc");
-    return StatusCode::FAILURE;
-  }
+  // if ( !m_userdatasvc.retrieve().isSuccess() ) {
+  //   ATH_MSG_ERROR("Unable to retrieve pointer to UserDataSvc");
+  //   return StatusCode::FAILURE;
+  // }
   
   if (m_isMC && m_doTruth) {
     if(m_MCTruthClassifier.retrieve().isFailure()) {
@@ -174,8 +174,7 @@ gmsbSelectionTool::~gmsbSelectionTool()
 // pt = -1 means use real one
 bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, 
 				    unsigned int /* runNum */, 
-				    unsigned int nPV,
-				    double pt) const
+				    unsigned int nPV) const
 {
   ATH_MSG_DEBUG("in electron isSelected(), with electron = " << electron);
 
@@ -198,6 +197,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
   const double absClusEta = fabs(eta2);
 
   const double eta = (electron->trackParticle()) ? electron->trackParticle()->eta() : electron->eta();
+  const double phi = (electron->trackParticle()) ? electron->trackParticle()->phi() : electron->phi();
 
   const double uncorrectedE = electron->cluster()->e();
   const double uncorrectedEt = uncorrectedE/cosh(eta);
@@ -242,22 +242,31 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 						    m_egammaScaleShift, 
 						    "ELECTRON") / uncorrectedE; 
     }
-  }
 
-  if (pt == -1.0) {
-    pt = energy/cosh(eta);
-  } else {
-    energy = pt * cosh(eta);
-  }
+    ATH_MSG_DEBUG("Original electron E = " << uncorrectedE << ", corrected E = " << energy);
 
-  if (!m_simple) {
-    // add this as user data
-    if (m_userdatasvc->decorateElement(*electron, std::string("corrPt"), pt)
-	!= StatusCode::SUCCESS) {
-      ATH_MSG_ERROR("Error in electron decoration");
+    // let's cosnt-cast the four-mom
+    Analysis::Electron* volel = const_cast<Analysis::Electron*>(electron);
+    if (!volel) {
+      ATH_MSG_ERROR("Const-cast did not work");
       return false;
     }
+    volel->setE(energy);
+    volel->setEta(eta);
+    volel->setPhi(phi);
   }
+
+
+  const double pt = electron->pt();
+
+  // if (!m_simple) {
+  //   // add this as user data
+  //   if (m_userdatasvc->decorateElement(*electron, std::string("corrPt"), pt)
+  // 	!= StatusCode::SUCCESS) {
+  //     ATH_MSG_ERROR("Error in electron decoration");
+  //     return false;
+  //   }
+  // }
 
   if ( m_isAtlfast ) {
     select = pt > m_electronPt && absClusEta < m_electronEta;
@@ -346,8 +355,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 
 bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, 
 				    unsigned int /* runNum */,
-				    unsigned int nPV,
-				    double pt) const 
+				    unsigned int nPV) const 
 {
   ATH_MSG_DEBUG("in photon isSelected()");
 
@@ -394,24 +402,33 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 						   "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
       
     }
-  }
 
-  if (pt == -1.0) {
-    pt = energy/cosh(photon->eta());
-  } else {
-    energy = pt * cosh(photon->eta());
-  }
+    ATH_MSG_DEBUG("Original photon E = " << photon->e() << ", corrected E = " << energy);
 
-  if (!m_simple) {
-    // add this as a barcode
-    if (m_userdatasvc->decorateElement(*photon, std::string("corrPt"), pt)
-	!= StatusCode::SUCCESS) {
-      ATH_MSG_ERROR("Error in photon decoration");
+    // let's cosnt-cast the four-mom
+    Analysis::Photon* volpho = const_cast<Analysis::Photon*>(photon);
+    if (!volpho) {
+      ATH_MSG_ERROR("Const-cast did not work");
       return false;
     }
+    volpho->setE(energy);
+
   }
 
-  ATH_MSG_DEBUG("Original pt = " << photon->pt() << ", corrected photon pt = " << pt);
+  const double pt = photon->pt();
+
+  // double pt = energy/cosh(photon->eta());
+
+  // if (!m_simple) {
+  //   // add this as a barcode
+  //   if (m_userdatasvc->decorateElement(*photon, std::string("corrPt"), pt)
+  // 	!= StatusCode::SUCCESS) {
+  //     ATH_MSG_ERROR("Error in photon decoration");
+  //     return false;
+  //   }
+  // }
+
+  // ATH_MSG_DEBUG("Original pt = " << photon->pt() << ", corrected photon pt = " << pt);
 
   // // for test
   // // get the user data
@@ -559,54 +576,64 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
 
   if (!select) return false;
 
-  // ATH_MSG_DEBUG("Here 1");
-
-  double pt = (muon->isCombinedMuon()) ? muon->pt() : muon->inDetTrackParticle()->pt(); ;
+  //double pt = (muon->isCombinedMuon()) ? muon->pt() : muon->inDetTrackParticle()->pt(); ;
+  double pt = muon->pt();
 
   // ATH_MSG_DEBUG("Here 2");
-  if (m_isMC && m_smearMC) {
-    ATH_MSG_DEBUG("Here 2a");
-    int seed = int(1.e+5*fabs(muon->phi()));
-    if (!seed) seed = 1;
-    m_muonSmear.SetSeed(seed);
-    ATH_MSG_DEBUG("Here 2b");
-    ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
-  		  << muon->inDetTrackParticle() << ", "
-  		  << muon->pt() << ", "
-  		  <<  muon->eta());
-
-    // double charge = muon->charge();
-    double eta = muon->eta();
-    double ptcb = muon->pt();
-    double ptms = muon->muonExtrapolatedTrackParticle() ? muon->muonExtrapolatedTrackParticle()->pt() : 0;
-    double ptid = muon->inDetTrackParticle() ? muon->inDetTrackParticle()->pt() : 0;
-
-    m_muonSmear.Event(ptms,ptid,ptcb,eta);
-
-    if (m_muonResSyst == "") {
-      if (muon->isCombinedMuon()) {
-	pt = m_muonSmear.pTCB();
+  if (!m_simple) {
+    if (m_isMC && m_smearMC) {
+      ATH_MSG_DEBUG("Here 2a");
+      int seed = int(1.e+5*fabs(muon->phi()));
+      if (!seed) seed = 1;
+      m_muonSmear.SetSeed(seed);
+      ATH_MSG_DEBUG("Here 2b");
+      ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
+		    << muon->inDetTrackParticle() << ", "
+		    << muon->pt() << ", "
+		    <<  muon->eta());
+      
+      // double charge = muon->charge();
+      double eta = muon->eta();
+      double ptcb = muon->pt();
+      double ptms = muon->muonExtrapolatedTrackParticle() ? muon->muonExtrapolatedTrackParticle()->pt() : 0;
+      double ptid = muon->inDetTrackParticle() ? muon->inDetTrackParticle()->pt() : 0;
+      
+      m_muonSmear.Event(ptms,ptid,ptcb,eta);
+      
+      if (m_muonResSyst == "") {
+	if (muon->isCombinedMuon()) {
+	  pt = m_muonSmear.pTCB();
+	} else {
+	  pt = m_muonSmear.pTID();
+	}
       } else {
-	pt = m_muonSmear.pTID();
+	double pTMS_smeared = 0.;
+	double pTID_smeared = 0.;
+	double pTCB_smeared = 0.;
+	
+	// Valid values for "THESTRING": {"MSLOW", "MSUP", "IDLOW", "IDUP"} 
+	m_muonSmear.PTVar(pTMS_smeared, pTID_smeared, pTCB_smeared, m_muonResSyst);
+	
+	if (muon->isCombinedMuon()) {
+	  pt = pTCB_smeared;
+	} else {
+	  pt = pTID_smeared;
+	}
       }
-    } else {
-      double pTMS_smeared = 0.;
-      double pTID_smeared = 0.;
-      double pTCB_smeared = 0.;
-      
-      // Valid values for "THESTRING": {"MSLOW", "MSUP", "IDLOW", "IDUP"} 
-      m_muonSmear.PTVar(pTMS_smeared, pTID_smeared, pTCB_smeared, m_muonResSyst);
-      
-      if (muon->isCombinedMuon()) {
-	pt = pTCB_smeared;
-      } else {
-	pt = pTID_smeared;
+    
+
+      // let's cosnt-cast the four-mom
+      if (pt != 0) {
+	Analysis::Muon* volmu = const_cast<Analysis::Muon*>(muon);
+	if (!volmu) {
+	  ATH_MSG_ERROR("Const-cast for muon did not work");
+	  return false;
+	}
+	volmu->setIPt(1.0/pt);
       }
     }
   }
     
-  // ATH_MSG_DEBUG("Here3");
-
   // select must be true before in order to get here, so can overwrite
   select = pt >m_muonPt && fabs(muon->eta())<m_muonEta;
 
@@ -638,7 +665,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   } else if (nTRTTotal > 5) {
     select = nTRTOutliers < 0.9*nTRTTotal;
   }
-  //ATH_MSG_DEBUG("Here6, select = " << select);
+  
+  ATH_MSG_DEBUG("Muon with pt = " << pt << ", select = " << select);
   
   return select;
 }
