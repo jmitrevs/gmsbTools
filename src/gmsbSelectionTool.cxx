@@ -595,8 +595,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
       // double charge = muon->charge();
       double eta = muon->eta();
       double ptcb = muon->pt();
-      double ptms = muon->muonExtrapolatedTrackParticle() ? muon->muonExtrapolatedTrackParticle()->pt() : 0;
-      double ptid = muon->inDetTrackParticle() ? muon->inDetTrackParticle()->pt() : 0;
+      double ptms = muon->muonExtrapolatedTrackParticle() ? muon->muonExtrapolatedTrackParticle()->pt() : 1;
+      double ptid = muon->inDetTrackParticle() ? muon->inDetTrackParticle()->pt() : 1;
       
       m_muonSmear.Event(ptms,ptid,ptcb,eta);
       
