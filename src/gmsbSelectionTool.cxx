@@ -84,6 +84,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("PhotonPt",   m_photonPt=25*GeV);
   declareProperty("PhotonEta",  m_photonEta=2.37);
   declareProperty("PhotonID", m_photonID = egammaPID::PhotonIDTightAR);
+  declareProperty("PhotonIsEM", m_photonIsEM = 0);
   declareProperty("DoPhotonEtaWindowCut", m_doPhotonEtaWindCut = false);
   declareProperty("PhotonEtaWindowMin", m_photonEtaWindMin = 1.37);
   declareProperty("PhotonEtaWindowMax", m_photonEtaWindMax = 1.52);
@@ -448,6 +449,8 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
  
   select = pt > m_photonPt && absClusEta < m_photonEta && photon->passID(static_cast<egammaPID::egammaIDQuality>(m_photonID)); 
 
+  // also do isEM selection for special requirements (usually m_photonIsEM == 0, so this does nothing)
+  select = select && photon->isPhoton(m_photonIsEM);
 
   ATH_MSG_DEBUG("after pt, eta (= " << eta2 << "), and isEM cut, select = " << select);
 
@@ -640,9 +643,9 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   // do iso cut
   if (m_do_iso_cut) {
     if (m_do_flat_iso_cut) {
-      select = select && muon->parameter(MuonParameters::etcone20)<m_flat_isolation_cut;
+      select = select && muon->parameter(MuonParameters::ptcone20)<m_flat_isolation_cut;
     } else {
-      select = select && muon->parameter(MuonParameters::etcone20)/muon->et()<m_isolation_cut;
+      select = select && muon->parameter(MuonParameters::ptcone20)/muon->et()<m_isolation_cut;
     }
   }
 

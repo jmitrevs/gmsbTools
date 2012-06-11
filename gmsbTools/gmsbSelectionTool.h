@@ -122,6 +122,7 @@ private:
   double m_photonPt;
   double m_photonEta;
   int    m_photonID;
+  unsigned int m_photonIsEM;
   bool   m_doOldPhotonIsolation;
   bool   m_doNewPhotonIsolation;
   bool   m_doEDPhotonIsolation;
