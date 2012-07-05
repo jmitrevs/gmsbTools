@@ -66,6 +66,8 @@ StatusCode TruthStudies::execute()
   m_leptons.clear();
   m_lightParticles.clear();
 
+  m_Wpt = -999.;
+
   const HepMC::GenEvent *ge = 0;
 
   /** get the MC truth particle AOD or ESD container from StoreGate */
@@ -205,6 +207,13 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
       }
 
       //msg(MSG::INFO) << std::setw(4) << std::right << round(p.perp()/GeV) << " ";
+
+      if (abspid == 24) {
+	// maybe add to the Wpt
+	const HepMC::FourVector p = (*outit)->momentum();
+	const double newPt = p.perp();
+	if (newPt > m_Wpt) m_Wpt = newPt;
+      }
 
       if (haveSeen == 1000022) { // neutralino
 	const HepMC::FourVector p = (*outit)->momentum();

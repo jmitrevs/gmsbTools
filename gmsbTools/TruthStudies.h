@@ -109,6 +109,8 @@ public:
 
   int nPhotons() const {return m_nPhotons; };
 
+  double Wpt() const { return m_Wpt; };
+
 private:
 
   // this is for one side of the decay
@@ -176,6 +178,8 @@ private:
 
   // where we classify the decay types
   std::vector<decayType> m_decays;
+
+  double m_Wpt; // for reweighing
 
 
   bool m_doDeltaRLepton;
