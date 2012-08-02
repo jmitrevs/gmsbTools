@@ -77,6 +77,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("ElectronEtcone20corrected", m_electronEtcone20corrected=5*GeV);
   declareProperty("DoElectronTrackIsolation", m_doElectronTrackIsolation = false);
   declareProperty("ElectronPtcone20ovEt", m_electronPtcone20ovEt=0.1);
+  declareProperty("DoEDElectronIsolation", m_doEDElectronIsolation = false);
   declareProperty("Simple", m_simple=false); // don't smear or decorate object
                                              // (useful for selecting already selected)
 
@@ -142,7 +143,7 @@ StatusCode gmsbSelectionTool::initialize() {
     }
   }
 
-  if (m_doEDPhotonIsolation) {
+  if (m_doEDPhotonIsolation || m_doEDElectronIsolation) {
     if(m_PAUcaloIsolationTool.retrieve().isFailure()) {
       ATH_MSG_ERROR("Failed to retrieve " << m_PAUcaloIsolationTool);
       return StatusCode::FAILURE;
@@ -346,6 +347,34 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
       isol = ptcone / uncorrectedEt;
     }
     select = select && isol < m_electronPtcone20ovEt;
+  }
+
+  if ( m_doEDElectronIsolation ) {
+    const EMShower* egdetail = electron->detail<EMShower>();
+    float isol = 1000000;
+    if(egdetail && pt > 0.0) {
+
+      const int removeNHardestJets = 0;  // default value for now
+      const double ED_correction_40 = m_PAUcaloIsolationTool->EtConeCorrectionJetAreas(electron, .40,
+										       removeNHardestJets);
+
+      ATH_MSG_DEBUG("ED_correction_40 = " << ED_correction_40);
+      
+      isol = CaloIsoCorrection::GetPtEDCorrectedIsolation(ED_correction_40, 0.0,
+							  energy,
+							  eta2,
+							  egdetail->parameter(egammaParameters::etap),
+							  electron->cluster()->eta(),
+							  20,
+							  m_isMC,
+							  egdetail->etcone20(),
+							  electron->conversion(),
+							  CaloIsoCorrection::ELECTRON);
+
+      ATH_MSG_DEBUG("ptcone20 = " << egdetail->etcone20() << ", pt_corrected = " << egdetail->etcone20_ptcorrected() << ", +ED = " << isol);
+
+    }
+    select = select && isol < m_electronEtcone20corrected;
   }
 
 

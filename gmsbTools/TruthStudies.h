@@ -188,6 +188,8 @@ private:
   double m_mInv;
   bool m_decayTaus; // only for classification, not for results
 
+  int m_WptID; // the W ID (usually 24, but can change to 23 for Z)
+
   // to match truth filters
   std::vector<const HepMC::GenParticle *> m_leptons;
   std::vector<const HepMC::GenParticle *> m_lightParticles;

@@ -111,7 +111,9 @@ private:
   bool   m_doNewElectronIsolation;
   bool   m_doElectronTrackIsolation;
   bool   m_authorEgammaOnly;
-  bool   m_doElectronEtaWindCut;/// apply (or not) eta cut in bad region window  
+  bool   m_doElectronEtaWindCut;/// apply (or not) eta cut in bad region window   
+  bool   m_doEDElectronIsolation;
+ 
   double m_electronEtaWindMin;
   double m_electronEtaWindMax;
   double m_electronEtcone20ovEt;  // for old

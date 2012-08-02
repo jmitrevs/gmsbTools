@@ -42,6 +42,7 @@ TruthStudies::TruthStudies(const std::string& type,
   declareProperty("DeltaRLepton", m_deltaRLepton = 0.5);
   declareProperty("MInv", m_mInv = 5*GeV);
   declareProperty("decayTaus", m_decayTaus = false);
+  declareProperty("WptID", m_WptID = 24); // can change it to 23 for Z
 
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -208,7 +209,7 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
 
       //msg(MSG::INFO) << std::setw(4) << std::right << round(p.perp()/GeV) << " ";
 
-      if (abspid == 24) {
+      if (abspid == m_WptID) {
 	// maybe add to the Wpt
 	const HepMC::FourVector p = (*outit)->momentum();
 	const double newPt = p.perp();
