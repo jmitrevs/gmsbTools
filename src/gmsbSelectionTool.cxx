@@ -34,7 +34,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 				      const std::string& name, 
 				      const IInterface* parent )
   : AthAlgTool( type, name, parent ), 
-    //m_userdatasvc("UserDataSvc", name),
+    m_userdatasvc("UserDataSvc", name),
     m_muonSmear("Data11","staco","q_pT","Rel17","")
 {
   declareInterface<gmsbSelectionTool>( this );
@@ -373,6 +373,9 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 
       ATH_MSG_DEBUG("ptcone20 = " << egdetail->etcone20() << ", pt_corrected = " << egdetail->etcone20_ptcorrected() << ", +ED = " << isol);
 
+      EMShower *newDetail = const_cast<EMShower *>(egdetail);
+      newDetail->set_parameter(egammaParameters::etcone20_ptcorrected,isol, true) ;
+
     }
     select = select && isol < m_electronEtcone20corrected;
   }
@@ -578,6 +581,9 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 							  CaloIsoCorrection::PHOTON);
 
       ATH_MSG_DEBUG("ptcone20 = " << egdetail->etcone20() << ", pt_corrected = " << egdetail->etcone20_ptcorrected() << ", +ED = " << isol);
+
+      EMShower *newDetail = const_cast<EMShower *>(egdetail);
+      newDetail->set_parameter(egammaParameters::etcone20_ptcorrected,isol, true) ;
 
     }
     select = select && isol < m_photonEtcone20corrected;

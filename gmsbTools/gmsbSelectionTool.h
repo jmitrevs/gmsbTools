@@ -34,7 +34,7 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 
 #include "MuonMomentumCorrections/SmearingClass.h"
 
-//#include "AthenaKernel/IUserDataSvc.h"
+#include "AthenaKernel/IUserDataSvc.h"
 #include "GaudiKernel/ToolHandle.h"
 
 #include <string>
@@ -168,7 +168,7 @@ private:
 
 
   // user data
-  //ServiceHandle<IUserDataSvc> m_userdatasvc;
+  ServiceHandle<IUserDataSvc> m_userdatasvc;
 
   ToolHandle<IMCTruthClassifier> m_MCTruthClassifier;
 
