@@ -45,8 +45,10 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("SmearMC", m_smearMC = true);
   declareProperty("MCHasConstantTerm", m_MCHasConstantTerm = false);
   //  declareProperty("RandomSeed", m_randomSeed = 0); // use SUSY prescription
-  declareProperty("EgammaScaleShift", m_egammaScaleShift = eg2011::EnergyRescaler::NOMINAL);
-  declareProperty("EgammaSmearShift", m_egammaSmearShift = eg2011::EnergyRescaler::NOMINAL);
+  declareProperty("ElScaleShift", m_elScaleShift = eg2011::EnergyRescaler::NOMINAL);
+  declareProperty("ElSmearShift", m_elSmearShift = eg2011::EnergyRescaler::NOMINAL);
+  declareProperty("PhoScaleShift", m_phoScaleShift = eg2011::EnergyRescaler::NOMINAL);
+  declareProperty("PhoSmearShift", m_phoSmearShift = eg2011::EnergyRescaler::NOMINAL);
   declareProperty("MCEtconeScale", m_mcEtconeScale = 1.5);
   declareProperty("MCUseAltIsoCorrection", m_useAltIsoCorrection = false);
 
@@ -211,12 +213,12 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
     energy *= m_eRescale.applyMCCalibrationMeV(electron->cluster()->eta(), uncorrectedEt,"ELECTRON");
     
     if (m_isMC) {
-      if (m_egammaScaleShift) {
+      if (m_elScaleShift) {
 	energy *= m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
 						     electron->cluster()->phi(),  
 						     uncorrectedE, 
 						     uncorrectedEt, 
-						     m_egammaScaleShift, 
+						     m_elScaleShift, 
 						     "ELECTRON") / 
 	  m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
 					      electron->cluster()->phi(),  
@@ -232,7 +234,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 	m_eRescale.SetRandomSeed(seed);
 	energy *= m_eRescale.getSmearingCorrectionMeV(electron->cluster()->eta(),
 						      uncorrectedE,
-						      m_egammaSmearShift,
+						      m_elSmearShift,
 						      m_MCHasConstantTerm,
 						      "2011");
       } 
@@ -241,7 +243,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
 						    electron->cluster()->phi(),  
 						    uncorrectedE, 
 						    uncorrectedEt, 
-						    m_egammaScaleShift, 
+						    m_elScaleShift, 
 						    "ELECTRON") / uncorrectedE; 
     }
 
@@ -409,28 +411,36 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
   double energy = photon->e();
   if (!m_simple) {
     if (m_isMC) {
-      if (m_egammaScaleShift) {
-	energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
-						     photon->cluster()->phi(),  
-						     photon->e(), 
-						     photon->et(), 
-						     m_egammaScaleShift, 
-						     (photon->conversion()) ?  
-						     "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
+      if (m_phoScaleShift) {
+	energy *= m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
+						      photon->cluster()->phi(),  
+						      photon->e(), 
+						      photon->et(), 
+						      m_phoScaleShift, 
+						      (photon->conversion()) ?  
+						      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON") /
+	  m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
+					      photon->cluster()->phi(),  
+					      photon->e(), 
+					      photon->et(), 
+					      eg2011::EnergyRescaler::NOMINAL,
+					      (photon->conversion()) ?  
+					      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
+	  
       }
       if (m_smearMC) {
 	m_eRescale.SetRandomSeed(int(1.e+5*fabs(photon->cluster()->phi())));
-	energy = photon->e() * m_eRescale.getSmearingCorrectionMeV(photon->cluster()->eta(),
-								   photon->e(),
-								   m_egammaSmearShift,
-								   m_MCHasConstantTerm);
+	energy *= m_eRescale.getSmearingCorrectionMeV(photon->cluster()->eta(),
+						      photon->e(),
+						      m_phoSmearShift,
+						      m_MCHasConstantTerm);
       }  
     } else { 
       energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
 						   photon->cluster()->phi(),  
 						   photon->e(), 
 						   photon->et(), 
-						   m_egammaScaleShift, 
+						   m_phoScaleShift, 
 						   (photon->conversion()) ?  
 						   "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
       
