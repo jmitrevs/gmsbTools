@@ -14,40 +14,26 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 
 #include "AthenaBaseComps/AthAlgTool.h"
 
-#include "VxVertex/VxContainer.h"
-#include "Particle/TrackParticleContainer.h"
-#include "CaloEvent/CaloClusterContainer.h"
-#include "TrkSegment/SegmentCollection.h"
 
-#include "muonEvent/MuonContainer.h"
-#include "egammaEvent/ElectronContainer.h"
-#include "egammaEvent/PhotonContainer.h"
-#include "tauEvent/TauJetContainer.h"
-#include "JetEvent/JetCollection.h"
-#include "MissingETEvent/MissingET.h"
+//#include "egammaAnalysisUtils/checkOQ.h"
+//#include "egammaAnalysisUtils/EnergyRescaler.h"
 
-#include "NavFourMom/IParticleContainer.h"
-#include "NavFourMom/INavigable4MomentumCollection.h"
+//#include "MuonMomentumCorrections/SmearingClass.h"
 
-#include "egammaAnalysisUtils/checkOQ.h"
-#include "egammaAnalysisUtils/EnergyRescaler.h"
-
-#include "MuonMomentumCorrections/SmearingClass.h"
-
-#include "AthenaKernel/IUserDataSvc.h"
 #include "GaudiKernel/ToolHandle.h"
 
 #include <string>
 #include <map>
 #include <vector>
 
-class IPAUcaloIsolationTool;
-
 
 /** Interface ID */  
 static const InterfaceID IID_gmsbSelectionTool("gmsbSelectionTool", 1, 0);
 
-class IMCTruthClassifier;
+class ElectronD3PDObject;
+class MuonD3PDObject;
+class JetD3PDObject;
+class PhotonD3PDObject;
 
 class gmsbSelectionTool : public AthAlgTool {
 
@@ -65,19 +51,13 @@ public:
   virtual StatusCode finalize();
 
   /** pre-selections */
-  bool isSelected( const Analysis::Electron * electron, 
-		   unsigned int runNum = 0,
-		   unsigned int nPV = 0) const;
-  bool isSelected( const Analysis::Photon * photon, 
-		   unsigned int runNum = 0,
-		   unsigned int nPV = 0) const;
-  bool isSelected( const Analysis::Muon * muon ) const;
-  bool isSelected( const Analysis::TauJet * tauJet ) const;
-  bool isSelected( const Jet* jet ) const;
-  bool isSelected( const Rec::TrackParticle * trackParticle ) const;
-  bool isSelected( const CaloCluster* caloCluster ) const;
+  // note: the references are not const since an update can be made to the calibrations
+  bool isSelected( ElectronD3PDObject& electron, std::size_t idx ) const; 
+  bool isSelected( PhotonD3PDObject& photon, std::size_t idx ) const; 
+  bool isSelected( MuonD3PDObject& muon, std::size_t idx ) const;
+  bool isSelected( JetD3PDObject& jet, std::size_t idx ) const;
 
-  bool isBJet( const Jet * jet ) const;
+  //  bool isBJet( const Jet * jet ) const;
 
 protected:
 
@@ -109,7 +89,6 @@ private:
   double m_electronPt;
   double m_electronEta;
   int    m_electronID;
-  bool   m_doOldElectronIsolation;
   bool   m_doNewElectronIsolation;
   bool   m_doElectronTrackIsolation;
   bool   m_authorEgammaOnly;
@@ -118,7 +97,6 @@ private:
  
   double m_electronEtaWindMin;
   double m_electronEtaWindMax;
-  double m_electronEtcone20ovEt;  // for old
   double m_electronEtcone20corrected; // for new
   double m_electronPtcone20ovEt;  // for track
 
@@ -127,13 +105,12 @@ private:
   double m_photonEta;
   int    m_photonID;
   unsigned int m_photonIsEM;
-  bool   m_doOldPhotonIsolation;
-  bool   m_doNewPhotonIsolation;
+  bool   m_doPhotonTrackIsolation;
   bool   m_doEDPhotonIsolation;
   bool   m_doPhotonEtaWindCut;/// apply (or not) eta cut in bad region window  
   double m_photonEtaWindMin;
   double m_photonEtaWindMax;
-  double m_photonEtcone20ovEt;  // for old
+  double m_photonPtcone20ovEt; // for track
   double m_photonEtcone20corrected;  // for new
 
   /** Muon selection */
@@ -150,39 +127,20 @@ private:
   //float m_ms_p_diff_limit;
   std::string m_muonResSyst;  // Valid values: {"MSLOW", "MSUP", "IDLOW", "IDUP"} 
 
-  /** TauJet selection */
-  double m_tauJetPt;
-  double m_tauJetEta;
-  double m_tauJetLikelihood;
-  double m_tauElTauLikelihood;
-
   /** Jet selection */
   double m_jetPt;
   double m_jetEta;
   double m_bJetLikelihood;
   double m_rejNegEJets;		// reject jets with neg E
 
-  /** caloCluster selection */
-  double m_caloClusterE;
-
-  /** TrackParticle selection */
-  double m_trackParticlePt;
 
 
-  // user data
-  ServiceHandle<IUserDataSvc> m_userdatasvc;
+  // // the OQ utility
+  // egammaOQ m_OQ;
 
-  ToolHandle<IMCTruthClassifier> m_MCTruthClassifier;
+  // mutable eg2011::EnergyRescaler m_eRescale;
 
-  /** @brief Tool handle for corrected isolation */
-  ToolHandle<IPAUcaloIsolationTool> m_PAUcaloIsolationTool;
-
-  // the OQ utility
-  egammaOQ m_OQ;
-
-  mutable eg2011::EnergyRescaler m_eRescale;
-
-  mutable MuonSmear::SmearingClass m_muonSmear;
+  // mutable MuonSmear::SmearingClass m_muonSmear;
 
 };
 

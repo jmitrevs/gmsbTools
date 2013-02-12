@@ -16,26 +16,15 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena
 
 #include "gmsbTools/gmsbSelectionTool.h"
 
-#include "VxVertex/VxContainer.h"
-#include "Particle/TrackParticleContainer.h"
-#include "CaloEvent/CaloClusterContainer.h"
-#include "TrkSegment/SegmentCollection.h"
-
-#include "muonEvent/MuonContainer.h"
-#include "egammaEvent/ElectronContainer.h"
-#include "egammaEvent/PhotonContainer.h"
-#include "tauEvent/TauJetContainer.h"
-#include "JetEvent/JetCollection.h"
-#include "MissingETEvent/MissingET.h"
-
-#include "NavFourMom/IParticleContainer.h"
-#include "NavFourMom/INavigable4MomentumCollection.h"
 
 #include <string>
 #include <map>
 #include <vector>
 
-class MsgStream;
+class ElectronD3PDObject;
+class MuonD3PDObject;
+class JetD3PDObject;
+class PhotonD3PDObject;
 
 /** Interface ID */  
 static const InterfaceID IID_gmsbPreparationTool("gmsbPreparationTool", 1, 0);
@@ -53,17 +42,15 @@ public:
 
   /** Overriding initialize, finalize, and execute */
   virtual StatusCode initialize();
-  virtual StatusCode execute(unsigned int runNum);
+  virtual StatusCode execute();
   virtual StatusCode finalize();
 
   /** access to containers after preparation */
-  const ElectronContainer             * selectedElectrons();
-  const PhotonContainer               * selectedPhotons();  
-  const Analysis::MuonContainer       * selectedMuons();
-  const Analysis::TauJetContainer     * selectedTauJets();
-  const JetCollection                 * selectedJets();
-  const Rec::TrackParticleContainer   * selectedTrackParticles();
-  const CaloClusterContainer          * selectedCaloClusters();
+  /// NOTE: These are factories:  The user needs to delete the created object
+  const ElectronD3PDObject*  selectedElectrons();
+  const PhotonD3PDObject*    selectedPhotons();  
+  const MuonD3PDObject*      selectedMuons();
+  const JetD3PDObject*       selectedJets();
 
   /** summary of pre-selections and overlap removal - will be called at the end of the job
       in the finalize of this tool - the first number is reconstrued and the second is the pre-selected */
@@ -71,10 +58,7 @@ public:
   const std::pair<unsigned int, unsigned int>& electronSummary() const;
   const std::pair<unsigned int, unsigned int>& photonSummary() const;
   const std::pair<unsigned int, unsigned int>& muonSummary() const;
-  const std::pair<unsigned int, unsigned int>& tauJetSummary() const;
   const std::pair<unsigned int, unsigned int>& jetSummary() const;
-  const std::pair<unsigned int, unsigned int>& trackParticleSummary() const;
-  const std::pair<unsigned int, unsigned int>& caloClusterSummary() const;
 
 protected:
 
@@ -84,17 +68,10 @@ protected:
 private:
 
   /** container preparation */
-  StatusCode electronPreparation( std::string key, 
-				  unsigned int runNum, 
-				  unsigned int nPV );
-  StatusCode photonPreparation( std::string key, 
-				unsigned int runNum,
-				unsigned int nPV );
+  StatusCode electronPreparation( std::string key );
+  StatusCode photonPreparation( std::string key );
   StatusCode muonPreparation( std::string key );
-  StatusCode tauJetPreparation( std::string key );
   StatusCode jetPreparation( std::string key );
-  StatusCode trackParticlePreparation( std::string key );
-  StatusCode caloClusterPreparation( std::string key );
 
   /** for debugging purposes - called if MSG_Level = DEBUG */
   void print();
@@ -104,9 +81,6 @@ private:
   /** a handle on selection */
   ToolHandle <gmsbSelectionTool> m_userSelectionTool;
 
-  /** primary vertex container */
-  std::string m_vxCandidatesName;
-
   /** should contain the StoreGate keys to be passed in job options */ 
   std::vector<std::string> m_inputContainerKeys;
  
@@ -115,10 +89,7 @@ private:
   std::pair<unsigned int, unsigned int> m_numElectrons;
   std::pair<unsigned int, unsigned int> m_numPhotons;
   std::pair<unsigned int, unsigned int> m_numMuons;
-  std::pair<unsigned int, unsigned int> m_numTauJets;
   std::pair<unsigned int, unsigned int> m_numJets;
-  std::pair<unsigned int, unsigned int> m_numTrackParticles;
-  std::pair<unsigned int, unsigned int> m_numCaloClusters; 
 
   /** output collection prefix and keys 
       the output collection key are built form the inputCollectionKeys with the prefix appended
@@ -127,10 +98,7 @@ private:
   std::string m_outputElectronKey;
   std::string m_outputPhotonKey;
   std::string m_outputMuonKey;
-  std::string m_outputTauJetKey;
   std::string m_outputJetKey;
-  std::string m_outputTrackParticleKey;
-  std::string m_outputCaloClusterKey;
 
   /** is ATLFAST data */
   bool m_isAtlfast;
@@ -158,24 +126,9 @@ inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::muonSum
   return m_numMuons;
 }
 
-inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::tauJetSummary() const
-{
-  return m_numTauJets;
-}
-
 inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::jetSummary() const
 {
   return m_numJets;
-}
-
-inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::trackParticleSummary() const
-{
-  return m_numTrackParticles;
-}
-
-inline const std::pair<unsigned int, unsigned int>& gmsbPreparationTool::caloClusterSummary() const
-{
-  return m_numCaloClusters;
 }
 
 #endif // GMSBTOOLS_GMSBPREPARATIONTOOL_H 

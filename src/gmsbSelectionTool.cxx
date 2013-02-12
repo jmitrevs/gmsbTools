@@ -13,16 +13,17 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 
 // Accessing data:
 #include "CLHEP/Units/PhysicalConstants.h"
+#include "gmsbD3PDObjects/ElectronD3PDObject.h"
+#include "gmsbD3PDObjects/MuonD3PDObject.h"
+#include "gmsbD3PDObjects/JetD3PDObject.h"
+#include "gmsbD3PDObjects/PhotonD3PDObject.h"
 
 // User Tools
 #include "gmsbTools/gmsbSelectionTool.h"
 
-#include "egammaAnalysisUtils/CaloIsoCorrection.h"
+//#include "egammaAnalysisUtils/CaloIsoCorrection.h"
 
-#include "MCTruthClassifier/IMCTruthClassifier.h"
 #include "MCTruthClassifier/MCTruthClassifierDefs.h"
-
-#include "PhotonAnalysisUtils/IPAUcaloIsolationTool.h"
 
 #include <sstream>
 #include <iomanip>
@@ -33,9 +34,8 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 				      const std::string& name, 
 				      const IInterface* parent )
-  : AthAlgTool( type, name, parent ), 
-    m_userdatasvc("UserDataSvc", name),
-    m_muonSmear("Data11","staco","q_pT","Rel17","")
+  : AthAlgTool( type, name, parent )
+    //    m_muonSmear("Data11","staco","q_pT","Rel17","")
 {
   declareInterface<gmsbSelectionTool>( this );
 
@@ -52,18 +52,9 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("MCEtconeScale", m_mcEtconeScale = 1.5);
   declareProperty("MCUseAltIsoCorrection", m_useAltIsoCorrection = false);
 
-  declareProperty("PAUcaloIsolationTool", m_PAUcaloIsolationTool);
-
-  declareProperty("MCTruthClassifier", m_MCTruthClassifier);
 
   declareProperty("DoTruth", m_doTruth = false);
 
-
-  /** caloCluster selection */
-  declareProperty("CaloClusterE", m_caloClusterE=1.0*GeV);
-
-  /** TrackParticle Pt */
-  declareProperty("TrackParticlePt", m_trackParticlePt=1.0*GeV);
 
   /** Electron selection */
   declareProperty("ElectronPt",       m_electronPt=25*GeV);
@@ -73,9 +64,6 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("DoElectronEtaWindowCut", m_doElectronEtaWindCut = false);
   declareProperty("ElectronEtaWindowMin", m_electronEtaWindMin = 1.37);
   declareProperty("ElectronEtaWindowMax", m_electronEtaWindMax = 1.52);
-  declareProperty("DoOldElectronIsolation", m_doOldElectronIsolation = false);
-  declareProperty("ElectronEtcone20ovEt", m_electronEtcone20ovEt=0.15);
-  declareProperty("DoNewElectronIsolation", m_doNewElectronIsolation = false);
   declareProperty("ElectronEtcone20corrected", m_electronEtcone20corrected=5*GeV);
   declareProperty("DoElectronTrackIsolation", m_doElectronTrackIsolation = false);
   declareProperty("ElectronPtcone20ovEt", m_electronPtcone20ovEt=0.1);
@@ -91,9 +79,8 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("DoPhotonEtaWindowCut", m_doPhotonEtaWindCut = false);
   declareProperty("PhotonEtaWindowMin", m_photonEtaWindMin = 1.37);
   declareProperty("PhotonEtaWindowMax", m_photonEtaWindMax = 1.52);
-  declareProperty("DoOldPhotonIsolation", m_doOldPhotonIsolation = false);
-  declareProperty("PhotonEtcone20ovEt", m_photonEtcone20ovEt=0.1);
-  declareProperty("DoNewPhotonIsolation", m_doNewPhotonIsolation = false);
+  declareProperty("PhotonPtcone20ovEt", m_photonPtcone20ovEt=0.1);
+  declareProperty("DoPhotonTrackIsolation", m_doPhotonTrackIsolation = false);
   declareProperty("PhotonEtcone20corrected", m_photonEtcone20corrected=5*GeV);
   declareProperty("DoEDPhotonIsolation", m_doEDPhotonIsolation = true);
 
@@ -111,11 +98,6 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   //declareProperty("MuonSegMomDiffLimit", m_ms_p_diff_limit = -0.4);
   declareProperty("MuonResSyst", m_muonResSyst = "");
 
-  /** TauJet selection */
-  declareProperty("TauJetPt",           m_tauJetPt=20*GeV);
-  declareProperty("TauJetEta",          m_tauJetEta=2.5);
-  declareProperty("TauJetLikelihood",   m_tauJetLikelihood=-6.0);
-  declareProperty("TauElTauLikelihood", m_tauElTauLikelihood=1000.0); // not yet set - No 23 1007
 
   /** Jet selection */
   declareProperty("JetPt",          m_jetPt=20*GeV);
@@ -130,35 +112,11 @@ StatusCode gmsbSelectionTool::initialize() {
 
   ATH_MSG_DEBUG("in initialize()");
 
-  // if ( !m_userdatasvc.retrieve().isSuccess() ) {
-  //   ATH_MSG_ERROR("Unable to retrieve pointer to UserDataSvc");
-  //   return StatusCode::FAILURE;
-  // }
-  
-  if (m_isMC && m_doTruth) {
-    if(m_MCTruthClassifier.retrieve().isFailure()) {
-      ATH_MSG_ERROR("Failed to retrieve " << m_MCTruthClassifier);
-      return StatusCode::FAILURE; // why success?
-    }
-    else {
-      ATH_MSG_DEBUG("Retrieved MCTruthClassifier " << m_MCTruthClassifier);   
-    }
-  }
+  // m_eRescale.useDefaultCalibConstants("2011");
+  // // m_eRescale.SetRandomSeed(m_randomSeed);
 
-  if (m_doEDPhotonIsolation || m_doEDElectronIsolation) {
-    if(m_PAUcaloIsolationTool.retrieve().isFailure()) {
-      ATH_MSG_ERROR("Failed to retrieve " << m_PAUcaloIsolationTool);
-      return StatusCode::FAILURE;
-    } else {
-      ATH_MSG_DEBUG("Retrieved PAUcaloIsolationTool " << m_PAUcaloIsolationTool);   
-    }
-  }
-
-  m_eRescale.useDefaultCalibConstants("2011");
-  // m_eRescale.SetRandomSeed(m_randomSeed);
-
-  m_muonSmear.UseScale(1);
-  m_muonSmear.UseImprovedCombine();
+  // m_muonSmear.UseScale(1);
+  // m_muonSmear.UseImprovedCombine();
 
   return StatusCode::SUCCESS;
 }
@@ -176,108 +134,90 @@ gmsbSelectionTool::~gmsbSelectionTool()
 {}
 
 // pt = -1 means use real one
-bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron, 
-				    unsigned int /* runNum */, 
-				    unsigned int nPV) const
+bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t idx ) const
 {
-  ATH_MSG_DEBUG("in electron isSelected(), with electron = " << electron);
-
-  if ( !electron ) return false;
+  ATH_MSG_DEBUG("in electron isSelected(), with electron = " << idx);
 
   bool select = true;
 
-  if ( m_authorEgammaOnly ) select = select && electron->author(egammaParameters::AuthorElectron);
+  if ( m_authorEgammaOnly ) select = select && electron.author(idx, egammaParameters::AuthorElectron);
 
   if (!select) return false;
 
   if (m_isMC && m_doTruth) {
-    std::pair<MCTruthPartClassifier::ParticleType, MCTruthPartClassifier::ParticleOrigin> res =
-      m_MCTruthClassifier->particleTruthClassifier(electron);
-    if (res.first != MCTruthPartClassifier::IsoElectron) return false;
+    if (electron.type(idx) != MCTruthPartClassifier::IsoElectron) return false;
   }
   
 
-  const double eta2 = electron->cluster()->etaBE(2);
-  const double absClusEta = fabs(eta2);
+  const float eta2 = electron.etas2(idx);
+  const float absClusEta = fabs(eta2);
 
-  const double eta = (electron->trackParticle()) ? electron->trackParticle()->eta() : electron->eta();
-  const double phi = (electron->trackParticle()) ? electron->trackParticle()->phi() : electron->phi();
+  const float eta = electron.tracketa(idx);
+  const float phi = electron.trackphi(idx);
 
-  const double uncorrectedE = electron->cluster()->e();
-  const double uncorrectedEt = uncorrectedE/cosh(eta);
+  const float uncorrectedE = electron.cl_E(idx);
+  const float uncorrectedEt = uncorrectedE/cosh(eta);
 
-  double energy = uncorrectedE;
+  float energy = uncorrectedE;
 
   if (!m_simple) {
     // Energy calibration around the barrel-endcap crack region (both data/MC)
-    energy *= m_eRescale.applyMCCalibrationMeV(electron->cluster()->eta(), uncorrectedEt,"ELECTRON");
+    // energy *= m_eRescale.applyMCCalibrationMeV(electron->cluster()->eta(), uncorrectedEt,"ELECTRON");
     
-    if (m_isMC) {
-      if (m_elScaleShift) {
-	energy *= m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
-						     electron->cluster()->phi(),  
-						     uncorrectedE, 
-						     uncorrectedEt, 
-						     m_elScaleShift, 
-						     "ELECTRON") / 
-	  m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
-					      electron->cluster()->phi(),  
-					      uncorrectedE, 
-					      uncorrectedEt, 
-					      eg2011::EnergyRescaler::NOMINAL, 
-					      "ELECTRON"); 
-      }
-      if (m_smearMC) {	  
+    // if (m_isMC) {
+    //   if (m_elScaleShift) {
+    // 	energy *= m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
+    // 						     electron->cluster()->phi(),  
+    // 						     uncorrectedE, 
+    // 						     uncorrectedEt, 
+    // 						     m_elScaleShift, 
+    // 						     "ELECTRON") / 
+    // 	  m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
+    // 					      electron->cluster()->phi(),  
+    // 					      uncorrectedE, 
+    // 					      uncorrectedEt, 
+    // 					      eg2011::EnergyRescaler::NOMINAL, 
+    // 					      "ELECTRON"); 
+    //   }
+    //   if (m_smearMC) {	  
 
-	int seed = int(1.e+5*fabs(electron->cluster()->phi()));
-	if (!seed) seed = 1;
-	m_eRescale.SetRandomSeed(seed);
-	energy *= m_eRescale.getSmearingCorrectionMeV(electron->cluster()->eta(),
-						      uncorrectedE,
-						      m_elSmearShift,
-						      m_MCHasConstantTerm,
-						      "2011");
-      } 
-    } else {
-      energy *= m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
-						    electron->cluster()->phi(),  
-						    uncorrectedE, 
-						    uncorrectedEt, 
-						    m_elScaleShift, 
-						    "ELECTRON") / uncorrectedE; 
-    }
+    // 	int seed = int(1.e+5*fabs(electron->cluster()->phi()));
+    // 	if (!seed) seed = 1;
+    // 	m_eRescale.SetRandomSeed(seed);
+    // 	energy *= m_eRescale.getSmearingCorrectionMeV(electron->cluster()->eta(),
+    // 						      uncorrectedE,
+    // 						      m_elSmearShift,
+    // 						      m_MCHasConstantTerm,
+    // 						      "2011");
+    //   } 
+    // } else {
+    //   energy *= m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
+    // 						    electron->cluster()->phi(),  
+    // 						    uncorrectedE, 
+    // 						    uncorrectedEt, 
+    // 						    m_elScaleShift, 
+    // 						    "ELECTRON") / uncorrectedE; 
+    // }
 
     ATH_MSG_DEBUG("Original electron E = " << uncorrectedE << ", corrected E = " << energy);
 
     // let's cosnt-cast the four-mom
-    Analysis::Electron* volel = const_cast<Analysis::Electron*>(electron);
-    if (!volel) {
-      ATH_MSG_ERROR("Const-cast did not work");
-      return false;
-    }
-    volel->setE(energy);
-    volel->setEta(eta);
-    volel->setPhi(phi);
+
+    electron.E(idx) = energy;
+    electron.eta(idx) = eta;
+    electron.phi(idx) = phi;
+    electron.pt(idx) = energy/cosh(eta); // massless
   }
 
 
-  const double pt = electron->pt();
-
-  // if (!m_simple) {
-  //   // add this as user data
-  //   if (m_userdatasvc->decorateElement(*electron, std::string("corrPt"), pt)
-  // 	!= StatusCode::SUCCESS) {
-  //     ATH_MSG_ERROR("Error in electron decoration");
-  //     return false;
-  //   }
-  // }
+  const float pt = electron.pt(idx);
 
   if ( m_isAtlfast ) {
     select = pt > m_electronPt && absClusEta < m_electronEta;
     return select;
   }
 
-  select = electron->passID(static_cast<egammaPID::egammaIDQuality>(m_electronID)); 
+  select = electron.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_electronID)); 
 
   select = select && pt > m_electronPt && absClusEta <m_electronEta;
   ATH_MSG_DEBUG("select is now " << select);
@@ -292,207 +232,102 @@ bool gmsbSelectionTool::isSelected( const Analysis::Electron * electron,
   ATH_MSG_DEBUG("after crack, select is now " << select);
 
   // check OQ
-  bool badOQ = electron->isgoodoq(egammaPID::BADCLUSELECTRON); // 0 == good
+  bool badOQ = (electron.OQ(idx) & egammaPID::BADCLUSELECTRON); // 0 == good
   // if (m_isMC) {
   //   badOQ = badOQ || 
   //     m_OQ.checkOQClusterElectron(runNum, electron->cluster()->eta(), electron->cluster()->phi())==3;
   // }
   select = select && !badOQ;
 
-  if ( m_doOldElectronIsolation ) {
-    const EMShower* egdetail = electron->detail<EMShower>();
-    double isol = 10000000;
-    if(egdetail && pt > 0.0) {
-      double etcone = egdetail->etcone20();
-      if (m_isMC) {
-	if (!m_useAltIsoCorrection) {
-	  etcone *= m_mcEtconeScale;
-	} else {
-	  if (absClusEta < 0.6) {
-	    etcone += 0.007 * uncorrectedEt;
-	  } else if (absClusEta < 1.37) {
-	    etcone += 0.009 * uncorrectedEt;
-	  } else {
-	    etcone += 0.008 * uncorrectedEt;
-	  }
-	}
-      }
-      isol = etcone / uncorrectedEt;
-    }
-    select = select && isol < m_electronEtcone20ovEt;
-  }
-
-  if ( m_doNewElectronIsolation ) {
-    const EMShower* egdetail = electron->detail<EMShower>();
-    float isol = 1000000;
-    if(egdetail && pt > 0.0) {
-
-      isol = CaloIsoCorrection::GetPtNPVCorrectedIsolation(nPV,
-							   energy,
-							   eta2,
-							   egdetail->parameter(egammaParameters::etap),
-							   electron->cluster()->eta(),
-							   20,
-							   m_isMC,
-							   egdetail->etcone20(),
-							   false,
-							   CaloIsoCorrection::ELECTRON);
-    }
-    select = select && isol < m_electronEtcone20corrected;
-  }
-
   if ( m_doElectronTrackIsolation ) {
-    const EMShower* egdetail = electron->detail<EMShower>();
-    double isol = 10000000;
-    if(egdetail && pt > 0.0) {
-      double ptcone = egdetail->ptcone20();
-      isol = ptcone / uncorrectedEt;
-    }
+    const float isol = electron.ptcone20_zpv05(idx) / pt;
     select = select && isol < m_electronPtcone20ovEt;
   }
 
   if ( m_doEDElectronIsolation ) {
-    const EMShower* egdetail = electron->detail<EMShower>();
-    float isol = 1000000;
-    if(egdetail && pt > 0.0) {
-
-      const int removeNHardestJets = 0;  // default value for now
-      const double ED_correction_40 = m_PAUcaloIsolationTool->EtConeCorrectionJetAreas(electron, .40,
-										       removeNHardestJets);
-
-      ATH_MSG_DEBUG("ED_correction_40 = " << ED_correction_40);
-      
-      isol = CaloIsoCorrection::GetPtEDCorrectedIsolation(ED_correction_40, 0.0,
-							  energy,
-							  eta2,
-							  egdetail->parameter(egammaParameters::etap),
-							  electron->cluster()->eta(),
-							  20,
-							  m_isMC,
-							  egdetail->etcone20(),
-							  electron->conversion(),
-							  CaloIsoCorrection::ELECTRON);
-
-      ATH_MSG_DEBUG("ptcone20 = " << egdetail->etcone20() << ", pt_corrected = " << egdetail->etcone20_ptcorrected() << ", +ED = " << isol);
-
-      EMShower *newDetail = const_cast<EMShower *>(egdetail);
-      newDetail->set_parameter(egammaParameters::etcone20_ptcorrected,isol, true) ;
-
-    }
+    const float isol = electron.topoEtcone20_corrected(idx);
     select = select && isol < m_electronEtcone20corrected;
   }
-
 
   ATH_MSG_DEBUG("after iso, select is now " << select);
 
   return select;
 }
 
-bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon, 
-				    unsigned int /* runNum */,
-				    unsigned int nPV) const 
+bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) const
 {
   ATH_MSG_DEBUG("in photon isSelected()");
 
   bool select = false;
-  if ( !photon ) return select;
-
-  const double eta2 = photon->cluster()->etaBE(2);
-  const double absClusEta = fabs(eta2);
 
     
   if (m_isMC && m_doTruth) {
-    std::pair<MCTruthPartClassifier::ParticleType, MCTruthPartClassifier::ParticleOrigin> res =
-      m_MCTruthClassifier->particleTruthClassifier(photon);
-    if (res.first != MCTruthPartClassifier::IsoPhoton) return false;
+    if (photon.type(idx) != MCTruthPartClassifier::IsoPhoton) return false;
   }
 
 
-  double energy = photon->e();
+  const float eta2 = photon.eta2(idx);
+  const float absClusEta = fabs(eta2);
+
+
+  float energy = photon.E(idx);
   if (!m_simple) {
-    if (m_isMC) {
-      if (m_phoScaleShift) {
-	energy *= m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
-						      photon->cluster()->phi(),  
-						      photon->e(), 
-						      photon->et(), 
-						      m_phoScaleShift, 
-						      (photon->conversion()) ?  
-						      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON") /
-	  m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
-					      photon->cluster()->phi(),  
-					      photon->e(), 
-					      photon->et(), 
-					      eg2011::EnergyRescaler::NOMINAL,
-					      (photon->conversion()) ?  
-					      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
+    // if (m_isMC) {
+    //   if (m_phoScaleShift) {
+    // 	energy *= m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
+    // 						      photon->cluster()->phi(),  
+    // 						      photon->e(), 
+    // 						      photon->et(), 
+    // 						      m_phoScaleShift, 
+    // 						      (photon->conversion()) ?  
+    // 						      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON") /
+    // 	  m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
+    // 					      photon->cluster()->phi(),  
+    // 					      photon->e(), 
+    // 					      photon->et(), 
+    // 					      eg2011::EnergyRescaler::NOMINAL,
+    // 					      (photon->conversion()) ?  
+    // 					      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
 	  
-      }
-      if (m_smearMC) {
-	m_eRescale.SetRandomSeed(int(1.e+5*fabs(photon->cluster()->phi())));
-	energy *= m_eRescale.getSmearingCorrectionMeV(photon->cluster()->eta(),
-						      photon->e(),
-						      m_phoSmearShift,
-						      m_MCHasConstantTerm);
-      }  
-    } else { 
-      energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
-						   photon->cluster()->phi(),  
-						   photon->e(), 
-						   photon->et(), 
-						   m_phoScaleShift, 
-						   (photon->conversion()) ?  
-						   "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
+    //   }
+    //   if (m_smearMC) {
+    // 	m_eRescale.SetRandomSeed(int(1.e+5*fabs(photon->cluster()->phi())));
+    // 	energy *= m_eRescale.getSmearingCorrectionMeV(photon->cluster()->eta(),
+    // 						      photon->e(),
+    // 						      m_phoSmearShift,
+    // 						      m_MCHasConstantTerm);
+    //   }  
+    // } else { 
+    //   energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
+    // 						   photon->cluster()->phi(),  
+    // 						   photon->e(), 
+    // 						   photon->et(), 
+    // 						   m_phoScaleShift, 
+    // 						   (photon->conversion()) ?  
+    // 						   "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
       
-    }
+    // }
 
-    ATH_MSG_DEBUG("Original photon E = " << photon->e() << ", corrected E = " << energy);
+    ATH_MSG_DEBUG("Original photon E = " << photon.E(idx) << ", corrected E = " << energy);
 
-    // let's cosnt-cast the four-mom
-    Analysis::Photon* volpho = const_cast<Analysis::Photon*>(photon);
-    if (!volpho) {
-      ATH_MSG_ERROR("Const-cast did not work");
-      return false;
-    }
-    volpho->setE(energy);
+    const float scale = energy / photon.E(idx);
+
+    photon.E(idx) = energy;
+    photon.pt(idx) *= scale; 
 
   }
 
-  const double pt = photon->pt();
-
-  // double pt = energy/cosh(photon->eta());
-
-  // if (!m_simple) {
-  //   // add this as a barcode
-  //   if (m_userdatasvc->decorateElement(*photon, std::string("corrPt"), pt)
-  // 	!= StatusCode::SUCCESS) {
-  //     ATH_MSG_ERROR("Error in photon decoration");
-  //     return false;
-  //   }
-  // }
-
-  // ATH_MSG_DEBUG("Original pt = " << photon->pt() << ", corrected photon pt = " << pt);
-
-  // // for test
-  // // get the user data
-  // double readBackPt;
-  // if (m_userdatasvc->getInMemElementDecoration(*photon, std::string("corrPt"), readBackPt)
-  //     != StatusCode::SUCCESS) {
-  //   ATH_MSG_ERROR("Error in geting photon decoration");
-  //   return StatusCode::FAILURE;
-  // }
-
-  // ATH_MSG_DEBUG("Original Written photon pt = " << pt << ", read back = " << readBackPt); 
+  const float pt = photon.pt(idx);
 
   if ( m_isAtlfast ) {
     select = pt >m_photonPt && absClusEta < m_photonEta;
     return select;
   }
  
-  select = pt > m_photonPt && absClusEta < m_photonEta && photon->passID(static_cast<egammaPID::egammaIDQuality>(m_photonID)); 
+  select = pt > m_photonPt && absClusEta < m_photonEta && photon.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_photonID)); 
 
   // also do isEM selection for special requirements (usually m_photonIsEM == 0, so this does nothing)
-  select = select && photon->isPhoton(m_photonIsEM);
+  select = select && ((photon.isEM(idx) & m_photonIsEM) == 0);
 
   ATH_MSG_DEBUG("after pt, eta (= " << eta2 << "), and isEM cut, select = " << select);
 
@@ -506,7 +341,7 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
   ATH_MSG_DEBUG("after crack cut, select = " << select);
 
   // check OQ
-  bool badOQ = photon->isgoodoq(egammaPID::BADCLUSPHOTON); // 0 == good
+  bool badOQ = (photon.OQ(idx) & egammaPID::BADCLUSPHOTON); // 0 == good
   // if (m_isMC) {
   //   badOQ = badOQ || 
   //     m_OQ.checkOQClusterPhoton(runNum, photon->cluster()->eta(), photon->cluster()->phi(), photon->conversion())==3;
@@ -515,87 +350,13 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
 
   ATH_MSG_DEBUG("after OTX, select = " << select);
 
-  if ( m_doOldPhotonIsolation ) {
-    const EMShower* egdetail = photon->detail<EMShower>();
-    double isol = 10000000;
-    if(egdetail && pt > 0.0) {
-      double etcone = egdetail->etcone20();
-      ATH_MSG_DEBUG("etcone20 = " << etcone);
-      if (m_isMC) {
-	if (!m_useAltIsoCorrection) {
-	  etcone *= m_mcEtconeScale;
-	} else {
-	  if (absClusEta < 0.6) {
-	    etcone += 0.007 * photon->pt();
-	  } else if (absClusEta < 1.37) {
-	    etcone += 0.009 * photon->pt();
-	  } else {
-	    etcone += 0.008 * photon->pt();
-	  }
-	}
-      }
-      isol = etcone / photon->pt();
-    }
-    select = select && isol < m_photonEtcone20ovEt;
-  }
-
-  if ( m_doNewPhotonIsolation ) {
-    const EMShower* egdetail = photon->detail<EMShower>();
-    float isol = 1000000;
-    if(egdetail && pt > 0.0) {
-      // ATH_MSG_DEBUG("arguments to GetPtNPVCorrectedIsolation: " << nPV << ", " <<
-      // 		    energy << ", " <<
-      // 		    eta2 << ", " <<
-      // 		    egdetail->parameter(egammaParameters::etap) << ", " <<
-      // 		    photon->cluster()->eta() << ", " <<
-      // 		    20 << ", " <<
-      // 		    m_isMC << ", " <<
-      // 		    egdetail->etcone20() << ", " <<
-      // 		    photon->conversion() << ", " <<
-      // 		    CaloIsoCorrection::PHOTON);
-
-      isol = CaloIsoCorrection::GetPtNPVCorrectedIsolation(nPV,
-							   energy,
-							   eta2,
-							   egdetail->parameter(egammaParameters::etap),
-							   photon->cluster()->eta(),
-							   20,
-							   m_isMC,
-							   egdetail->etcone20(),
-							   photon->conversion(),
-							   CaloIsoCorrection::PHOTON);
-    }
-    select = select && isol < m_photonEtcone20corrected;
+  if ( m_doPhotonTrackIsolation ) {
+    const float isol = photon.ptcone20_zpv05(idx) / pt;
+    select = select && isol < m_photonPtcone20ovEt;
   }
 
   if ( m_doEDPhotonIsolation ) {
-    const EMShower* egdetail = photon->detail<EMShower>();
-    float isol = 1000000;
-    if(egdetail && pt > 0.0) {
-
-      const int removeNHardestJets = 0;  // default value for now
-      const double ED_correction_40 = m_PAUcaloIsolationTool->EtConeCorrectionJetAreas(photon, .40,
-										       removeNHardestJets);
-
-      ATH_MSG_DEBUG("ED_correction_40 = " << ED_correction_40);
-      
-      isol = CaloIsoCorrection::GetPtEDCorrectedIsolation(ED_correction_40, 0.0,
-							  energy,
-							  eta2,
-							  egdetail->parameter(egammaParameters::etap),
-							  photon->cluster()->eta(),
-							  20,
-							  m_isMC,
-							  egdetail->etcone20(),
-							  photon->conversion(),
-							  CaloIsoCorrection::PHOTON);
-
-      ATH_MSG_DEBUG("ptcone20 = " << egdetail->etcone20() << ", pt_corrected = " << egdetail->etcone20_ptcorrected() << ", +ED = " << isol);
-
-      EMShower *newDetail = const_cast<EMShower *>(egdetail);
-      newDetail->set_parameter(egammaParameters::etcone20_ptcorrected,isol, true) ;
-
-    }
+    const float isol = photon.topoEtcone20_corrected(idx);
     select = select && isol < m_photonEtcone20corrected;
   }
 
@@ -604,110 +365,103 @@ bool gmsbSelectionTool::isSelected( const Analysis::Photon * photon,
   return select;
 }
 
-bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
+bool gmsbSelectionTool::isSelected( MuonD3PDObject& muon, std::size_t idx ) const
 {
-  ATH_MSG_DEBUG("in muon isSelected(), with muon = " << muon);
-
-  if ( !muon ) return false;
+  ATH_MSG_DEBUG("in muon isSelected(), with muon = " << idx);
 
   if ( m_isAtlfast ) {
-    return (muon->pt()>m_muonPt && fabs(muon->eta())<m_muonEta);
+    return (muon.pt(idx) > m_muonPt && fabs(muon.eta(idx)) < m_muonEta);
   }
 
-  ATH_MSG_DEBUG("Here");
 
   // do ID cut
-  bool select = ((m_sel_combined && muon->isCombinedMuon()) ||
-		 (m_sel_seg_tag && muon->isSegmentTaggedMuon()));
+  bool select = ((m_sel_combined && muon.isCombinedMuon(idx)) ||
+		 (m_sel_seg_tag && muon.isSegmentTaggedMuon(idx)));
   
-  select = select && muon->isLoose();
+  select = select && muon.loose(idx);
 
   if (!select) return false;
 
-  //double pt = (muon->isCombinedMuon()) ? muon->pt() : muon->inDetTrackParticle()->pt(); ;
-  double pt = muon->pt();
+  //float pt = (muon->isCombinedMuon()) ? muon->pt() : muon->inDetTrackParticle()->pt(); ;
+  float pt = muon.pt(idx);
 
   // ATH_MSG_DEBUG("Here 2");
-  if (!m_simple) {
-    if (m_isMC && m_smearMC) {
-      ATH_MSG_DEBUG("Here 2a");
-      int seed = int(1.e+5*fabs(muon->phi()));
-      if (!seed) seed = 1;
-      m_muonSmear.SetSeed(seed);
-      ATH_MSG_DEBUG("Here 2b");
-      ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
-		    << muon->inDetTrackParticle() << ", "
-		    << muon->pt() << ", "
-		    <<  muon->eta());
+  // if (!m_simple) {
+  //   if (m_isMC && m_smearMC) {
+  //     ATH_MSG_DEBUG("Here 2a");
+  //     int seed = int(1.e+5*fabs(muon->phi()));
+  //     if (!seed) seed = 1;
+  //     m_muonSmear.SetSeed(seed);
+  //     ATH_MSG_DEBUG("Here 2b");
+  //     ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
+  // 		    << muon->inDetTrackParticle() << ", "
+  // 		    << muon->pt() << ", "
+  // 		    <<  muon->eta());
       
-      // double charge = muon->charge();
-      double eta = muon->eta();
-      double ptcb = muon->pt();
-      double ptms = muon->muonExtrapolatedTrackParticle() ? muon->muonExtrapolatedTrackParticle()->pt() : 1;
-      double ptid = muon->inDetTrackParticle() ? muon->inDetTrackParticle()->pt() : 1;
+  //     // float charge = muon->charge();
+  //     float eta = muon->eta();
+  //     float ptcb = muon->pt();
+  //     float ptms = muon->muonExtrapolatedTrackParticle() ? muon->muonExtrapolatedTrackParticle()->pt() : 1;
+  //     float ptid = muon->inDetTrackParticle() ? muon->inDetTrackParticle()->pt() : 1;
       
-      m_muonSmear.Event(ptms,ptid,ptcb,eta);
+  //     m_muonSmear.Event(ptms,ptid,ptcb,eta);
       
-      if (m_muonResSyst == "") {
-	if (muon->isCombinedMuon()) {
-	  pt = m_muonSmear.pTCB();
-	} else {
-	  pt = m_muonSmear.pTID();
-	}
-      } else {
-	double pTMS_smeared = 0.;
-	double pTID_smeared = 0.;
-	double pTCB_smeared = 0.;
+  //     if (m_muonResSyst == "") {
+  // 	if (muon->isCombinedMuon()) {
+  // 	  pt = m_muonSmear.pTCB();
+  // 	} else {
+  // 	  pt = m_muonSmear.pTID();
+  // 	}
+  //     } else {
+  // 	float pTMS_smeared = 0.;
+  // 	float pTID_smeared = 0.;
+  // 	float pTCB_smeared = 0.;
 	
-	// Valid values for "THESTRING": {"MSLOW", "MSUP", "IDLOW", "IDUP"} 
-	m_muonSmear.PTVar(pTMS_smeared, pTID_smeared, pTCB_smeared, m_muonResSyst);
+  // 	// Valid values for "THESTRING": {"MSLOW", "MSUP", "IDLOW", "IDUP"} 
+  // 	m_muonSmear.PTVar(pTMS_smeared, pTID_smeared, pTCB_smeared, m_muonResSyst);
 	
-	if (muon->isCombinedMuon()) {
-	  pt = pTCB_smeared;
-	} else {
-	  pt = pTID_smeared;
-	}
-      }
+  // 	if (muon->isCombinedMuon()) {
+  // 	  pt = pTCB_smeared;
+  // 	} else {
+  // 	  pt = pTID_smeared;
+  // 	}
+  //     }
     
 
-      // let's cosnt-cast the four-mom
-      if (pt != 0) {
-	Analysis::Muon* volmu = const_cast<Analysis::Muon*>(muon);
-	if (!volmu) {
-	  ATH_MSG_ERROR("Const-cast for muon did not work");
-	  return false;
-	}
-	volmu->setIPt(1.0/pt);
-      }
-    }
-  }
+  //     // let's cosnt-cast the four-mom
+  //     if (pt != 0) {
+  // 	Analysis::Muon* volmu = const_cast<Analysis::Muon*>(muon);
+  // 	if (!volmu) {
+  // 	  ATH_MSG_ERROR("Const-cast for muon did not work");
+  // 	  return false;
+  // 	}
+  // 	volmu->setIPt(1.0/pt);
+  //     }
+  //   }
+  // }
     
   // select must be true before in order to get here, so can overwrite
-  select = pt >m_muonPt && fabs(muon->eta())<m_muonEta;
+  select = pt >m_muonPt && fabs(muon.eta(idx))<m_muonEta;
 
   // do iso cut
   if (m_do_iso_cut) {
     if (m_do_flat_iso_cut) {
-      select = select && muon->parameter(MuonParameters::ptcone20)<m_flat_isolation_cut;
-    } else {
-      select = select && muon->parameter(MuonParameters::ptcone20)/muon->et()<m_isolation_cut;
+      select = select && muon.ptcone20(idx)<m_flat_isolation_cut;
+  } else {
+      select = select && muon.ptcone20(idx)/pt<m_isolation_cut;
     }
   }
 
   if (!select) return false;
 
   // do track cuts
-  const Rec::TrackParticle* id_trk_part = muon->inDetTrackParticle();
-  if(!id_trk_part) return false;
-  const Trk::TrackSummary* id_trk_sum = id_trk_part->trackSummary();
-  if(!id_trk_sum) return false;
-  if(id_trk_sum->get(Trk::expectBLayerHit) && id_trk_sum->get(Trk::numberOfBLayerHits) == 0) return false;
-  if (id_trk_sum->get(Trk::numberOfPixelHits) + id_trk_sum->get(Trk::numberOfPixelDeadSensors) <= 1) return false;
-  if (id_trk_sum->get(Trk::numberOfSCTHits) + id_trk_sum->get(Trk::numberOfSCTDeadSensors) < 6) return false;
-  if (id_trk_sum->get(Trk::numberOfPixelHoles) + id_trk_sum->get(Trk::numberOfSCTHoles) >= 3) return false;
-  const int nTRTOutliers = id_trk_sum->get(Trk::numberOfTRTOutliers);
-  const int nTRTTotal    = nTRTOutliers + id_trk_sum->get(Trk::numberOfTRTHits);
-  const float trackEta   = id_trk_part->eta();
+  if (muon.expectBLayerHit(idx) && muon.nBLHits(idx) == 0) return false;
+  if (muon.nPixHits(idx) + muon.nPixelDeadSensors(idx) <= 1) return false;
+  if (muon.nSCTHits(idx) + muon.nSCTDeadSensors(idx) < 6) return false;
+  if (muon.nPixHoles(idx) + muon.nSCTHoles(idx) >= 3) return false;
+  const int nTRTOutliers = muon.nTRTOutliers(idx);
+  const int nTRTTotal    = nTRTOutliers + muon.nTRTHits(idx);
+  const float trackEta   = - log(tan(muon.tracktheta(idx)/2.0));;
   if (fabs(trackEta) < 1.9) {
     select = (nTRTTotal > 5 &&  nTRTOutliers < 0.9 * nTRTTotal);
   } else if (nTRTTotal > 5) {
@@ -719,64 +473,24 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
   return select;
 }
 
-bool gmsbSelectionTool::isSelected( const Jet* jet ) const
+bool gmsbSelectionTool::isSelected( JetD3PDObject& jet, std::size_t idx ) const
 {
-  if ( !jet ) return false;
 
-  if (m_rejNegEJets && jet->e() < 0) {
+  if (m_rejNegEJets && jet.E(idx) < 0) {
     return false;
   }
 
-  return (jet->pt() > m_jetPt && fabs(jet->eta()) < m_jetEta);
+  return (jet.pt(idx) > m_jetPt && fabs(jet.eta(idx)) < m_jetEta);
 
 }
 
-bool gmsbSelectionTool::isSelected( const Rec::TrackParticle * trackParticle ) const
-{
-  bool select = false;
-  if ( !trackParticle ) return select;
-  select = trackParticle->pt() > m_trackParticlePt; 
 
-  return select;
-}
+// bool gmsbSelectionTool::isBJet( const Jet * jet ) const {
 
-bool gmsbSelectionTool::isSelected( const CaloCluster* caloCluster ) const
-{
-  bool select = false;
-  if ( !caloCluster ) return select;
-  select = caloCluster->e() > m_caloClusterE;
+//   /** first check that it is a selected jet */
+//   if ( !jet ) return false;
 
-  return select;
-}
-
-bool gmsbSelectionTool::isSelected( const Analysis::TauJet * /* tauJet */ ) const {
-
-  bool select = false;
-  // if ( !tauJet ) return select;
-
-  // int numTrack = tauJet->numTrack();
-  // select = tauJet->pt()>m_tauJetPt &&
-  //          fabs(tauJet->eta())<m_tauJetEta &&
-  //          fabs(tauJet->charge())==1.0 &&
-  //          (numTrack==1 || numTrack==3);
-
-  // const Analysis::TauPID* tauId = tauJet->tauID();
-  // if ( tauId ) {
-  //   select = select &&
-  //            tauId->discriminant( TauJetParameters::Likelihood ) > m_tauJetLikelihood &&
-  //            tauId->discriminant( TauJetParameters::TauElTauLikelihood )< m_tauElTauLikelihood;
-  // }
-
-  return select;
-
-}
-
-bool gmsbSelectionTool::isBJet( const Jet * jet ) const {
-
-  /** first check that it is a selected jet */
-  if ( !jet ) return false;
-
-  bool is_bjet = this->isSelected( jet );
-  return ( is_bjet && jet->getFlavourTagWeight()>m_bJetLikelihood );
-}
+//   bool is_bjet = this->isSelected( jet );
+//   return ( is_bjet && jet->getFlavourTagWeight()>m_bJetLikelihood );
+// }
 

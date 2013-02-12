@@ -13,6 +13,7 @@ use AtlasROOT                   AtlasROOT-*                     External
 use TrkSegment			TrkSegment-*			Tracking/TrkEvent
 
 use egammaEvent			egammaEvent-*			Reconstruction/egamma
+use gmsbD3PDObjects             gmsbD3PDObjects-*
 use muonEvent			muonEvent-*			Reconstruction/MuonIdentification
 use tauEvent			tauEvent-*			Reconstruction
 use Particle			Particle-*			Reconstruction
