@@ -19,20 +19,6 @@ Purpose : User tools for analyis overlap removal on ESD/AOD/DPD in Athena
 #include "gmsbTools/gmsbSelectionTool.h"
 #include "gmsbTools/gmsbOverlapCheckingTool.h"
 
-#include "VxVertex/VxContainer.h"
-#include "Particle/TrackParticleContainer.h"
-#include "CaloEvent/CaloClusterContainer.h"
-#include "TrkSegment/SegmentCollection.h"
-
-#include "muonEvent/MuonContainer.h"
-#include "egammaEvent/ElectronContainer.h"
-#include "egammaEvent/PhotonContainer.h"
-#include "tauEvent/TauJetContainer.h"
-#include "JetEvent/JetCollection.h"
-#include "MissingETEvent/MissingET.h"
-
-#include "NavFourMom/IParticleContainer.h"
-#include "NavFourMom/INavigable4MomentumCollection.h"
 
 #include <string>
 #include <map>
@@ -40,6 +26,38 @@ Purpose : User tools for analyis overlap removal on ESD/AOD/DPD in Athena
 
 /** Interface ID */  
 static const InterfaceID IID_gmsbOverlapRemovalTool("gmsbOverlapRemovalTool", 1, 0);
+
+class ElectronD3PDObject;
+class MuonD3PDObject;
+class JetD3PDObject;
+class PhotonD3PDObject;
+
+class genericParticle {
+public:
+  enum particleType {photon, electron, muon, jet}
+  float pt() const {return m_pt;};
+  float eta() const {return m_eta;};
+  float phi() const {return m_phi;};
+  particleType type() const {return m_isJet;} 
+  float etaClus() const {return m_etaClus;};
+  float phiClus() const {return m_phiClus;};
+  int idx() const {return m_idx;}
+  genericParticle(float pt, float eta, float phi, particleType type, int idx) :
+    m_pt(pt), m_eta(eta), m_phi(phi), m_type(type), m_idx(idx), 
+    m_etaClus(-999), m_phiClus(-999) {};
+  genericParticle(float pt, float eta, float phi, particleType type, int idx,
+		  float etaClus, float phiClus) :
+    m_pt(pt), m_eta(eta), m_phi(phi), m_type(type), m_idx(idx),
+    m_etaClus(etaClus), m_phiClus(phiClus) {};
+private:
+  float m_pt;
+  float m_eta;
+  float m_phi;
+  praticleType m_type;
+  int m_idx;
+  float m_etaClus; // cluster values for electrons/photons
+  float m_phiClus; // cluster values for electrons/photons
+}
 
 class gmsbOverlapRemovalTool : public AthAlgTool {
 
@@ -58,17 +76,13 @@ public:
   virtual StatusCode finalize();
 
   /** access to containers after preparation */
-  const INavigable4MomentumCollection * finalStateObjects();
-  const PhotonContainer               * finalStatePhotons();  // including converted photons
-  const ElectronContainer             * finalStateElectrons();
-  const Analysis::MuonContainer       * finalStateMuons();
-  const INavigable4MomentumCollection * finalStateLeptons();  // Electrons or Muons
-  const Analysis::TauJetContainer     * finalStateTauJets();
-  const JetCollection          * finalStateJets();
-  const JetCollection          * finalStateBJets();
-  const JetCollection          * finalStateLightJets();
-  const Rec::TrackParticleContainer   * finalStateTrackParticles();
-  const CaloClusterContainer          * finalStateCaloClusters();
+  /// NOTE: These are factories:  The user needs to delete the created object
+  const PhotonD3PDObject               * finalStatePhotons();  // including converted photons
+  const ElectronD3PDObject             * finalStateElectrons();
+  const MuonD3PDObject       * finalStateMuons();
+  const JetD3PDObject          * finalStateJets();
+  // const JetD3PDObject          * finalStateBJets();
+  // const JetD3PDObject          * finalStateLightJets();
 
   /** summary of pre-selections and overlap removal - will be called at the end of the job
       in the finalize of this tool - the first number is reconstrued and the second is the pre-selected */
@@ -76,12 +90,9 @@ public:
   const std::pair<unsigned int, unsigned int>& electronSummary() const;
   const std::pair<unsigned int, unsigned int>& photonSummary() const;
   const std::pair<unsigned int, unsigned int>& muonSummary() const;
-  const std::pair<unsigned int, unsigned int>& tauJetSummary() const;
   const std::pair<unsigned int, unsigned int>& jetSummary() const;
-  const std::pair<unsigned int, unsigned int>& bJetSummary() const;
-  const std::pair<unsigned int, unsigned int>& lightJetSummary() const;
-  const std::pair<unsigned int, unsigned int>& trackParticleSummary() const;
-  const std::pair<unsigned int, unsigned int>& caloClusterSummary() const;
+  //const std::pair<unsigned int, unsigned int>& bJetSummary() const;
+  //const std::pair<unsigned int, unsigned int>& lightJetSummary() const;
 
   /** check if execute() is already called for this tool in this job for this event */
   bool isExecuted();
@@ -94,32 +105,14 @@ protected:
 private:
 
   /** container preparation */
-  StatusCode prepareContainers();
   StatusCode electronPreparation( std::string key );
   StatusCode photonPreparation( std::string key );
   StatusCode muonPreparation( std::string key );
-  StatusCode tauJetPreparation( std::string key );
   StatusCode jetPreparation( std::string key );
-  StatusCode trackParticlePreparation( std::string key );
-  StatusCode caloClusterPreparation( std::string key );
-  StatusCode lockContainers();
 
   /** for debugging purposes - called if MSG_Level = DEBUG */
   void print();
 
-private:
-
-  INavigable4MomentumCollection * allParticles();
-  INavigable4MomentumCollection * allLeptons();
-  PhotonContainer               * allPhotons();  // including converted photons
-  ElectronContainer             * allElectrons();
-  Analysis::MuonContainer       * allMuons();
-  Analysis::TauJetContainer     * allTauJets();
-  JetCollection          * allJets();
-  JetCollection          * allBJets();
-  JetCollection          * allLightJets();
-  Rec::TrackParticleContainer   * allTrackParticles();
-  CaloClusterContainer          * allCaloClusters();
 
 private:
 
@@ -135,27 +128,21 @@ private:
   std::pair<unsigned int, unsigned int> m_numElectrons;
   std::pair<unsigned int, unsigned int> m_numPhotons;
   std::pair<unsigned int, unsigned int> m_numMuons;
-  std::pair<unsigned int, unsigned int> m_numTauJets;
   std::pair<unsigned int, unsigned int> m_numJets;
-  std::pair<unsigned int, unsigned int> m_numBJets;
-  std::pair<unsigned int, unsigned int> m_numLightJets;
-  std::pair<unsigned int, unsigned int> m_numTrackParticles;
-  std::pair<unsigned int, unsigned int> m_numCaloClusters; 
+  // std::pair<unsigned int, unsigned int> m_numBJets;
+  // std::pair<unsigned int, unsigned int> m_numLightJets;
 
   /** output collection prefix and keys 
       the output collection key are built form the inputCollectionKeys with the prefix appended
       the use can set the prefix in the job options */
-  std::string m_outputObjectKey;
-  std::string m_outputLeptonKey;
+  //std::string m_outputObjectKey;
+  //std::string m_outputLeptonKey;
   std::string m_outputElectronKey;
   std::string m_outputPhotonKey;
   std::string m_outputMuonKey;
-  std::string m_outputTauJetKey;
   std::string m_outputJetKey;
-  std::string m_outputBJetKey;
-  std::string m_outputLightJetKey;
-  std::string m_outputTrackParticleKey;
-  std::string m_outputCaloClusterKey;
+  //std::string m_outputBJetKey;
+  //std::string m_outputLightJetKey;
 
   /** is ATLFAST data */
   bool m_isAtlfast;
@@ -165,6 +152,8 @@ private:
 
   /** doing debugging */
   bool m_debug;
+
+  std::vector<genericParticle> m_allParticles;
 
 };
 
@@ -183,35 +172,21 @@ inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::muon
   return m_numMuons;
 }
 
-inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::tauJetSummary() const
-{
-  return m_numTauJets;
-}
-
 inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::jetSummary() const
 {
   return m_numJets;
 }
 
-inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::bJetSummary() const
-{
-  return m_numBJets;
-}
+// inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::bJetSummary() const
+// {
+//   return m_numBJets;
+// }
 
-inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::lightJetSummary() const
-{
-  return m_numLightJets;
-}
+// inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::lightJetSummary() const
+// {
+//   return m_numLightJets;
+// }
 
-inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::trackParticleSummary() const
-{
-  return m_numTrackParticles;
-}
-
-inline const std::pair<unsigned int, unsigned int>& gmsbOverlapRemovalTool::caloClusterSummary() const
-{
-  return m_numCaloClusters;
-}
 
 #endif // GMSBTOOLS_GMSBOVERLAPREMOVALTOOL_H 
 

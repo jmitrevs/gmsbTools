@@ -280,19 +280,22 @@ void gmsbPreparationTool::print() {
   /** Get the container of pre-selected Electrons */
   const ElectronD3PDObject * electrons = this->selectedElectrons();
   if(electrons) ATH_MSG_DEBUG("Number of Pre-selected Electrons is " << electrons->n());
+  delete electrons;
 
   /** Get the container of pre-selected Photons */
   const PhotonD3PDObject * photons = this->selectedPhotons();
   if(photons) ATH_MSG_DEBUG("Number of Pre-selected Photons is " << photons->n());
+  delete photons;
 
   /** Get the container of pre-selected Muons */
   const MuonD3PDObject * muons = this->selectedMuons();
   if(muons)ATH_MSG_DEBUG("Number of Pre-selected Muons is " << muons->n());
+  delete muons;
 
   /** Get the container of pre-selected Jets */
   const JetD3PDObject * jets = this->selectedJets();
   if(jets) ATH_MSG_DEBUG("Number of Pre-selected Jets is " << jets->n());
-
+  delete jets;
 }
 
 //---------------------------------------------------------------------------------------------------------

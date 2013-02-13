@@ -13,26 +13,11 @@ Purpose : User tools for checking overlaps at deltaR, TrackParticle/Cluster and 
 
 #include "GaudiKernel/ToolHandle.h"
 
-#include "VxVertex/VxContainer.h"
-#include "Particle/TrackParticleContainer.h"
-#include "CaloEvent/CaloClusterContainer.h"
-#include "TrkSegment/SegmentCollection.h"
-
-#include "muonEvent/MuonContainer.h"
-#include "egammaEvent/ElectronContainer.h"
-#include "egammaEvent/PhotonContainer.h"
-#include "tauEvent/TauJetContainer.h"
-#include "JetEvent/JetCollection.h"
-#include "MissingETEvent/MissingET.h"
-
-#include "NavFourMom/IParticleContainer.h"
-#include "NavFourMom/INavigable4MomentumCollection.h"
-
-#include "FourMomUtils/P4Helpers.h"
-
 #include <string>
 #include <map>
 #include <vector>
+
+#include "gmsbTools/FourMomHelpers.h"
 
 /** Interface ID */  
 static const InterfaceID IID_gmsbOverlapCheckingTool("gmsbOverlapCheckingTool", 1, 0);
@@ -53,7 +38,7 @@ public:
   virtual StatusCode finalize();
 
   /** overlaps */
-  bool overlap(const I4Momentum *object1, const I4Momentum *object2) const ;
+  bool overlap(float etaA, float phiA, float etaB, float phiB, bool jet) const ;
 
 protected:
 
@@ -62,6 +47,7 @@ protected:
 
 private:
 
+
   /** deltaR overlap */
   double m_deltaR;
   double m_deltaRWithJets;
@@ -69,17 +55,9 @@ private:
 };
 
 /** check for oeverlap in deltaR and return as well the deltaR value */
-inline bool gmsbOverlapCheckingTool::overlap(const I4Momentum *object1,
-                                                     const I4Momentum *object2) const 
+inline bool gmsbOverlapCheckingTool::overlap(float etaA, float phiA, float etaB, float phiB, bool jet) const 
 {
-
-  const Jet * jet1 = dynamic_cast<const Jet*> (object1);
-  const Jet * jet2 = dynamic_cast<const Jet*> (object2);
-  if ( jet1 || jet2 ) {
-    return P4Helpers::isInDeltaR( *object1, *object2, m_deltaRWithJets);
-  } else {
-    return P4Helpers::isInDeltaR( *object1, *object2, m_deltaR);
-  }
+  return FourMomHelpers::isInDeltaR(etaA, phiA, etaB, phiB, jet ? m_deltaRWithJets : m_deltaR);
 }
 
 #endif // GMSBTOOLS_GMSBOVERLAPCHECKINGTOOL_H 

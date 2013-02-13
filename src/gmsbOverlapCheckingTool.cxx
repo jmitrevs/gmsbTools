@@ -20,14 +20,11 @@ Purpose : User Analysis Overlap Checking - see gmsbOverlapCheckingTool.h for det
 #include <iomanip>
 #include <iostream>
 
-//using namespace Analysis;
-//using namespace Rec;
-//using namespace std;
 
 //------------------------------------------------------------------------------
 gmsbOverlapCheckingTool::gmsbOverlapCheckingTool( const std::string& type,
-                                                                  const std::string& name, 
-                                                                  const IInterface* parent )
+						  const std::string& name, 
+						  const IInterface* parent )
   : AthAlgTool( type, name, parent ) {
   
   declareInterface<gmsbOverlapCheckingTool>( this );
