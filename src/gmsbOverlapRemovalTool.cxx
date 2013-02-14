@@ -19,6 +19,8 @@ Purpose : User Analysis Overlap Removal - see gmsbOverlapRemovalTool.h for detai
 // User Tools
 #include "gmsbTools/gmsbOverlapRemovalTool.h"
 
+#include "gmsbTools/SortHelpers.h"
+
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -101,12 +103,7 @@ gmsbOverlapRemovalTool::~gmsbOverlapRemovalTool()
 StatusCode gmsbOverlapRemovalTool::execute() {
   ATH_MSG_DEBUG("in execute()");
 
-  /** check if the execute is already called or not 
-      in one job, execute should be called once for each event */
-  if ( this->isExecuted() ) {
-    ATH_MSG_WARNING("overlapRemovalTool->execute() already called for the event in this job");
-    return StatusCode::SUCCESS; 
-  }
+  m_allParticles.clear();
 
   /** now object preparation with overlap removal */
   for ( unsigned int i=0; i<m_inputContainerKeys.size(); ++i ) {
@@ -209,246 +206,261 @@ StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
   ATH_MSG_DEBUG("AOD ElectronD3PDObject size is " << aod_electrons.n());
   m_numElectrons.first += aod_electrons.n();
 
+  // need to first sort 
+  SortHelpers::sl_t sortedList;
+  SortHelpers::sort(sortedList, aod_electrons);
 
-  for (std::size_t idx = 0; idx < aod_electrons.n(); idx++) {
+  for (sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
+    const std::size_t idx = it->first;
 
-    ///////////////////////////////// STOPPED HERE /////////////////
-
-    /** if this is the first particle, just put it in */ 
-    if ( particles->size() == 0 ) {
-       particles->push_back( *elecItr );
-       leptons->push_back( *elecItr );
-       electrons->push_back( *elecItr );
-    }   
-    /** check for the overlap and save non overlapping ones */
-    else {
-      INavigable4MomentumCollection::const_iterator nav4MomItr  = particles->begin();
-      INavigable4MomentumCollection::const_iterator nav4MomItrE = particles->end();
-      bool overlap = false;
-      for (; nav4MomItr != nav4MomItrE; ++nav4MomItr) {
-          /** overlap checking */
-          const Electron * electron = dynamic_cast<const Electron*>(*nav4MomItr);
-          const egamma * eg = dynamic_cast<const egamma*>(*nav4MomItr);
-          if ( !electron || ( electron && m_removeOverlapInSameContainer ) ) {
-	    if (eg) {
-	      overlap = m_userOverlapCheckingTool->overlap((*elecItr)->cluster(), eg->cluster());
-	    } else {	      
-	      overlap = m_userOverlapCheckingTool->overlap((*elecItr)->trackParticle(), *nav4MomItr);
-	    }
-	  }
-          /** get out of the loop as soon as an overlap is found */
-          if ( overlap ) break;
+    bool overlap = false;
+    for (std::vector<genericParticle>::iterator particle = m_allParticles.begin();
+	 particle != m_allParticles.end(); 
+	 ++particle) {
+      /** overlap checking */
+      switch (particle.type()) {
+      case genericParticle::electron:
+	if (m_removeOverlapInSameContainer) {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_electrons.cl_eta(idx), 
+						       aod_electrons.cl_phi(idx),
+						       particle->cl_eta(), 
+						       particle->cl_phi(), false);
+	}
+	break;
+      case genericParticle::photon:
+	overlap = m_userOverlapCheckingTool->overlap(aod_electrons.cl_eta(idx), 
+						     aod_electrons.cl_phi(idx),
+						     particle->cl_eta(), 
+						     particle->cl_phi(), false);
+	break;
+      case genericParticle::muon:
+	overlap = m_userOverlapCheckingTool->overlap(aod_electrons.eta(idx), 
+						     aod_electrons.phi(idx),
+						     particle->eta(), 
+						     particle->phi(), false);
+	break;
+      default:
+	overlap = m_userOverlapCheckingTool->overlap(aod_electrons.eta(idx), 
+						     aod_electrons.phi(idx),
+						     particle->eta(), 
+						     particle->phi(), true);
+	break;
       }
-
-      /** if no overlap then save */  
-      if ( !overlap ) { 
-         particles->push_back( *elecItr ); 
-         leptons->push_back( *elecItr ); 
-         electrons->push_back( *elecItr );
-      }
+      /** get out of the loop as soon as an overlap is found */
+      if ( overlap ) break;
+    }
+    
+    /** if no overlap then save */  
+    if ( !overlap ) { 
+      electrons.add_object(aod_electrons, idx);
+      m_allParticles.push_back(genericParticle(aod_electrons.pt(idx), 
+					       aod_electrons.eta(idx), 
+					       aod_electrons.phi(idx),
+					       genericParticle::electron,
+					       aod_electrons.cl_eta(idx), 
+					       aod_electrons.cl_phi(idx))); 
     }
   }
 
-  m_numElectrons.second += electrons->size();
+  m_numElectrons.second += electrons.n();
 
   return sc;
 }
 
 StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
   ATH_MSG_DEBUG("in photonPreparation() with key = " << key);
-  StatusCode sc = StatusCode::SUCCESS;
 
-  INavigable4MomentumCollection * particles = this->allParticles();
-  if ( !particles ) return sc;
+  PhotonD3PDObject photons(m_outputPhotonKey);
+  ATH_CHECK(photons.record());
 
-  PhotonD3PDObject * photons = this->allPhotons();
-  if ( !photons ) return sc;
+  PhotonD3PDObject aod_photons(key);
+  ATH_CHECK(aod_photons.retrieve());
 
-  const PhotonD3PDObject * aod_photons = 0;
-  sc = evtStore()->retrieve( aod_photons, key );
-  if ( sc.isFailure() ) {
-    ATH_MSG_WARNING("No Existing ESD/AOD/DPD photon container found: key = " << key);
-    return sc;
-  }
-  ATH_MSG_DEBUG("Initial PhotonD3PDObject size is " << aod_photons->size());
-  m_numPhotons.first += aod_photons->size();
+  ATH_MSG_DEBUG("AOD PhotonD3PDObject size is " << aod_photons.n());
+  m_numPhotons.first += aod_photons.n();
 
-  /// iterators over the container 
-  PhotonD3PDObject::const_iterator photItr  = aod_photons->begin();
-  PhotonD3PDObject::const_iterator photItrE = aod_photons->end();
+  // need to first sort 
+  SortHelpers::sl_t sortedList;
+  SortHelpers::sort(sortedList, aod_photons);
 
-  for (; photItr != photItrE; ++photItr) {
+  for (sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
+    const std::size_t idx = it->first;
 
-    /** if this is the first particle, just put it in */ 
-    if ( particles->size() == 0 ) {
-       particles->push_back( *photItr );
-       photons->push_back( *photItr );
-    }   
-    /** check for the overlap and save non overlapping ones */
-    else {
-      INavigable4MomentumCollection::const_iterator nav4MomItr  = particles->begin();
-      INavigable4MomentumCollection::const_iterator nav4MomItrE = particles->end();
-      bool overlap = false;
-      for (; nav4MomItr != nav4MomItrE; ++nav4MomItr) {
-          /** overlap checking */
-          const Photon * photon = dynamic_cast<const Photon*>(*nav4MomItr);
-          const egamma * eg = dynamic_cast<const egamma*>(*nav4MomItr);
-          if ( !photon || ( photon && m_removeOverlapInSameContainer ) ) {
-	    if (eg) {
-	      overlap = m_userOverlapCheckingTool->overlap((*photItr)->cluster(), eg->cluster());
-	    } else {
-	      overlap = m_userOverlapCheckingTool->overlap(*photItr, *nav4MomItr);
-	    }
-	  }
-          /** get out of the loop as soon as an overlap is found */
-          if ( overlap ) break;
+    bool overlap = false;
+    for (std::vector<genericParticle>::iterator particle = m_allParticles.begin();
+	 particle != m_allParticles.end(); 
+	 ++particle) {
+      /** overlap checking */
+      switch (particle.type()) {
+      case genericParticle::photon:
+	if (m_removeOverlapInSameContainer) {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_photons.cl_eta(idx), 
+						       aod_photons.cl_phi(idx),
+						       particle->cl_eta(), 
+						       particle->cl_phi(), false);
+	}
+	break;
+      case genericParticle::electron:
+	overlap = m_userOverlapCheckingTool->overlap(aod_photons.cl_eta(idx), 
+						     aod_photons.cl_phi(idx),
+						     particle->cl_eta(), 
+						     particle->cl_phi(), false);
+	break;
+      case genericParticle::muon:
+	overlap = m_userOverlapCheckingTool->overlap(aod_photons.eta(idx), 
+						     aod_photons.phi(idx),
+						     particle->eta(), 
+						     particle->phi(), false);
+	break;
+      default:
+	overlap = m_userOverlapCheckingTool->overlap(aod_photons.eta(idx), 
+						     aod_photons.phi(idx),
+						     particle->eta(), 
+						     particle->phi(), true);
+	break;
       }
-
-      /** if no overlap then save */  
-      if ( !overlap ) { 
-         particles->push_back( *photItr );  
-         photons->push_back( *photItr );
-      }
+      /** get out of the loop as soon as an overlap is found */
+      if ( overlap ) break;
+    }
+    
+    /** if no overlap then save */  
+    if ( !overlap ) { 
+      photons.add_object(aod_photons, idx);
+      m_allParticles.push_back(genericParticle(aod_photons.pt(idx), 
+					       aod_photons.eta(idx), 
+					       aod_photons.phi(idx),
+					       genericParticle::photon,
+					       aod_photons.cl_eta(idx), 
+					       aod_photons.cl_phi(idx))); 
     }
   }
 
-  m_numPhotons.second += photons->size();
+  m_numPhotons.second += photons.n();
 
   return sc;
 }
 
 StatusCode gmsbOverlapRemovalTool::muonPreparation( std:: string key ) {
-  ATH_MSG_DEBUG("in muonPreparation() ");
-  StatusCode sc = StatusCode::SUCCESS;
+  ATH_MSG_DEBUG("in muonPreparation() with key = " << key);
 
-  INavigable4MomentumCollection * particles = this->allParticles();
-  if ( !particles ) return sc;
+  MuonD3PDObject muons(m_outputMuonKey);
+  ATH_CHECK(muons.record());
 
-  MuonD3PDObject * muons = this->allMuons();
-  if ( !muons ) return sc;
+  MuonD3PDObject aod_muons(key);
+  ATH_CHECK(aod_muons.retrieve());
 
-  const MuonD3PDObject * aod_muons = 0;
-  sc = evtStore()->retrieve( aod_muons, key );
-  if ( sc.isFailure() ) {
-    ATH_MSG_WARNING("No Existing ESD/AOD/DPD muon container found: key = " << key);
-    return sc; 
-  }
-  ATH_MSG_DEBUG("Initial MuonD3PDObject size is " << aod_muons->size());
-  m_numMuons.first += aod_muons->size();
+  ATH_MSG_DEBUG("AOD MuonD3PDObject size is " << aod_muons.n());
+  m_numMuons.first += aod_muons.n();
 
-  /// iterators over the container 
-  MuonD3PDObject::const_iterator muonItr  = aod_muons->begin();
-  MuonD3PDObject::const_iterator muonItrE = aod_muons->end();
+  // need to first sort 
+  SortHelpers::sl_t sortedList;
+  SortHelpers::sort(sortedList, aod_muons);
 
-  for (; muonItr != muonItrE; ++muonItr) {
+  for (sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
+    const std::size_t idx = it->first;
 
-    /** if this is the first particle, just put it in */ 
-    if ( particles->size() == 0 ) {
-      particles->push_back( *muonItr );
-       muons->push_back( *muonItr );
-    }   
-    /** check for the overlap and save non overlapping ones */
-    else {
-      INavigable4MomentumCollection::const_iterator nav4MomItr  = particles->begin();
-      INavigable4MomentumCollection::const_iterator nav4MomItrE = particles->end();
-      bool overlap = false;
-      for (; nav4MomItr != nav4MomItrE; ++nav4MomItr) {
-          /** overlap checking */
-          const Analysis::Muon * muon = dynamic_cast<const Analysis::Muon*>(*nav4MomItr);
-          if ( !muon || ( muon && m_removeOverlapInSameContainer ) )  
-             overlap = m_userOverlapCheckingTool->overlap(*muonItr, *nav4MomItr);
-
-          /** get out of the loop as soon as an overlap is found */
-          if ( overlap ) break;
+    bool overlap = false;
+    for (std::vector<genericParticle>::iterator particle = m_allParticles.begin();
+	 particle != m_allParticles.end(); 
+	 ++particle) {
+      /** overlap checking */
+      switch (particle.type()) {
+      case genericParticle::muon:
+	if (m_removeOverlapInSameContainer) {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_muons.eta(idx), 
+						       aod_muons.phi(idx),
+						       particle->eta(), 
+						       particle->phi(), false);
+	}
+	break;
+      case genericParticle::electron:
+      case genericParticle::photon:
+	overlap = m_userOverlapCheckingTool->overlap(aod_muons.eta(idx), 
+						     aod_muons.phi(idx),
+						     particle->eta(), 
+						     particle->phi(), false);
+	break;
+      default:
+	overlap = m_userOverlapCheckingTool->overlap(aod_muons.eta(idx), 
+						     aod_muons.phi(idx),
+						     particle->eta(), 
+						     particle->phi(), true);
+	break;
       }
-
-      /** if no overlap then save */  
-      if ( !overlap ) { 
-         particles->push_back( *muonItr ); 
-         muons->push_back( *muonItr );
-      }
+      /** get out of the loop as soon as an overlap is found */
+      if ( overlap ) break;
+    }
+    
+    /** if no overlap then save */  
+    if ( !overlap ) { 
+      muons.add_object(aod_muons, idx);
+      m_allParticles.push_back(genericParticle(aod_muons.pt(idx), 
+					       aod_muons.eta(idx), 
+					       aod_muons.phi(idx),
+					       genericParticle::muon));
     }
   }
 
-  m_numMuons.second += muons->size();
+  m_numMuons.second += muons.n();
 
   return sc;
 }
 
-
 StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
   ATH_MSG_DEBUG("in jetPreparation() with key = " << key);
-  StatusCode sc = StatusCode::SUCCESS;
 
-  INavigable4MomentumCollection * particles = this->allParticles();
-  if ( !particles ) return sc;
+  JetD3PDObject jets(m_outputJetKey);
+  ATH_CHECK(jets.record());
 
-  JetD3PDObject * jets = this->allJets();
-  if ( !jets ) return sc;
+  JetD3PDObject aod_jets(key);
+  ATH_CHECK(aod_jets.retrieve());
 
-  JetD3PDObject * bJets = this->allBJets();
-  if ( !bJets ) return sc;
+  ATH_MSG_DEBUG("AOD JetD3PDObject size is " << aod_jets.n());
+  m_numJets.first += aod_jets.n();
 
-  JetD3PDObject * lightJets = this->allLightJets();
-  if ( !lightJets ) return sc;
+  // need to first sort 
+  SortHelpers::sl_t sortedList;
+  SortHelpers::sort(sortedList, aod_jets);
 
-  const JetD3PDObject * aod_jets = 0;
-  sc = evtStore()->retrieve( aod_jets, key );
-  if ( sc.isFailure() ) {
-    ATH_MSG_WARNING("No Existing ESD/AOD/DPD jet container found: key = " << key);
-    return sc;
-  }
-  ATH_MSG_DEBUG("Initial JetD3PDObject size is " << aod_jets->size());
-  m_numJets.first      += aod_jets->size();
-  m_numBJets.first     += aod_jets->size();
-  m_numLightJets.first += aod_jets->size();
+  for (sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
+    const std::size_t idx = it->first;
 
-  /// iterators over the container 
-  JetD3PDObject::const_iterator jetItr  = aod_jets->begin();
-  JetD3PDObject::const_iterator jetItrE = aod_jets->end();
-
-  for (; jetItr != jetItrE; ++jetItr) {
-    /** check if this jet passes pre-selection */
-    /** if this is the first particle, just put it in */ 
-    if ( particles->size() == 0 ) {
-       particles->push_back( *jetItr );
-       jets->push_back( *jetItr );
-       if ( m_userSelectionTool->isBJet( *jetItr ) ) bJets->push_back( *jetItr);
-       else lightJets->push_back( *jetItr );
-    }   
-    /** check for the overlap and save non overlapping ones */
-    else {
-      INavigable4MomentumCollection::const_iterator nav4MomItr  = particles->begin();
-      INavigable4MomentumCollection::const_iterator nav4MomItrE = particles->end();
-      bool overlap = false;
-      for (; nav4MomItr != nav4MomItrE; ++nav4MomItr) {
-          /** overlap checking */
-          const Jet * jet = dynamic_cast<const Jet*>(*nav4MomItr);
-          const Electron * electron = dynamic_cast<const Electron*>(*nav4MomItr);
-          if ( !jet || ( jet && m_removeOverlapInSameContainer ) ) {
-	    if (electron) {
-	      overlap = m_userOverlapCheckingTool->overlap(*jetItr, electron->trackParticle());
-	    } else {
-	      overlap = m_userOverlapCheckingTool->overlap(*jetItr, *nav4MomItr);
-	    }
-	  }
-          /** get out of the loop as soon as an overlap is found */
-          if ( overlap ) break;
+    bool overlap = false;
+    for (std::vector<genericParticle>::iterator particle = m_allParticles.begin();
+	 particle != m_allParticles.end(); 
+	 ++particle) {
+      /** overlap checking */
+      switch (particle.type()) {
+      case genericParticle::jet:
+	if (m_removeOverlapInSameContainer) {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_jets.eta(idx), 
+						       aod_jets.phi(idx),
+						       particle->eta(), 
+						       particle->phi(), true);
+	}
+	break;
+      default:
+	overlap = m_userOverlapCheckingTool->overlap(aod_jets.eta(idx), 
+						     aod_jets.phi(idx),
+						     particle->eta(), 
+						     particle->phi(), true);
+	break;
       }
-
-      /** if no overlap then save */  
-      if ( !overlap ) { 
-	particles->push_back( *jetItr );
-	jets->push_back( *jetItr );
-	if ( m_userSelectionTool->isBJet( *jetItr ) ) bJets->push_back( *jetItr);
-	else lightJets->push_back( *jetItr );
-      }
+      /** get out of the loop as soon as an overlap is found */
+      if ( overlap ) break;
+    }
+    
+    /** if no overlap then save */  
+    if ( !overlap ) { 
+      jets.add_object(aod_jets, idx);
+      m_allParticles.push_back(genericParticle(aod_jets.pt(idx), 
+					       aod_jets.eta(idx), 
+					       aod_jets.phi(idx),
+					       genericParticle::jet));
     }
   }
 
-  m_numJets.second      += jets->size();
-  m_numBJets.second     += bJets->size();
-  m_numLightJets.second += lightJets->size();
+  m_numJets.second += jets.n();
 
   return sc;
 }
@@ -513,11 +525,5 @@ void gmsbOverlapRemovalTool::summarize() {
                       << "    Overlap-removed TrackParticles = " << std::setw(10) << m_numTrackParticles.second);
   ATH_MSG_INFO("Pre-selected CaloClusters          = " << std::setw(10) << m_numCaloClusters.first
                       << "   Overlap-removed CaloClusters    = " << std::setw(10) << m_numCaloClusters.second);
-}
-
-//-----------------------------------------------------------------------------------------------------------
-bool gmsbOverlapRemovalTool::isExecuted() {
-  ATH_MSG_DEBUG("in isExecuted() ");
-  return evtStore()->contains<INavigable4MomentumCollection>( m_outputObjectKey );
 }
 

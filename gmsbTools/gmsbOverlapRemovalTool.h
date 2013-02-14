@@ -39,24 +39,22 @@ public:
   float eta() const {return m_eta;};
   float phi() const {return m_phi;};
   particleType type() const {return m_isJet;} 
-  float etaClus() const {return m_etaClus;};
-  float phiClus() const {return m_phiClus;};
-  int idx() const {return m_idx;}
-  genericParticle(float pt, float eta, float phi, particleType type, int idx) :
-    m_pt(pt), m_eta(eta), m_phi(phi), m_type(type), m_idx(idx), 
+  float cl_eta() const {return m_cl_eta;};
+  float cl_phi() const {return m_cl_phi;};
+  genericParticle(float pt, float eta, float phi, particleType type) :
+    m_pt(pt), m_eta(eta), m_phi(phi), m_type(type), 
     m_etaClus(-999), m_phiClus(-999) {};
-  genericParticle(float pt, float eta, float phi, particleType type, int idx,
+  genericParticle(float pt, float eta, float phi, particleType type,
 		  float etaClus, float phiClus) :
-    m_pt(pt), m_eta(eta), m_phi(phi), m_type(type), m_idx(idx),
-    m_etaClus(etaClus), m_phiClus(phiClus) {};
+    m_pt(pt), m_eta(eta), m_phi(phi), m_type(type),
+    m_cl_eta(etaClus), m_cl_phi(phiClus) {};
 private:
   float m_pt;
   float m_eta;
   float m_phi;
   praticleType m_type;
-  int m_idx;
-  float m_etaClus; // cluster values for electrons/photons
-  float m_phiClus; // cluster values for electrons/photons
+  float m_cl_eta; // cluster values for electrons/photons
+  float m_cl_phi; // cluster values for electrons/photons
 }
 
 class gmsbOverlapRemovalTool : public AthAlgTool {
@@ -93,9 +91,6 @@ public:
   const std::pair<unsigned int, unsigned int>& jetSummary() const;
   //const std::pair<unsigned int, unsigned int>& bJetSummary() const;
   //const std::pair<unsigned int, unsigned int>& lightJetSummary() const;
-
-  /** check if execute() is already called for this tool in this job for this event */
-  bool isExecuted();
 
 protected:
 
