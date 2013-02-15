@@ -34,16 +34,16 @@ class PhotonD3PDObject;
 
 class genericParticle {
 public:
-  enum particleType {photon, electron, muon, jet}
+  enum particleType {photon, electron, muon, jet};
   float pt() const {return m_pt;};
   float eta() const {return m_eta;};
   float phi() const {return m_phi;};
-  particleType type() const {return m_isJet;} 
+  particleType type() const {return m_type;} 
   float cl_eta() const {return m_cl_eta;};
   float cl_phi() const {return m_cl_phi;};
   genericParticle(float pt, float eta, float phi, particleType type) :
     m_pt(pt), m_eta(eta), m_phi(phi), m_type(type), 
-    m_etaClus(-999), m_phiClus(-999) {};
+    m_cl_eta(-999), m_cl_phi(-999) {};
   genericParticle(float pt, float eta, float phi, particleType type,
 		  float etaClus, float phiClus) :
     m_pt(pt), m_eta(eta), m_phi(phi), m_type(type),
@@ -52,10 +52,10 @@ private:
   float m_pt;
   float m_eta;
   float m_phi;
-  praticleType m_type;
+  particleType m_type;
   float m_cl_eta; // cluster values for electrons/photons
   float m_cl_phi; // cluster values for electrons/photons
-}
+};
 
 class gmsbOverlapRemovalTool : public AthAlgTool {
 

@@ -50,5 +50,5 @@ apply_tag  ROOTSTLDictLibs
 apply_tag  ROOTGraphicsLibs
 apply_tag  ROOTTableLibs
 
-private
-macro_append gmsbTools_use_linkopts " -lEG"
+#private
+#macro_append gmsbTools_use_linkopts " -lEG"

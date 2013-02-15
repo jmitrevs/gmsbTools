@@ -24,10 +24,6 @@ Purpose : User Analysis Preparation - see gmsbPreparationTool.h for details
 #include <iomanip>
 #include <iostream>
 
-using namespace Analysis;
-using namespace Rec;
-//using namespace std;
-
 //------------------------------------------------------------------------------
 gmsbPreparationTool::gmsbPreparationTool( const std::string& type,
 					  const std::string& name, 
@@ -41,10 +37,6 @@ gmsbPreparationTool::gmsbPreparationTool( const std::string& type,
   declareProperty("InputContainerKeys",     m_inputContainerKeys);
   declareProperty("OutputContainerKeys",    m_outputContainerKeys);
   declareProperty("IsAtlfastData",          m_isAtlfast=false);
-  // Name of the primary vertex candidates
-  declareProperty("PrimaryVertexCandidates",
-		  m_vxCandidatesName="VxPrimaryCandidate",
-		  "Name of the primary vertex candidates");
 
   /** initialize counters */
   m_numElectrons      = std::make_pair(0,0);
@@ -143,7 +135,7 @@ StatusCode gmsbPreparationTool::execute() {
 const PhotonD3PDObject * gmsbPreparationTool::selectedPhotons() {
   ATH_MSG_DEBUG("in selectedPhotons()");
   const PhotonD3PDObject * container = new PhotonD3PDObject(m_outputPhotonKey);
-  StatusCode sc = container.retrieve();
+  StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
     container = NULL;
@@ -154,7 +146,7 @@ const PhotonD3PDObject * gmsbPreparationTool::selectedPhotons() {
 const ElectronD3PDObject * gmsbPreparationTool::selectedElectrons() {
   ATH_MSG_DEBUG("in selectedElectrons()");
   const ElectronD3PDObject * container = new ElectronD3PDObject(m_outputElectronKey);
-  StatusCode sc = container.retrieve();
+  StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
     container = NULL;
@@ -165,21 +157,23 @@ const ElectronD3PDObject * gmsbPreparationTool::selectedElectrons() {
 const MuonD3PDObject * gmsbPreparationTool::selectedMuons() {
   ATH_MSG_DEBUG("in selectedMuons()");
   const MuonD3PDObject * container = new MuonD3PDObject(m_outputMuonKey);
-  StatusCode sc = container.retrieve();
+  StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
     container = NULL;
   }
+  return container;
 }
 
 const JetD3PDObject * gmsbPreparationTool::selectedJets() {
   ATH_MSG_DEBUG("in selectedJets()");
   const JetD3PDObject * container = new JetD3PDObject(m_outputJetKey);
-  StatusCode sc = container.retrieve();
+  StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
     container = NULL;
   }
+  return container;
 }
 
 
@@ -196,7 +190,7 @@ StatusCode gmsbPreparationTool::electronPreparation( std::string key) {
   ATH_MSG_DEBUG("AOD ElectronD3PDObject size is " << aod_electrons.n());
   m_numElectrons.first += aod_electrons.n();
 
-  for (std::size_t idx = 0; idx < aod_electrons.n(); idx++) {
+  for (std::size_t idx = 0; idx < static_cast<std::size_t>(aod_electrons.n()); idx++) {
     if ( m_userSelectionTool->isSelected(aod_electrons, idx) ) {
       electrons.add_object(aod_electrons, idx);
     }
@@ -218,7 +212,7 @@ StatusCode gmsbPreparationTool::photonPreparation( std::string key) {
   ATH_MSG_DEBUG("AOD PhotonD3PDObject size is " << aod_photons.n());
   m_numPhotons.first += aod_photons.n();
 
-  for (std::size_t idx = 0; idx < aod_photons.n(); idx++) {
+  for (std::size_t idx = 0; idx < static_cast<std::size_t>(aod_photons.n()); idx++) {
     if ( m_userSelectionTool->isSelected(aod_photons, idx) ) {
       photons.add_object(aod_photons, idx);
     }
@@ -240,7 +234,7 @@ StatusCode gmsbPreparationTool::muonPreparation( std::string key) {
   ATH_MSG_DEBUG("AOD MuonD3PDObject size is " << aod_muons.n());
   m_numMuons.first += aod_muons.n();
 
-  for (std::size_t idx = 0; idx < aod_muons.n(); idx++) {
+  for (std::size_t idx = 0; idx < static_cast<std::size_t>(aod_muons.n()); idx++) {
     if ( m_userSelectionTool->isSelected(aod_muons, idx) ) {
       muons.add_object(aod_muons, idx);
     }
@@ -262,7 +256,7 @@ StatusCode gmsbPreparationTool::jetPreparation( std::string key) {
   ATH_MSG_DEBUG("AOD JetD3PDObject size is " << aod_jets.n());
   m_numJets.first += aod_jets.n();
 
-  for (std::size_t idx = 0; idx < aod_jets.n(); idx++) {
+  for (std::size_t idx = 0; idx < static_cast<std::size_t>(aod_jets.n()); idx++) {
     if ( m_userSelectionTool->isSelected(aod_jets, idx) ) {
       jets.add_object(aod_jets, idx);
     }

@@ -42,8 +42,6 @@ gmsbOverlapRemovalTool::gmsbOverlapRemovalTool( const std::string& type,
   declareProperty("InputContainerKeys",      m_inputContainerKeys);
   declareProperty("IsAtlfastData",           m_isAtlfast=false);
 
-  declareProperty("OuputObjectKey",         m_outputObjectKey        = "FinalStateObjects");
-  declareProperty("OutputLeptonKey",        m_outputLeptonKey        = "FinalStateLeptons");
   declareProperty("OutputPhotonKey",        m_outputPhotonKey        = "FinalStatePhotons");
   declareProperty("OutputElectronKey",      m_outputElectronKey      = "FinalStateElectrons");
   declareProperty("OutputMuonKey",          m_outputMuonKey          = "FinalStateMuons");
@@ -103,6 +101,8 @@ gmsbOverlapRemovalTool::~gmsbOverlapRemovalTool()
 StatusCode gmsbOverlapRemovalTool::execute() {
   ATH_MSG_DEBUG("in execute()");
 
+  StatusCode sc = StatusCode::SUCCESS;
+
   m_allParticles.clear();
 
   /** now object preparation with overlap removal */
@@ -126,7 +126,7 @@ StatusCode gmsbOverlapRemovalTool::execute() {
 
   if ( m_debug ) this->print();
 
-  return StatusCode::SUCCESS;
+  return sc;
 }
 
 //-------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ StatusCode gmsbOverlapRemovalTool::execute() {
 const PhotonD3PDObject * gmsbOverlapRemovalTool::finalStatePhotons() {
   ATH_MSG_DEBUG("in finalStatePhotons()");
   const PhotonD3PDObject * container = new PhotonD3PDObject(m_outputPhotonKey);
-  StatusCode sc = container.retrieve();
+  StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
     container = NULL;
@@ -145,7 +145,7 @@ const PhotonD3PDObject * gmsbOverlapRemovalTool::finalStatePhotons() {
 const ElectronD3PDObject * gmsbOverlapRemovalTool::finalStateElectrons() {
   ATH_MSG_DEBUG("in finalStateElectrons()");
   const ElectronD3PDObject * container = new ElectronD3PDObject(m_outputElectronKey);
-  StatusCode sc = container.retrieve();
+  StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
     container = NULL;
@@ -156,27 +156,29 @@ const ElectronD3PDObject * gmsbOverlapRemovalTool::finalStateElectrons() {
 const MuonD3PDObject * gmsbOverlapRemovalTool::finalStateMuons() {
   ATH_MSG_DEBUG("in finalStateMuons()");
   const MuonD3PDObject * container = new MuonD3PDObject(m_outputMuonKey);
-  StatusCode sc = container.retrieve();
+  StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
     container = NULL;
   }
+  return container;
 }
 
 const JetD3PDObject * gmsbOverlapRemovalTool::finalStateJets() {
   ATH_MSG_DEBUG("in finalStateJets()");
   const JetD3PDObject * container = new JetD3PDObject(m_outputJetKey);
-  StatusCode sc = container.retrieve();
+  StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
     container = NULL;
   }
+  return container;
 }
 
 // const JetD3PDObject * gmsbOverlapRemovalTool::finalStateBJets() {
 //   ATH_MSG_DEBUG("in finalStateBJets()");
 //   const JetD3PDObject * container = new JetD3PDObject(m_outputBJetKey);
-//   StatusCode sc = container.retrieve();
+//   StatusCode sc = container->retrieve();
 //   if (!sc.isSuccess()) {
 //     delete container;
 //     container = NULL;
@@ -186,7 +188,7 @@ const JetD3PDObject * gmsbOverlapRemovalTool::finalStateJets() {
 // const JetD3PDObject * gmsbOverlapRemovalTool::finalStateLightJets() {
 //   ATH_MSG_DEBUG("in finalStateLightJets()");
 //   const JetD3PDObject * container = new JetD3PDObject(m_outputLightJetKey);
-//   StatusCode sc = container.retrieve();
+//   StatusCode sc = container->retrieve();
 //   if (!sc.isSuccess()) {
 //     delete container;
 //     container = NULL;
@@ -210,7 +212,7 @@ StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
   SortHelpers::sl_t sortedList;
   SortHelpers::sort(sortedList, aod_electrons);
 
-  for (sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
+  for (SortHelpers::sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
     const std::size_t idx = it->first;
 
     bool overlap = false;
@@ -218,7 +220,7 @@ StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
 	 particle != m_allParticles.end(); 
 	 ++particle) {
       /** overlap checking */
-      switch (particle.type()) {
+      switch (particle->type()) {
       case genericParticle::electron:
 	if (m_removeOverlapInSameContainer) {
 	  overlap = m_userOverlapCheckingTool->overlap(aod_electrons.cl_eta(idx), 
@@ -264,7 +266,7 @@ StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
 
   m_numElectrons.second += electrons.n();
 
-  return sc;
+  return StatusCode::SUCCESS;
 }
 
 StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
@@ -283,7 +285,7 @@ StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
   SortHelpers::sl_t sortedList;
   SortHelpers::sort(sortedList, aod_photons);
 
-  for (sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
+  for (SortHelpers::sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
     const std::size_t idx = it->first;
 
     bool overlap = false;
@@ -291,7 +293,7 @@ StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
 	 particle != m_allParticles.end(); 
 	 ++particle) {
       /** overlap checking */
-      switch (particle.type()) {
+      switch (particle->type()) {
       case genericParticle::photon:
 	if (m_removeOverlapInSameContainer) {
 	  overlap = m_userOverlapCheckingTool->overlap(aod_photons.cl_eta(idx), 
@@ -337,7 +339,7 @@ StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
 
   m_numPhotons.second += photons.n();
 
-  return sc;
+  return StatusCode::SUCCESS;
 }
 
 StatusCode gmsbOverlapRemovalTool::muonPreparation( std:: string key ) {
@@ -356,7 +358,7 @@ StatusCode gmsbOverlapRemovalTool::muonPreparation( std:: string key ) {
   SortHelpers::sl_t sortedList;
   SortHelpers::sort(sortedList, aod_muons);
 
-  for (sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
+  for (SortHelpers::sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
     const std::size_t idx = it->first;
 
     bool overlap = false;
@@ -364,7 +366,7 @@ StatusCode gmsbOverlapRemovalTool::muonPreparation( std:: string key ) {
 	 particle != m_allParticles.end(); 
 	 ++particle) {
       /** overlap checking */
-      switch (particle.type()) {
+      switch (particle->type()) {
       case genericParticle::muon:
 	if (m_removeOverlapInSameContainer) {
 	  overlap = m_userOverlapCheckingTool->overlap(aod_muons.eta(idx), 
@@ -403,7 +405,7 @@ StatusCode gmsbOverlapRemovalTool::muonPreparation( std:: string key ) {
 
   m_numMuons.second += muons.n();
 
-  return sc;
+  return StatusCode::SUCCESS;
 }
 
 StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
@@ -422,7 +424,7 @@ StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
   SortHelpers::sl_t sortedList;
   SortHelpers::sort(sortedList, aod_jets);
 
-  for (sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
+  for (SortHelpers::sl_t::const_iterator it = sortedList.begin(); it != sortedList.end(); ++it) {
     const std::size_t idx = it->first;
 
     bool overlap = false;
@@ -430,7 +432,7 @@ StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
 	 particle != m_allParticles.end(); 
 	 ++particle) {
       /** overlap checking */
-      switch (particle.type()) {
+      switch (particle->type()) {
       case genericParticle::jet:
 	if (m_removeOverlapInSameContainer) {
 	  overlap = m_userOverlapCheckingTool->overlap(aod_jets.eta(idx), 
@@ -462,7 +464,7 @@ StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
 
   m_numJets.second += jets.n();
 
-  return sc;
+  return StatusCode::SUCCESS;
 }
 
 
@@ -511,19 +513,9 @@ void gmsbOverlapRemovalTool::summarize() {
                       << "   Overlap-removed Electrons       = " << std::setw(10) << m_numElectrons.second);
   ATH_MSG_INFO("Pre-selected Photons               = " << std::setw(10) << m_numPhotons.first 
                       << "   Overlap-removed Photons         = " << std::setw(10) << m_numPhotons.second);
-  ATH_MSG_INFO("Pre-selected pMuons                = " << std::setw(10) << m_numMuons.first 
+  ATH_MSG_INFO("Pre-selected Muons                 = " << std::setw(10) << m_numMuons.first 
                       << "    Overlap-removed Muons          = " << std::setw(10) << m_numMuons.second);
-  ATH_MSG_INFO("Pre-selected TauJets               = " << std::setw(10) << m_numTauJets.first  
-                      << "    Overlap-removed TauJets        = " << std::setw(10) << m_numTauJets.second);
   ATH_MSG_INFO("Pre-selected Jets                  = " << std::setw(10) << m_numJets.first 
                       << "    Overlap-removed Jets           = " << std::setw(10) << m_numJets.second);
-  ATH_MSG_INFO("Pre-selected BJets                 = " << std::setw(10) << m_numBJets.first  
-                      << "    Overlap-removed BJets          = " << std::setw(10) << m_numBJets.second);
-  ATH_MSG_INFO("Pre-selected LightJets             = " << std::setw(10) << m_numLightJets.first
-                      << "    Overlpa-removed LightJets      = " << std::setw(10) << m_numLightJets.second);
-  ATH_MSG_INFO("Pre-selected TrackParticles        = " << std::setw(10) << m_numTrackParticles.first
-                      << "    Overlap-removed TrackParticles = " << std::setw(10) << m_numTrackParticles.second);
-  ATH_MSG_INFO("Pre-selected CaloClusters          = " << std::setw(10) << m_numCaloClusters.first
-                      << "   Overlap-removed CaloClusters    = " << std::setw(10) << m_numCaloClusters.second);
 }
 

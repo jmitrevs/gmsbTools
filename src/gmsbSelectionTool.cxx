@@ -21,7 +21,7 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 // User Tools
 #include "gmsbTools/gmsbSelectionTool.h"
 
-//#include "egammaAnalysisUtils/CaloIsoCorrection.h"
+#include "egammaAnalysisUtils/CaloIsoCorrection.h"
 
 #include "MCTruthClassifier/MCTruthClassifierDefs.h"
 
@@ -45,10 +45,10 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("SmearMC", m_smearMC = true);
   declareProperty("MCHasConstantTerm", m_MCHasConstantTerm = false);
   //  declareProperty("RandomSeed", m_randomSeed = 0); // use SUSY prescription
-  declareProperty("ElScaleShift", m_elScaleShift = eg2011::EnergyRescaler::NOMINAL);
-  declareProperty("ElSmearShift", m_elSmearShift = eg2011::EnergyRescaler::NOMINAL);
-  declareProperty("PhoScaleShift", m_phoScaleShift = eg2011::EnergyRescaler::NOMINAL);
-  declareProperty("PhoSmearShift", m_phoSmearShift = eg2011::EnergyRescaler::NOMINAL);
+  declareProperty("ElScaleShift", m_elScaleShift = 0);
+  declareProperty("ElSmearShift", m_elSmearShift = 0);
+  declareProperty("PhoScaleShift", m_phoScaleShift = 0);
+  declareProperty("PhoSmearShift", m_phoSmearShift = 0);
   declareProperty("MCEtconeScale", m_mcEtconeScale = 1.5);
   declareProperty("MCUseAltIsoCorrection", m_useAltIsoCorrection = false);
 
@@ -156,7 +156,7 @@ bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t id
   const float phi = electron.trackphi(idx);
 
   const float uncorrectedE = electron.cl_E(idx);
-  const float uncorrectedEt = uncorrectedE/cosh(eta);
+  //const float uncorrectedEt = uncorrectedE/cosh(eta);
 
   float energy = uncorrectedE;
 
@@ -266,7 +266,7 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
   }
 
 
-  const float eta2 = photon.eta2(idx);
+  const float eta2 = photon.etas2(idx);
   const float absClusEta = fabs(eta2);
 
 
