@@ -75,12 +75,12 @@ public:
 
   /** access to containers after preparation */
   /// NOTE: These are factories:  The user needs to delete the created object
-  const PhotonD3PDObject               * finalStatePhotons();  // including converted photons
-  const ElectronD3PDObject             * finalStateElectrons();
-  const MuonD3PDObject       * finalStateMuons();
-  const JetD3PDObject          * finalStateJets();
-  // const JetD3PDObject          * finalStateBJets();
-  // const JetD3PDObject          * finalStateLightJets();
+  PhotonD3PDObject               * finalStatePhotons();  // including converted photons
+  ElectronD3PDObject             * finalStateElectrons();
+  MuonD3PDObject       * finalStateMuons();
+  JetD3PDObject          * finalStateJets();
+  // JetD3PDObject          * finalStateBJets();
+  // JetD3PDObject          * finalStateLightJets();
 
   /** summary of pre-selections and overlap removal - will be called at the end of the job
       in the finalize of this tool - the first number is reconstrued and the second is the pre-selected */

@@ -131,9 +131,9 @@ StatusCode gmsbOverlapRemovalTool::execute() {
 
 //-------------------------------------------------------------------------------
 
-const PhotonD3PDObject * gmsbOverlapRemovalTool::finalStatePhotons() {
+PhotonD3PDObject * gmsbOverlapRemovalTool::finalStatePhotons() {
   ATH_MSG_DEBUG("in finalStatePhotons()");
-  const PhotonD3PDObject * container = new PhotonD3PDObject(m_outputPhotonKey);
+  PhotonD3PDObject * container = new PhotonD3PDObject(m_outputPhotonKey);
   StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
@@ -142,9 +142,9 @@ const PhotonD3PDObject * gmsbOverlapRemovalTool::finalStatePhotons() {
   return container;
 }
 
-const ElectronD3PDObject * gmsbOverlapRemovalTool::finalStateElectrons() {
+ElectronD3PDObject * gmsbOverlapRemovalTool::finalStateElectrons() {
   ATH_MSG_DEBUG("in finalStateElectrons()");
-  const ElectronD3PDObject * container = new ElectronD3PDObject(m_outputElectronKey);
+  ElectronD3PDObject * container = new ElectronD3PDObject(m_outputElectronKey);
   StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
@@ -153,9 +153,9 @@ const ElectronD3PDObject * gmsbOverlapRemovalTool::finalStateElectrons() {
   return container;
 }
 
-const MuonD3PDObject * gmsbOverlapRemovalTool::finalStateMuons() {
+MuonD3PDObject * gmsbOverlapRemovalTool::finalStateMuons() {
   ATH_MSG_DEBUG("in finalStateMuons()");
-  const MuonD3PDObject * container = new MuonD3PDObject(m_outputMuonKey);
+  MuonD3PDObject * container = new MuonD3PDObject(m_outputMuonKey);
   StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
@@ -164,9 +164,9 @@ const MuonD3PDObject * gmsbOverlapRemovalTool::finalStateMuons() {
   return container;
 }
 
-const JetD3PDObject * gmsbOverlapRemovalTool::finalStateJets() {
+JetD3PDObject * gmsbOverlapRemovalTool::finalStateJets() {
   ATH_MSG_DEBUG("in finalStateJets()");
-  const JetD3PDObject * container = new JetD3PDObject(m_outputJetKey);
+  JetD3PDObject * container = new JetD3PDObject(m_outputJetKey);
   StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
@@ -175,9 +175,9 @@ const JetD3PDObject * gmsbOverlapRemovalTool::finalStateJets() {
   return container;
 }
 
-// const JetD3PDObject * gmsbOverlapRemovalTool::finalStateBJets() {
+// JetD3PDObject * gmsbOverlapRemovalTool::finalStateBJets() {
 //   ATH_MSG_DEBUG("in finalStateBJets()");
-//   const JetD3PDObject * container = new JetD3PDObject(m_outputBJetKey);
+//   JetD3PDObject * container = new JetD3PDObject(m_outputBJetKey);
 //   StatusCode sc = container->retrieve();
 //   if (!sc.isSuccess()) {
 //     delete container;
@@ -185,9 +185,9 @@ const JetD3PDObject * gmsbOverlapRemovalTool::finalStateJets() {
 //   }
 // }
 
-// const JetD3PDObject * gmsbOverlapRemovalTool::finalStateLightJets() {
+// JetD3PDObject * gmsbOverlapRemovalTool::finalStateLightJets() {
 //   ATH_MSG_DEBUG("in finalStateLightJets()");
-//   const JetD3PDObject * container = new JetD3PDObject(m_outputLightJetKey);
+//   JetD3PDObject * container = new JetD3PDObject(m_outputLightJetKey);
 //   StatusCode sc = container->retrieve();
 //   if (!sc.isSuccess()) {
 //     delete container;

@@ -132,9 +132,9 @@ StatusCode gmsbPreparationTool::execute() {
 }
 
 //-------------------------------------------------------------------------------
-const PhotonD3PDObject * gmsbPreparationTool::selectedPhotons() {
+PhotonD3PDObject * gmsbPreparationTool::selectedPhotons() {
   ATH_MSG_DEBUG("in selectedPhotons()");
-  const PhotonD3PDObject * container = new PhotonD3PDObject(m_outputPhotonKey);
+  PhotonD3PDObject * container = new PhotonD3PDObject(m_outputPhotonKey);
   StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
@@ -143,9 +143,9 @@ const PhotonD3PDObject * gmsbPreparationTool::selectedPhotons() {
   return container;
 }
 
-const ElectronD3PDObject * gmsbPreparationTool::selectedElectrons() {
+ElectronD3PDObject * gmsbPreparationTool::selectedElectrons() {
   ATH_MSG_DEBUG("in selectedElectrons()");
-  const ElectronD3PDObject * container = new ElectronD3PDObject(m_outputElectronKey);
+  ElectronD3PDObject * container = new ElectronD3PDObject(m_outputElectronKey);
   StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
@@ -154,9 +154,9 @@ const ElectronD3PDObject * gmsbPreparationTool::selectedElectrons() {
   return container;
 }
 
-const MuonD3PDObject * gmsbPreparationTool::selectedMuons() {
+MuonD3PDObject * gmsbPreparationTool::selectedMuons() {
   ATH_MSG_DEBUG("in selectedMuons()");
-  const MuonD3PDObject * container = new MuonD3PDObject(m_outputMuonKey);
+  MuonD3PDObject * container = new MuonD3PDObject(m_outputMuonKey);
   StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;
@@ -165,9 +165,9 @@ const MuonD3PDObject * gmsbPreparationTool::selectedMuons() {
   return container;
 }
 
-const JetD3PDObject * gmsbPreparationTool::selectedJets() {
+JetD3PDObject * gmsbPreparationTool::selectedJets() {
   ATH_MSG_DEBUG("in selectedJets()");
-  const JetD3PDObject * container = new JetD3PDObject(m_outputJetKey);
+  JetD3PDObject * container = new JetD3PDObject(m_outputJetKey);
   StatusCode sc = container->retrieve();
   if (!sc.isSuccess()) {
     delete container;

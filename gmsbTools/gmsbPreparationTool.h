@@ -47,10 +47,10 @@ public:
 
   /** access to containers after preparation */
   /// NOTE: These are factories:  The user needs to delete the created object
-  const ElectronD3PDObject*  selectedElectrons();
-  const PhotonD3PDObject*    selectedPhotons();  
-  const MuonD3PDObject*      selectedMuons();
-  const JetD3PDObject*       selectedJets();
+  ElectronD3PDObject*  selectedElectrons();
+  PhotonD3PDObject*    selectedPhotons();  
+  MuonD3PDObject*      selectedMuons();
+  JetD3PDObject*       selectedJets();
 
   /** summary of pre-selections and overlap removal - will be called at the end of the job
       in the finalize of this tool - the first number is reconstrued and the second is the pre-selected */
