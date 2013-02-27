@@ -4,7 +4,7 @@ from gmsbTools.gmsbToolsConf import \
     gmsbSelectionTool as ConfiguredUserSelectionTool
 gmsbSelectionTool = ConfiguredUserSelectionTool(
     name = "gmsbSelectionTool",
-    OutputLevel = DEBUG
+    #OutputLevel = DEBUG
 )
 
 ToolSvc += gmsbSelectionTool
@@ -17,7 +17,7 @@ gmsbFinalSelectionTool = ConfiguredUserSelectionTool(
     DoMuonIsoCut = True,
     MuonPt = 25*GeV,
     Simple = True,
-    OutputLevel = DEBUG
+    #OutputLevel = DEBUG
     )
 
 ToolSvc += gmsbFinalSelectionTool
@@ -48,7 +48,7 @@ gmsbPreparationTool = ConfiguredgmsbPreparationTool(
                           "sl_mu_staco_",
                           "sl_jet_AntiKt4LCTopo_"
                           ],
-    OutputLevel = DEBUG
+    #OutputLevel = DEBUG
     
     )
 
@@ -60,7 +60,7 @@ from gmsbTools.gmsbToolsConf import \
 gmsbOverlapCheckingTool1 = ConfiguredgmsbOverlapCheckingTool(
     name = "gmsbOverlapCheckingTool1",
     OverlapDeltaRWithJets=0.2,
-    OutputLevel = DEBUG   
+    #OutputLevel = DEBUG   
     )
 
 ToolSvc += gmsbOverlapCheckingTool1
@@ -69,7 +69,7 @@ print      gmsbOverlapCheckingTool1
 gmsbOverlapCheckingTool2 = ConfiguredgmsbOverlapCheckingTool(
     name = "gmsbOverlapCheckingTool2",
     OverlapDeltaRWithJets=0.4,
-    OutputLevel = DEBUG   
+    #OutputLevel = DEBUG   
     )
 
 ToolSvc += gmsbOverlapCheckingTool2
@@ -112,7 +112,7 @@ gmsbOverlapRemovalTool1 = ConfiguredgmsbOverlapRemovalTool(
     # OutputBJetKey          = "IntermediateBJetCollection",
     # OutputLightJetKey      = "IntermediateLightJetCollection",
     
-    OutputLevel = DEBUG
+    #OutputLevel = DEBUG
     )
 
 ToolSvc += gmsbOverlapRemovalTool1
@@ -153,7 +153,7 @@ gmsbOverlapRemovalTool2 = ConfiguredgmsbOverlapRemovalTool(
     # OutputBJetKey          = "FinalStateBJetCollection",
     # OutputLightJetKey      = "FinalStateLightJetCollection",
     
-    OutputLevel = DEBUG
+    #OutputLevel = DEBUG
     )
 
 ToolSvc += gmsbOverlapRemovalTool2
