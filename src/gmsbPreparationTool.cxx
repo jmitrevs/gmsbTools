@@ -181,18 +181,20 @@ JetD3PDObject * gmsbPreparationTool::selectedJets() {
 StatusCode gmsbPreparationTool::electronPreparation( std::string key) {
   ATH_MSG_DEBUG("in electronPreparation() ");
 
-  ElectronD3PDObject electrons(m_outputElectronKey);
+  ElectronD3PDObject electrons = ElectronD3PDObject::create(m_outputElectronKey);
   ATH_CHECK(electrons.record());
 
-  ElectronD3PDObject aod_electrons(key);
+  const ElectronD3PDObject aod_electrons(key);
   ATH_CHECK(aod_electrons.retrieve());
 
-  ATH_MSG_DEBUG("AOD ElectronD3PDObject size is " << aod_electrons.n());
-  m_numElectrons.first += aod_electrons.n();
+  ElectronD3PDObject elIn = aod_electrons;
 
-  for (std::size_t idx = 0; idx < static_cast<std::size_t>(aod_electrons.n()); idx++) {
-    if ( m_userSelectionTool->isSelected(aod_electrons, idx) ) {
-      electrons.add_object(aod_electrons, idx);
+  ATH_MSG_DEBUG("AOD ElectronD3PDObject size is " << elIn.n());
+  m_numElectrons.first += elIn.n();
+
+  for (std::size_t idx = 0; idx < static_cast<std::size_t>(elIn.n()); idx++) {
+    if ( m_userSelectionTool->isSelected(elIn, idx) ) {
+      electrons.add_object(elIn, idx);
     }
   }
   m_numElectrons.second += electrons.n();
@@ -203,18 +205,20 @@ StatusCode gmsbPreparationTool::electronPreparation( std::string key) {
 StatusCode gmsbPreparationTool::photonPreparation( std::string key) {
   ATH_MSG_DEBUG("in photonPreparation() ");
 
-  PhotonD3PDObject photons(m_outputPhotonKey);
+  PhotonD3PDObject photons = PhotonD3PDObject::create(m_outputPhotonKey);
   ATH_CHECK(photons.record());
 
-  PhotonD3PDObject aod_photons(key);
+  const PhotonD3PDObject aod_photons(key);
   ATH_CHECK(aod_photons.retrieve());
 
-  ATH_MSG_DEBUG("AOD PhotonD3PDObject size is " << aod_photons.n());
-  m_numPhotons.first += aod_photons.n();
+  PhotonD3PDObject phIn = aod_photons;
 
-  for (std::size_t idx = 0; idx < static_cast<std::size_t>(aod_photons.n()); idx++) {
-    if ( m_userSelectionTool->isSelected(aod_photons, idx) ) {
-      photons.add_object(aod_photons, idx);
+  ATH_MSG_DEBUG("AOD PhotonD3PDObject size is " << phIn.n());
+  m_numPhotons.first += phIn.n();
+
+  for (std::size_t idx = 0; idx < static_cast<std::size_t>(phIn.n()); idx++) {
+    if ( m_userSelectionTool->isSelected(phIn, idx) ) {
+      photons.add_object(phIn, idx);
     }
   }
   m_numPhotons.second += photons.n();
@@ -225,18 +229,20 @@ StatusCode gmsbPreparationTool::photonPreparation( std::string key) {
 StatusCode gmsbPreparationTool::muonPreparation( std::string key) {
   ATH_MSG_DEBUG("in muonPreparation() ");
 
-  MuonD3PDObject muons(m_outputMuonKey);
+  MuonD3PDObject muons = MuonD3PDObject::create(m_outputMuonKey);
   ATH_CHECK(muons.record());
 
-  MuonD3PDObject aod_muons(key);
+  const MuonD3PDObject aod_muons(key);
   ATH_CHECK(aod_muons.retrieve());
 
-  ATH_MSG_DEBUG("AOD MuonD3PDObject size is " << aod_muons.n());
-  m_numMuons.first += aod_muons.n();
+  MuonD3PDObject muIn = aod_muons;
 
-  for (std::size_t idx = 0; idx < static_cast<std::size_t>(aod_muons.n()); idx++) {
-    if ( m_userSelectionTool->isSelected(aod_muons, idx) ) {
-      muons.add_object(aod_muons, idx);
+  ATH_MSG_DEBUG("AOD MuonD3PDObject size is " << muIn.n());
+  m_numMuons.first += muIn.n();
+
+  for (std::size_t idx = 0; idx < static_cast<std::size_t>(muIn.n()); idx++) {
+    if ( m_userSelectionTool->isSelected(muIn, idx) ) {
+      muons.add_object(muIn, idx);
     }
   }
   m_numMuons.second += muons.n();
@@ -247,18 +253,20 @@ StatusCode gmsbPreparationTool::muonPreparation( std::string key) {
 StatusCode gmsbPreparationTool::jetPreparation( std::string key) {
   ATH_MSG_DEBUG("in jetPreparation() ");
 
-  JetD3PDObject jets(m_outputJetKey);
+  JetD3PDObject jets = JetD3PDObject::create(m_outputJetKey);
   ATH_CHECK(jets.record());
 
-  JetD3PDObject aod_jets(key);
+  const JetD3PDObject aod_jets(key);
   ATH_CHECK(aod_jets.retrieve());
 
-  ATH_MSG_DEBUG("AOD JetD3PDObject size is " << aod_jets.n());
-  m_numJets.first += aod_jets.n();
+  JetD3PDObject jetIn = aod_jets;
 
-  for (std::size_t idx = 0; idx < static_cast<std::size_t>(aod_jets.n()); idx++) {
-    if ( m_userSelectionTool->isSelected(aod_jets, idx) ) {
-      jets.add_object(aod_jets, idx);
+  ATH_MSG_DEBUG("AOD JetD3PDObject size is " << jetIn.n());
+  m_numJets.first += jetIn.n();
+
+  for (std::size_t idx = 0; idx < static_cast<std::size_t>(jetIn.n()); idx++) {
+    if ( m_userSelectionTool->isSelected(jetIn, idx) ) {
+      jets.add_object(jetIn, idx);
     }
   }
   m_numJets.second += jets.n();

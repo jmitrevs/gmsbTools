@@ -108,6 +108,8 @@ StatusCode gmsbOverlapRemovalTool::execute() {
   /** now object preparation with overlap removal */
   for ( unsigned int i=0; i<m_inputContainerKeys.size(); ++i ) {
 
+    ATH_MSG_DEBUG("m_inputContainerKeys[" << i << "] = " << m_inputContainerKeys[i]);
+
     std::string::size_type loc = m_inputContainerKeys[i].find( "el_", 0);
     if( loc != std::string::npos ) sc = this->electronPreparation( m_inputContainerKeys[i] );
 
@@ -199,10 +201,10 @@ JetD3PDObject * gmsbOverlapRemovalTool::finalStateJets() {
 StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
   ATH_MSG_DEBUG("in electronPreparation() with key = " << key);
 
-  ElectronD3PDObject electrons(m_outputElectronKey);
+  ElectronD3PDObject electrons = ElectronD3PDObject::create(m_outputElectronKey);
   ATH_CHECK(electrons.record());
 
-  ElectronD3PDObject aod_electrons(key);
+  const ElectronD3PDObject aod_electrons(key);
   ATH_CHECK(aod_electrons.retrieve());
 
   ATH_MSG_DEBUG("AOD ElectronD3PDObject size is " << aod_electrons.n());
@@ -272,10 +274,10 @@ StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
 StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
   ATH_MSG_DEBUG("in photonPreparation() with key = " << key);
 
-  PhotonD3PDObject photons(m_outputPhotonKey);
+  PhotonD3PDObject photons = PhotonD3PDObject::create(m_outputPhotonKey);
   ATH_CHECK(photons.record());
 
-  PhotonD3PDObject aod_photons(key);
+  const PhotonD3PDObject aod_photons(key);
   ATH_CHECK(aod_photons.retrieve());
 
   ATH_MSG_DEBUG("AOD PhotonD3PDObject size is " << aod_photons.n());
@@ -345,10 +347,10 @@ StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
 StatusCode gmsbOverlapRemovalTool::muonPreparation( std:: string key ) {
   ATH_MSG_DEBUG("in muonPreparation() with key = " << key);
 
-  MuonD3PDObject muons(m_outputMuonKey);
+  MuonD3PDObject muons = MuonD3PDObject::create(m_outputMuonKey);
   ATH_CHECK(muons.record());
 
-  MuonD3PDObject aod_muons(key);
+  const MuonD3PDObject aod_muons(key);
   ATH_CHECK(aod_muons.retrieve());
 
   ATH_MSG_DEBUG("AOD MuonD3PDObject size is " << aod_muons.n());
@@ -411,10 +413,10 @@ StatusCode gmsbOverlapRemovalTool::muonPreparation( std:: string key ) {
 StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
   ATH_MSG_DEBUG("in jetPreparation() with key = " << key);
 
-  JetD3PDObject jets(m_outputJetKey);
+  JetD3PDObject jets = JetD3PDObject::create(m_outputJetKey);
   ATH_CHECK(jets.record());
 
-  JetD3PDObject aod_jets(key);
+  const JetD3PDObject aod_jets(key);
   ATH_CHECK(aod_jets.retrieve());
 
   ATH_MSG_DEBUG("AOD JetD3PDObject size is " << aod_jets.n());

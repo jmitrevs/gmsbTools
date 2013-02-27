@@ -1,25 +1,10 @@
 
-from PhotonAnalysisUtils.LowPtJetFinder import LowPtJetFinder
-mygetter2 = LowPtJetFinder() # will insert the alg into the AlgSequence()
-print mygetter2
-
-from egammaCaloTools.egammaIsoPtCorrectionToolBase import egammaIsoPtCorrectionToolBase
-theegammaisoptcorrection=egammaIsoPtCorrectionToolBase("egammaIsoPtCorrection")
-ToolSvc+=theegammaisoptcorrection
-
-from PhotonAnalysisUtils.PhotonAnalysisUtilsConf import PAUcaloIsolationTool
-mycaloisolationtool = PAUcaloIsolationTool(DoAreaCorrections = True,
-                                           EMCaloIsoPtCorrectionTool = theegammaisoptcorrection,
-                                           # OutputLevel = DEBUG
-                                           )
-ToolSvc += mycaloisolationtool
 
 from gmsbTools.gmsbToolsConf import \
     gmsbSelectionTool as ConfiguredUserSelectionTool
 gmsbSelectionTool = ConfiguredUserSelectionTool(
     name = "gmsbSelectionTool",
-    PAUcaloIsolationTool = mycaloisolationtool,
-    #OutputLevel = DEBUG
+    OutputLevel = DEBUG
 )
 
 ToolSvc += gmsbSelectionTool
@@ -31,7 +16,8 @@ gmsbFinalSelectionTool = ConfiguredUserSelectionTool(
     DoEDPhotonIsolation = False, # already done
     DoMuonIsoCut = True,
     MuonPt = 25*GeV,
-    Simple = True
+    Simple = True,
+    OutputLevel = DEBUG
     )
 
 ToolSvc += gmsbFinalSelectionTool
@@ -47,22 +33,22 @@ gmsbPreparationTool = ConfiguredgmsbPreparationTool(
     UserSelectionTool = gmsbSelectionTool,
     
     # thelist of the input container keys - the order does not matter
-    InputContainerKeys=[ "PhotonAODCollection",
-                         "ElectronAODCollection",
-                         "StacoMuonCollection",
-                         "AntiKt4TopoEMJets"
+    InputContainerKeys=[ "ph_",
+                         "el_",
+                         "mu_staco_",
+                         "jet_AntiKt4LCTopo_"
                          ],
     
     
     
     # the list of the output container keys - these containers container the selected objects
     # The order matter::Should follow the same order as the input container keys above
-    OutputContainerKeys=[ "SelectedPhotonAODCollection",
-                          "SelectedElectronAODCollection",
-                          "SelectedMuonCollection",
-                          "SelectedAntiKt4TopoEMJets"
+    OutputContainerKeys=[ "sl_ph_",
+                          "sl_el_",
+                          "sl_mu_staco_",
+                          "sl_jet_AntiKt4LCTopo_"
                           ],
-    #OutputLevel = DEBUG
+    OutputLevel = DEBUG
     
     )
 
@@ -73,7 +59,8 @@ from gmsbTools.gmsbToolsConf import \
      gmsbOverlapCheckingTool as ConfiguredgmsbOverlapCheckingTool
 gmsbOverlapCheckingTool1 = ConfiguredgmsbOverlapCheckingTool(
     name = "gmsbOverlapCheckingTool1",
-    OverlapDeltaRWithJets=0.2
+    OverlapDeltaRWithJets=0.2,
+    OutputLevel = DEBUG   
     )
 
 ToolSvc += gmsbOverlapCheckingTool1
@@ -81,7 +68,8 @@ print      gmsbOverlapCheckingTool1
 
 gmsbOverlapCheckingTool2 = ConfiguredgmsbOverlapCheckingTool(
     name = "gmsbOverlapCheckingTool2",
-    OverlapDeltaRWithJets=0.4
+    OverlapDeltaRWithJets=0.4,
+    OutputLevel = DEBUG   
     )
 
 ToolSvc += gmsbOverlapCheckingTool2
@@ -106,9 +94,9 @@ gmsbOverlapRemovalTool1 = ConfiguredgmsbOverlapRemovalTool(
     
     # thelist of the input container keys - the order is important: the overlap removing will be done in that order
     
-    InputContainerKeys=[  "SelectedElectronAODCollection",
-                          "SelectedPhotonAODCollection",
-                          "SelectedAntiKt4TopoEMJets"
+    InputContainerKeys=[  "sl_el_",
+                          "sl_ph_",
+                          "sl_jet_AntiKt4LCTopo_"
                           ],
     
     
@@ -117,19 +105,14 @@ gmsbOverlapRemovalTool1 = ConfiguredgmsbOverlapRemovalTool(
     # and Cell/Hit overlap not done in the case of Atlfast 
     
     # the list of the output container keys - 
-    OuputObjectKey         = "IntermediateObjectCollection",
-    OutputLeptonKey        = "IntermediateLeptonCollection",
-    OutputPhotonKey        = "IntermediatePhotonCollection",
-    OutputElectronKey      = "IntermediateElectronCollection",
-    OutputMuonKey          = "IntermediateMuonCollection",
-    OutputTauJetKey        = "IntermediateTauCollection",
-    OutputCalloClusterKey  = "IntermediateCaloClusterCollection",
-    OutputTrackParticleKey = "IntermediateTrackParticleCollection",
-    OutputJetKey           = "IntermediateJetCollection",
-    OutputBJetKey          = "IntermediateBJetCollection",
-    OutputLightJetKey      = "IntermediateLightJetCollection",
+    OutputPhotonKey        = "int_ph_",
+    OutputElectronKey      = "int_el_",
+    OutputMuonKey          = "int_mu_staco_",
+    OutputJetKey           = "int_jet_AntiKt4LCTopo_",
+    # OutputBJetKey          = "IntermediateBJetCollection",
+    # OutputLightJetKey      = "IntermediateLightJetCollection",
     
-    # OutputLevel = DEBUG
+    OutputLevel = DEBUG
     )
 
 ToolSvc += gmsbOverlapRemovalTool1
@@ -151,10 +134,10 @@ gmsbOverlapRemovalTool2 = ConfiguredgmsbOverlapRemovalTool(
     
     # thelist of the input container keys - the order is important: the overlap removing will be done in that order
     
-    InputContainerKeys=[  "IntermediateJetCollection",
-                          "IntermediatePhotonCollection",
-                          "IntermediateElectronCollection",
-                          "SelectedMuonCollection"
+    InputContainerKeys=[  "int_jet_AntiKt4LCTopo_",
+                          "int_el_",
+                          "int_ph_",
+                          "sl_mu_staco_"
                           ],
     
     
@@ -163,19 +146,14 @@ gmsbOverlapRemovalTool2 = ConfiguredgmsbOverlapRemovalTool(
     # and Cell/Hit overlap not done in the case of Atlfast 
     
     # the list of the output container keys - 
-    OuputObjectKey         = "FinalStateObjectCollection",
-    OutputLeptonKey        = "FinalStateLeptonCollection",
-    OutputPhotonKey        = "FinalStatePhotonCollection",
-    OutputElectronKey      = "FinalStateElectronCollection",
-    OutputMuonKey          = "FinalStateMuonCollection",
-    OutputTauJetKey        = "FinalStateTauCollection",
-    OutputCalloClusterKey  = "FinalStateCaloClusterCollection",
-    OutputTrackParticleKey = "FinalStateTrackParticleCollection",
-    OutputJetKey           = "FinalStateJetCollection",
-    OutputBJetKey          = "FinalStateBJetCollection",
-    OutputLightJetKey      = "FinalStateLightJetCollection",
+    OutputPhotonKey        = "fin_ph_",
+    OutputElectronKey      = "fin_el_",
+    OutputMuonKey          = "fin_mu_staco_",
+    OutputJetKey           = "fin_jet_AntiKt4LCTopo_",
+    # OutputBJetKey          = "FinalStateBJetCollection",
+    # OutputLightJetKey      = "FinalStateLightJetCollection",
     
-    # OutputLevel = DEBUG
+    OutputLevel = DEBUG
     )
 
 ToolSvc += gmsbOverlapRemovalTool2
