@@ -21,7 +21,7 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 // User Tools
 #include "gmsbTools/gmsbSelectionTool.h"
 
-#include "egammaAnalysisUtils/CaloIsoCorrection.h"
+//#include "egammaAnalysisUtils/CaloIsoCorrection.h"
 
 #include "MCTruthClassifier/MCTruthClassifierDefs.h"
 

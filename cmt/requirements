@@ -6,38 +6,24 @@ author Jovan Mitrevski <Jovan.Mitrevski@cern.ch>
 use AtlasPolicy	       AtlasPolicy-*
 use GaudiInterface     GaudiInterface-*		External
 use AthenaBaseComps    AthenaBaseComps-*   	Control
-use AthenaKernel       AthenaKernel-*           Control
 
 use AtlasROOT                   AtlasROOT-*                     External
 
-use TrkSegment			TrkSegment-*			Tracking/TrkEvent
-
-use egammaEvent			egammaEvent-*			Reconstruction/egamma
-use gmsbD3PDObjects             gmsbD3PDObjects-*
-use muonEvent			muonEvent-*			Reconstruction/MuonIdentification
-use tauEvent			tauEvent-*			Reconstruction
-use Particle			Particle-*			Reconstruction
-use VxVertex             	VxVertex-*                  	Tracking/TrkEvent
-use MissingETEvent		MissingETEvent-*		Reconstruction
-use CaloEvent			CaloEvent-*			Calorimeter
-use JetEvent			JetEvent-*			Reconstruction/Jet
-
-use NavFourMom			NavFourMom-*			Event
-use FourMomUtils		FourMomUtils-*			Event
-
-use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/egamma/egammaAnalysis
-use MuonMomentumCorrections     MuonMomentumCorrections-*       PhysicsAnalysis/MuonID/MuonIDAnalysis
+#use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/egamma/egammaAnalysis
+#use MuonMomentumCorrections     MuonMomentumCorrections-*       PhysicsAnalysis/MuonID/MuonIDAnalysis
 
 
 private
+use gmsbD3PDObjects             gmsbD3PDObjects-*
+use egammaEvent			egammaEvent-*			Reconstruction/egamma
 use AtlasCLHEP			AtlasCLHEP-*			External
 use AnalysisUtils               AnalysisUtils-*                 PhysicsAnalysis/AnalysisCommon
 use EventInfo                   EventInfo-*                     Event
 use MCTruthClassifier  MCTruthClassifier-*      PhysicsAnalysis
+use  FourMomUtils               FourMomUtils-*                  Event
 use GeneratorObjects   GeneratorObjects-*       Generators
 use McParticleEvent    McParticleEvent-*        PhysicsAnalysis/TruthParticleID
 use AtlasHepMC         AtlasHepMC-*             External
-use PhotonAnalysisUtils        PhotonAnalysisUtils-*           PhysicsAnalysis/StandardModelPhys
 end_private
 
 apply_pattern dual_use_library files=*.cxx
