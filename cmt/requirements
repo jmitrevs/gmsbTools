@@ -9,11 +9,12 @@ use AthenaBaseComps    AthenaBaseComps-*   	Control
 
 use AtlasROOT                   AtlasROOT-*                     External
 
-#use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/egamma/egammaAnalysis
+use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/egamma/egammaAnalysis
 #use MuonMomentumCorrections     MuonMomentumCorrections-*       PhysicsAnalysis/MuonID/MuonIDAnalysis
 
 
 private
+use PathResolver       PathResolver-* Tools
 use gmsbD3PDObjects             gmsbD3PDObjects-*
 use egammaEvent			egammaEvent-*			Reconstruction/egamma
 use AtlasCLHEP			AtlasCLHEP-*			External

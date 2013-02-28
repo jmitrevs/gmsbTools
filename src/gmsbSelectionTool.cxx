@@ -23,6 +23,8 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 
 //#include "egammaAnalysisUtils/CaloIsoCorrection.h"
 
+#include "PathResolver/PathResolver.h"
+
 #include "MCTruthClassifier/MCTruthClassifierDefs.h"
 
 #include <sstream>
@@ -40,6 +42,8 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareInterface<gmsbSelectionTool>( this );
 
   declareProperty("Atlfast",          m_isAtlfast=false);
+
+  declareProperty("WhichSyste", m_whichsyste = SystErr::NONE);
 
   declareProperty("IsMC", m_isMC=false);
   declareProperty("SmearMC", m_smearMC = true);
@@ -70,6 +74,8 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("DoEDElectronIsolation", m_doEDElectronIsolation = false);
   declareProperty("Simple", m_simple=false); // don't smear or decorate object
                                              // (useful for selecting already selected)
+
+  declareProperty("RescalerData", m_rescalerData = "EnergyRescalerData.root");
 
   /** Photon selection */
   declareProperty("PhotonPt",   m_photonPt=25*GeV);
@@ -112,6 +118,16 @@ StatusCode gmsbSelectionTool::initialize() {
 
   ATH_MSG_DEBUG("in initialize()");
 
+  if (!m_simple) {
+    std::string rescalerData = PathResolver::find_file(m_rescalerData, "DATAPATH");
+
+    if (rescalerData == "") {
+      ATH_MSG_ERROR("rescaler data file " << m_rescalerData << " not found. Exiting");
+      return StatusCode::FAILURE;
+    }
+
+    m_eRescale.Init(rescalerData, "2012", "es2012");
+  }
   // m_eRescale.useDefaultCalibConstants("2011");
   // // m_eRescale.SetRandomSeed(m_randomSeed);
 
@@ -150,7 +166,9 @@ bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t id
   
 
   const float eta2 = electron.etas2(idx);
-  const float absClusEta = fabs(eta2);
+  const float absClusEta = fabsf(eta2);
+
+  const float cleta = electron.cl_eta(idx);
 
   const float eta = electron.tracketa(idx);
   const float phi = electron.trackphi(idx);
@@ -161,47 +179,92 @@ bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t id
   float energy = uncorrectedE;
 
   if (!m_simple) {
-    // Energy calibration around the barrel-endcap crack region (both data/MC)
-    // energy *= m_eRescale.applyMCCalibrationMeV(electron->cluster()->eta(), uncorrectedEt,"ELECTRON");
     
-    // if (m_isMC) {
-    //   if (m_elScaleShift) {
-    // 	energy *= m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
-    // 						     electron->cluster()->phi(),  
-    // 						     uncorrectedE, 
-    // 						     uncorrectedEt, 
-    // 						     m_elScaleShift, 
-    // 						     "ELECTRON") / 
-    // 	  m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
-    // 					      electron->cluster()->phi(),  
-    // 					      uncorrectedE, 
-    // 					      uncorrectedEt, 
-    // 					      eg2011::EnergyRescaler::NOMINAL, 
-    // 					      "ELECTRON"); 
-    //   }
-    //   if (m_smearMC) {	  
+    if (m_isMC) {
 
-    // 	int seed = int(1.e+5*fabs(electron->cluster()->phi()));
-    // 	if (!seed) seed = 1;
-    // 	m_eRescale.SetRandomSeed(seed);
-    // 	energy *= m_eRescale.getSmearingCorrectionMeV(electron->cluster()->eta(),
-    // 						      uncorrectedE,
-    // 						      m_elSmearShift,
-    // 						      m_MCHasConstantTerm,
-    // 						      "2011");
-    //   } 
-    // } else {
-    //   energy *= m_eRescale.applyEnergyCorrectionMeV(electron->cluster()->eta(),  
-    // 						    electron->cluster()->phi(),  
-    // 						    uncorrectedE, 
-    // 						    uncorrectedEt, 
-    // 						    m_elScaleShift, 
-    // 						    "ELECTRON") / uncorrectedE; 
-    // }
+      /// electron energy scale uncertainty
+      switch(m_whichsyste) {
+      case SystErr::EGZEEUP:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  egRescaler::EnergyRescalerUpgrade::Electron, 
+						  egRescaler::EnergyRescalerUpgrade::ZeeAllUp);
+	break;
+
+      case SystErr::EGZEEDOWN:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  egRescaler::EnergyRescalerUpgrade::Electron, 
+						  egRescaler::EnergyRescalerUpgrade::ZeeAllDown);
+	break;
+
+      case SystErr::EGMATUP:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  egRescaler::EnergyRescalerUpgrade::Electron, 
+						  egRescaler::EnergyRescalerUpgrade::R12StatUp);
+	break;
+
+      case SystErr::EGMATDOWN:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  egRescaler::EnergyRescalerUpgrade::Electron, 
+						  egRescaler::EnergyRescalerUpgrade::R12StatDown);
+	break;
+
+      case SystErr::EGPSUP:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  egRescaler::EnergyRescalerUpgrade::Electron,
+						  egRescaler::EnergyRescalerUpgrade::PSStatUp);
+	break;
+
+      case SystErr::EGPSDOWN:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  egRescaler::EnergyRescalerUpgrade::Electron, 
+						  egRescaler::EnergyRescalerUpgrade::PSStatDown);
+	break;
+
+      case SystErr::EGLOWUP:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  egRescaler::EnergyRescalerUpgrade::Electron, 
+						  egRescaler::EnergyRescalerUpgrade::LowPtUp);
+	break;
+
+      case SystErr::EGLOWDOWN: 
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  egRescaler::EnergyRescalerUpgrade::Electron,
+						  egRescaler::EnergyRescalerUpgrade::LowPtDown);
+	break;
+      default:
+	break;
+      }
+
+      if (m_smearMC) {
+	/// electron energy smearing
+	int seed = int(1.e+5*fabs(electron.cl_phi(idx)));
+	if(!seed) ++seed;
+	m_eRescale.SetRandomSeed(seed); 
+      
+	double smearcorr = 1;
+	if (m_whichsyste == SystErr::EGRESUP) {
+	  smearcorr = m_eRescale.getSmearingCorrection(cleta, uncorrectedE, 
+						       egRescaler::EnergyRescalerUpgrade::ERR_UP);
+	} else if (m_whichsyste == SystErr::EGRESDOWN) {
+	  smearcorr = m_eRescale.getSmearingCorrection(cleta, uncorrectedE, 
+						       egRescaler::EnergyRescalerUpgrade::ERR_DOWN);
+	} else {
+	  smearcorr = m_eRescale.getSmearingCorrection(cleta, uncorrectedE, 
+						       egRescaler::EnergyRescalerUpgrade::NOMINAL);
+	}
+	energy *= smearcorr;
+      }
+      /// Atlfast specific calibration corrections
+      if (m_isAtlfast) {
+	energy *= m_eRescale.applyAFtoG4(cleta);
+      }
+    } else { /// Residual energy scale corrections to be applied to data
+      energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						egRescaler::EnergyRescalerUpgrade::Electron, 
+						egRescaler::EnergyRescalerUpgrade::Nominal);
+    }
 
     ATH_MSG_DEBUG("Original electron E = " << uncorrectedE << ", corrected E = " << energy);
-
-    // let's cosnt-cast the four-mom
 
     electron.E(idx) = energy;
     electron.eta(idx) = eta;
@@ -209,13 +272,7 @@ bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t id
     electron.pt(idx) = energy/cosh(eta); // massless
   }
 
-
   const float pt = electron.pt(idx);
-
-  if ( m_isAtlfast ) {
-    select = pt > m_electronPt && absClusEta < m_electronEta;
-    return select;
-  }
 
   select = electron.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_electronID)); 
 
@@ -269,45 +326,102 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
   const float eta2 = photon.etas2(idx);
   const float absClusEta = fabs(eta2);
 
+  const float uncorrectedE = photon.cl_E(idx);
 
-  float energy = photon.E(idx);
+  const float cleta = photon.cl_eta(idx);
+
+  egRescaler::EnergyRescalerUpgrade::ParticleType particleType = 
+    (photon.convFlag(idx)) ? 
+    egRescaler::EnergyRescalerUpgrade::Converted : 
+    egRescaler::EnergyRescalerUpgrade::Unconverted;
+
+  float energy = uncorrectedE;
+
   if (!m_simple) {
-    // if (m_isMC) {
-    //   if (m_phoScaleShift) {
-    // 	energy *= m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
-    // 						      photon->cluster()->phi(),  
-    // 						      photon->e(), 
-    // 						      photon->et(), 
-    // 						      m_phoScaleShift, 
-    // 						      (photon->conversion()) ?  
-    // 						      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON") /
-    // 	  m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
-    // 					      photon->cluster()->phi(),  
-    // 					      photon->e(), 
-    // 					      photon->et(), 
-    // 					      eg2011::EnergyRescaler::NOMINAL,
-    // 					      (photon->conversion()) ?  
-    // 					      "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
-	  
-    //   }
-    //   if (m_smearMC) {
-    // 	m_eRescale.SetRandomSeed(int(1.e+5*fabs(photon->cluster()->phi())));
-    // 	energy *= m_eRescale.getSmearingCorrectionMeV(photon->cluster()->eta(),
-    // 						      photon->e(),
-    // 						      m_phoSmearShift,
-    // 						      m_MCHasConstantTerm);
-    //   }  
-    // } else { 
-    //   energy = m_eRescale.applyEnergyCorrectionMeV(photon->cluster()->eta(),  
-    // 						   photon->cluster()->phi(),  
-    // 						   photon->e(), 
-    // 						   photon->et(), 
-    // 						   m_phoScaleShift, 
-    // 						   (photon->conversion()) ?  
-    // 						   "CONVERTED_PHOTON" : "UNCONVERTED_PHOTON"); 
+    if (m_isMC) {
       
-    // }
+      /// electron energy scale uncertainty
+      switch(m_whichsyste) {
+      case SystErr::EGZEEUP:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  particleType, 
+						  egRescaler::EnergyRescalerUpgrade::ZeeAllUp);
+	break;
 
+      case SystErr::EGZEEDOWN:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  particleType, 
+						  egRescaler::EnergyRescalerUpgrade::ZeeAllDown);
+	break;
+
+      case SystErr::EGMATUP:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  particleType, 
+						  egRescaler::EnergyRescalerUpgrade::R12StatUp);
+	break;
+
+      case SystErr::EGMATDOWN:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  particleType, 
+						  egRescaler::EnergyRescalerUpgrade::R12StatDown);
+	break;
+
+      case SystErr::EGPSUP:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  particleType,
+						  egRescaler::EnergyRescalerUpgrade::PSStatUp);
+	break;
+
+      case SystErr::EGPSDOWN:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  particleType, 
+						  egRescaler::EnergyRescalerUpgrade::PSStatDown);
+	break;
+
+      case SystErr::EGLOWUP:
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  particleType, 
+						  egRescaler::EnergyRescalerUpgrade::LowPtUp);
+	break;
+
+      case SystErr::EGLOWDOWN: 
+	energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						  particleType,
+						  egRescaler::EnergyRescalerUpgrade::LowPtDown);
+	break;
+      default:
+	break;
+      }
+
+      if (m_smearMC) {
+	/// electron energy smearing
+	int seed = int(1.e+5*fabs(photon.cl_phi(idx)));
+	if(!seed) ++seed;
+	m_eRescale.SetRandomSeed(seed); 
+      
+	double smearcorr = 1;
+	if (m_whichsyste == SystErr::EGRESUP) {
+	  smearcorr = m_eRescale.getSmearingCorrection(cleta, uncorrectedE, 
+						       egRescaler::EnergyRescalerUpgrade::ERR_UP);
+	} else if (m_whichsyste == SystErr::EGRESDOWN) {
+	  smearcorr = m_eRescale.getSmearingCorrection(cleta, uncorrectedE, 
+						       egRescaler::EnergyRescalerUpgrade::ERR_DOWN);
+	} else {
+	  smearcorr = m_eRescale.getSmearingCorrection(cleta, uncorrectedE, 
+						       egRescaler::EnergyRescalerUpgrade::NOMINAL);
+	}
+	energy *= smearcorr;
+      }
+      /// Atlfast specific calibration corrections
+      if (m_isAtlfast) {
+	energy *= m_eRescale.applyAFtoG4(cleta);
+      }
+    } else { /// Residual energy scale corrections to be applied to data
+      energy = m_eRescale.applyEnergyCorrection(cleta, uncorrectedE, 
+						particleType, 
+						egRescaler::EnergyRescalerUpgrade::Nominal);
+    }
+    
     ATH_MSG_DEBUG("Original photon E = " << photon.E(idx) << ", corrected E = " << energy);
 
     const float scale = energy / photon.E(idx);
@@ -319,11 +433,6 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
 
   const float pt = photon.pt(idx);
 
-  if ( m_isAtlfast ) {
-    select = pt >m_photonPt && absClusEta < m_photonEta;
-    return select;
-  }
- 
   select = pt > m_photonPt && absClusEta < m_photonEta && photon.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_photonID)); 
 
   // also do isEM selection for special requirements (usually m_photonIsEM == 0, so this does nothing)
@@ -368,11 +477,6 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
 bool gmsbSelectionTool::isSelected( MuonD3PDObject& muon, std::size_t idx ) const
 {
   ATH_MSG_DEBUG("in muon isSelected(), with muon = " << idx);
-
-  if ( m_isAtlfast ) {
-    return (muon.pt(idx) > m_muonPt && fabs(muon.eta(idx)) < m_muonEta);
-  }
-
 
   // do ID cut
   bool select = ((m_sel_combined && muon.isCombinedMuon(idx)) ||

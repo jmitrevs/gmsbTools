@@ -16,9 +16,11 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 
 
 //#include "egammaAnalysisUtils/checkOQ.h"
-//#include "egammaAnalysisUtils/EnergyRescaler.h"
+#include "egammaAnalysisUtils/EnergyRescalerUpgrade.h"
 
 //#include "MuonMomentumCorrections/SmearingClass.h"
+
+#include "gmsbTools/gmsbSystError.h"
 
 #include "GaudiKernel/ToolHandle.h"
 
@@ -71,6 +73,8 @@ private:
 
   bool m_simple; 		// if true, don't smear or decorate event
 
+  int m_whichsyste;  // really SystErr::Syste
+
 
   /** MC */
   bool m_isMC;
@@ -99,6 +103,8 @@ private:
   double m_electronEtaWindMax;
   double m_electronEtcone20corrected; // for new
   double m_electronPtcone20ovEt;  // for track
+
+  std::string m_rescalerData; // name of the rescalar root file
 
   /** Photon selection */
   double m_photonPt;
@@ -138,11 +144,12 @@ private:
   // // the OQ utility
   // egammaOQ m_OQ;
 
-  // mutable eg2011::EnergyRescaler m_eRescale;
+  mutable egRescaler::EnergyRescalerUpgrade m_eRescale;
 
   // mutable MuonSmear::SmearingClass m_muonSmear;
 
 };
+
 
 #endif // GMSBTOOLS_GMSBSELECTIONTOOL_H 
 
