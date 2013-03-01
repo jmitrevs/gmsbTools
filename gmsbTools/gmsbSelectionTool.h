@@ -14,9 +14,11 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 
 #include "AthenaBaseComps/AthAlgTool.h"
 
+#include "egammaEvent/egammaPIDdefs.h"
 
 //#include "egammaAnalysisUtils/checkOQ.h"
 #include "egammaAnalysisUtils/EnergyRescalerUpgrade.h"
+#include "egammaAnalysisUtils/FudgeMCTool.h"
 
 //#include "MuonMomentumCorrections/SmearingClass.h"
 
@@ -66,6 +68,8 @@ protected:
    /** Standard destructor */
    virtual ~gmsbSelectionTool();
 
+  void fudgeID(PhotonD3PDObject& photon, std::size_t idx) const;
+
 private:
 
   /** this is Atlfast data */
@@ -86,12 +90,12 @@ private:
   int m_elSmearShift;
   int m_phoScaleShift;
   int m_phoSmearShift;
-  double m_mcEtconeScale;
+  float m_mcEtconeScale;
   bool m_useAltIsoCorrection;
 
   /** Electron selection */
-  double m_electronPt;
-  double m_electronEta;
+  float m_electronPt;
+  float m_electronEta;
   int    m_electronID;
   bool   m_doNewElectronIsolation;
   bool   m_doElectronTrackIsolation;
@@ -99,30 +103,32 @@ private:
   bool   m_doElectronEtaWindCut;/// apply (or not) eta cut in bad region window   
   bool   m_doEDElectronIsolation;
  
-  double m_electronEtaWindMin;
-  double m_electronEtaWindMax;
-  double m_electronEtcone20corrected; // for new
-  double m_electronPtcone20ovEt;  // for track
+  float m_electronEtaWindMin;
+  float m_electronEtaWindMax;
+  float m_electronEtcone20corrected; // for new
+  float m_electronPtcone20ovEt;  // for track
 
   std::string m_rescalerData; // name of the rescalar root file
 
   /** Photon selection */
-  double m_photonPt;
-  double m_photonEta;
+  float m_photonPt;
+  float m_photonEta;
   int    m_photonID;
   unsigned int m_photonIsEM;
   bool   m_doPhotonTrackIsolation;
   bool   m_doEDPhotonIsolation;
   bool   m_doPhotonEtaWindCut;/// apply (or not) eta cut in bad region window  
-  double m_photonEtaWindMin;
-  double m_photonEtaWindMax;
-  double m_photonPtcone20ovEt; // for track
-  double m_photonEtcone20corrected;  // for new
+  float m_photonEtaWindMin;
+  float m_photonEtaWindMax;
+  float m_photonPtcone20ovEt; // for track
+  float m_photonEtcone20corrected;  // for new
+  bool m_doFF;
+  int m_FFset;
 
   /** Muon selection */
-  double m_muonPt;
-  double m_muonEta;
-  // double m_matchChi2Max;
+  float m_muonPt;
+  float m_muonEta;
+  // float m_matchChi2Max;
   bool m_sel_combined;
   bool m_sel_seg_tag;
   bool m_do_iso_cut;
@@ -134,15 +140,17 @@ private:
   std::string m_muonResSyst;  // Valid values: {"MSLOW", "MSUP", "IDLOW", "IDUP"} 
 
   /** Jet selection */
-  double m_jetPt;
-  double m_jetEta;
-  double m_bJetLikelihood;
-  double m_rejNegEJets;		// reject jets with neg E
-
+  float m_jetPt;
+  float m_jetEta;
+  float m_bJetLikelihood;
+  float m_rejNegEJets;		// reject jets with neg E
 
 
   // // the OQ utility
   // egammaOQ m_OQ;
+
+  // the photon utilities
+  mutable FudgeMCTool  m_ft;
 
   mutable egRescaler::EnergyRescalerUpgrade m_eRescale;
 

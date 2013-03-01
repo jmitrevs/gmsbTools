@@ -11,12 +11,12 @@ use AtlasROOT                   AtlasROOT-*                     External
 
 use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/egamma/egammaAnalysis
 #use MuonMomentumCorrections     MuonMomentumCorrections-*       PhysicsAnalysis/MuonID/MuonIDAnalysis
+use egammaEvent			egammaEvent-*			Reconstruction/egamma
 
 
 private
 use PathResolver       PathResolver-* Tools
 use gmsbD3PDObjects             gmsbD3PDObjects-*
-use egammaEvent			egammaEvent-*			Reconstruction/egamma
 use AtlasCLHEP			AtlasCLHEP-*			External
 use AnalysisUtils               AnalysisUtils-*                 PhysicsAnalysis/AnalysisCommon
 use EventInfo                   EventInfo-*                     Event

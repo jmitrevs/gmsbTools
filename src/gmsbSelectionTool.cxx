@@ -9,8 +9,6 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 //#include "GaudiKernel/GaudiException.h"
 //#include "GaudiKernel/Property.h"
 
-#include "egammaEvent/EMShower.h"
-
 // Accessing data:
 #include "CLHEP/Units/PhysicalConstants.h"
 #include "gmsbD3PDObjects/ElectronD3PDObject.h"
@@ -22,6 +20,8 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 #include "gmsbTools/gmsbSelectionTool.h"
 
 //#include "egammaAnalysisUtils/CaloIsoCorrection.h"
+
+#include "egammaAnalysisUtils/PhotonIDTool.h"
 
 #include "PathResolver/PathResolver.h"
 
@@ -89,6 +89,8 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("DoPhotonTrackIsolation", m_doPhotonTrackIsolation = false);
   declareProperty("PhotonEtcone20corrected", m_photonEtcone20corrected=5*GeV);
   declareProperty("DoEDPhotonIsolation", m_doEDPhotonIsolation = true);
+  declareProperty("ApplyFF", m_doFF = true); // only applied on fullsim MC
+  declareProperty("FFSet", m_FFset = 14); //
 
   /** Muon selection */
   declareProperty("MuonPt", m_muonPt = 10.0*GeV);
@@ -127,6 +129,9 @@ StatusCode gmsbSelectionTool::initialize() {
     }
 
     m_eRescale.Init(rescalerData, "2012", "es2012");
+    if (m_doFF && m_isMC && !m_isAtlfast) {
+      m_ft.SetPreselection(m_FFset);
+    }
   }
   // m_eRescale.useDefaultCalibConstants("2011");
   // // m_eRescale.SetRandomSeed(m_randomSeed);
@@ -433,7 +438,13 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
 
   const float pt = photon.pt(idx);
 
-  select = pt > m_photonPt && absClusEta < m_photonEta && photon.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_photonID)); 
+  select = pt > m_photonPt && absClusEta < m_photonEta; 
+
+  if (m_doFF && m_isMC && !m_isAtlfast && !m_simple) {
+    fudgeID(photon, idx);
+  } 
+
+  select = select && photon.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_photonID));
 
   // also do isEM selection for special requirements (usually m_photonIsEM == 0, so this does nothing)
   select = select && ((photon.isEM(idx) & m_photonIsEM) == 0);
@@ -597,4 +608,74 @@ bool gmsbSelectionTool::isSelected( JetD3PDObject& jet, std::size_t idx ) const
 //   bool is_bjet = this->isSelected( jet );
 //   return ( is_bjet && jet->getFlavourTagWeight()>m_bJetLikelihood );
 // }
+
+
+void gmsbSelectionTool::fudgeID(PhotonD3PDObject& photon, 
+				std::size_t idx) const
+{
+
+  // calculate some veraibles
+
+  const float eta2 = photon.etas2(idx);
+  float et = 0;
+
+  if (fabs(eta2)<999.)
+    et = cosh(eta2)!=0. ? photon.cl_E(idx)/cosh(eta2) : 0.;
+
+  float rhad1 = fabsf(et)>0. ? photon.Ethad1(idx)/et : 0.;
+  float rhad  = fabsf(et)>0. ? photon.Ethad(idx)/et : 0.;
+
+
+  float reta = fabsf(photon.E277(idx))>0. ? photon.E237(idx)/photon.E277(idx) : 0.;
+  float rphi = fabsf(photon.E237(idx))>0. ? photon.E233(idx)/photon.E237(idx) : 0.;
+
+  const float emax2 = photon.Emax2(idx);
+  const float emin = photon.Emins1(idx);
+  const float emaxs1 = photon.emaxs1(idx);
+
+  float deltae = emax2 - emin;  
+  float eratio = (emaxs1+emax2)==0. ? 0 : (emaxs1 - emax2)/(emaxs1+emax2);
+
+
+  m_ft.FudgeShowers(photon.pt(idx),
+		    eta2,
+		    rhad1,
+		    rhad,
+		    photon.E277(idx),
+		    reta,
+		    rphi,
+		    photon.weta2(idx),
+		    photon.f1(idx),
+		    photon.fside(idx),
+		    photon.wstot(idx),
+		    photon.ws3(idx),
+		    deltae,
+		    eratio,
+		    photon.convFlag(idx));
+
+  PhotonIDTool myTool(et,
+		      eta2,
+		      rhad1,
+		      rhad,
+		      photon.E277(idx),
+		      reta,
+		      rphi,
+		      photon.weta2(idx),
+		      photon.f1(idx),
+		      photon.fside(idx),
+		      photon.wstot(idx),
+		      photon.ws3(idx),
+		      deltae,
+		      eratio,
+		      photon.convFlag(idx));
+
+  const unsigned int fudgedIsEM = myTool.isEM(4,2012);
+
+  const unsigned int origIsEM = photon.isEM(idx);
+
+  const unsigned int newIsEM = (origIsEM & egammaPID::AMBIGUITYRESOLVE_PHOTON) | fudgedIsEM;
+
+  photon.isEM(idx) = newIsEM;
+
+}
 
