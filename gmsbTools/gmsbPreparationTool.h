@@ -68,9 +68,9 @@ protected:
 private:
 
   /** container preparation */
-  StatusCode electronPreparation( std::string key );
+  StatusCode electronPreparation( std::string key, int nPV );
   StatusCode photonPreparation( std::string key );
-  StatusCode muonPreparation( std::string key );
+  StatusCode muonPreparation( std::string key, int nPV );
   StatusCode jetPreparation( std::string key );
 
   /** for debugging purposes - called if MSG_Level = DEBUG */
@@ -99,6 +99,9 @@ private:
   std::string m_outputPhotonKey;
   std::string m_outputMuonKey;
   std::string m_outputJetKey;
+
+  /** primary vertex container */
+  std::string m_vxCandidatesName;
 
   /** is ATLFAST data */
   bool m_isAtlfast;

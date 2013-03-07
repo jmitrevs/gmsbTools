@@ -56,12 +56,14 @@ public:
 
   /** pre-selections */
   // note: the references are not const since an update can be made to the calibrations
-  bool isSelected( ElectronD3PDObject& electron, std::size_t idx ) const; 
+  bool isSelected( ElectronD3PDObject& electron, std::size_t idx, int nPV) const; 
   bool isSelected( PhotonD3PDObject& photon, std::size_t idx ) const; 
-  bool isSelected( MuonD3PDObject& muon, std::size_t idx ) const;
+  bool isSelected( MuonD3PDObject& muon, std::size_t idx, int nPV) const;
   bool isSelected( JetD3PDObject& jet, std::size_t idx ) const;
 
   //  bool isBJet( const Jet * jet ) const;
+
+  enum isoType {NONE = 0, EDIso, TrackIso, LooseIso, MediumIso, TightIso};
 
 protected:
 
@@ -97,14 +99,13 @@ private:
   float m_electronPt;
   float m_electronEta;
   int    m_electronID;
-  bool   m_doNewElectronIsolation;
-  bool   m_doElectronTrackIsolation;
   bool   m_authorEgammaOnly;
   bool   m_doElectronEtaWindCut;/// apply (or not) eta cut in bad region window   
-  bool   m_doEDElectronIsolation;
- 
-  float m_electronEtaWindMin;
+   float m_electronEtaWindMin;
   float m_electronEtaWindMax;
+  int   m_doElectronIsolation; // enum value from above
+  //bool   m_doEDElectronIsolation;
+  //bool   m_doElectronTrackIsolation;
   float m_electronEtcone20corrected; // for new
   float m_electronPtcone20ovEt;  // for track
 

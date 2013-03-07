@@ -15,6 +15,7 @@ Purpose : User Analysis Preparation - see gmsbPreparationTool.h for details
 #include "gmsbD3PDObjects/MuonD3PDObject.h"
 #include "gmsbD3PDObjects/JetD3PDObject.h"
 #include "gmsbD3PDObjects/PhotonD3PDObject.h"
+#include "gmsbD3PDObjects/PrimaryVertexD3PDObject.h"
 
 // User Tools
 #include "gmsbTools/gmsbPreparationTool.h"
@@ -37,6 +38,10 @@ gmsbPreparationTool::gmsbPreparationTool( const std::string& type,
   declareProperty("InputContainerKeys",     m_inputContainerKeys);
   declareProperty("OutputContainerKeys",    m_outputContainerKeys);
   declareProperty("IsAtlfastData",          m_isAtlfast=false);
+  // Name of the primary vertex candidates
+  declareProperty("PrimaryVertexCandidates",
+		  m_vxCandidatesName="vx_",
+		  "Name of the primary vertex candidates");
 
   /** initialize counters */
   m_numElectrons      = std::make_pair(0,0);
@@ -84,6 +89,19 @@ StatusCode gmsbPreparationTool::execute() {
   /** check that the input and the output containers are defined */
   StatusCode sc = StatusCode::SUCCESS;
 
+  // retrieve the container of Vertex
+  const PrimaryVertexD3PDObject vxContainer(m_vxCandidatesName);
+  ATH_CHECK(vxContainer.retrieve());
+
+  // find the number of PVs with 5 tracks or more
+  int nPV = 0;
+
+  for (int i = 0; i < vxContainer.n(); i++) {
+    if (vxContainer.nTracks(i) >= 5) {
+      nPV++;
+    }
+  }
+
   if ( m_first ) {
     if ( m_outputContainerKeys.size() != m_inputContainerKeys.size() ) {
       ATH_MSG_FATAL("Input/Output container mis-match: please fix job options");
@@ -102,7 +120,7 @@ StatusCode gmsbPreparationTool::execute() {
     std::string::size_type loc = m_inputContainerKeys[i].find( "el_", 0);
     if ( loc != std::string::npos ) { 
       if ( m_first ) m_outputElectronKey = m_outputContainerKeys[i]; 
-      sc = this->electronPreparation( m_inputContainerKeys[i]);
+      sc = this->electronPreparation( m_inputContainerKeys[i], nPV);
     }
 
     loc = m_inputContainerKeys[i].find( "ph_", 0);
@@ -114,7 +132,7 @@ StatusCode gmsbPreparationTool::execute() {
     loc = m_inputContainerKeys[i].find( "mu_", 0);
     if ( loc != std::string::npos ) {
       if ( m_first ) m_outputMuonKey = m_outputContainerKeys[i];       
-      sc = this->muonPreparation( m_inputContainerKeys[i] );
+      sc = this->muonPreparation(m_inputContainerKeys[i], nPV);
     }
 
     loc = m_inputContainerKeys[i].find( "jet_", 0);
@@ -178,7 +196,7 @@ JetD3PDObject * gmsbPreparationTool::selectedJets() {
 
 
 /** container preparation */
-StatusCode gmsbPreparationTool::electronPreparation( std::string key) {
+StatusCode gmsbPreparationTool::electronPreparation( std::string key, int nPV) {
   ATH_MSG_DEBUG("in electronPreparation() ");
 
   ElectronD3PDObject electrons = ElectronD3PDObject::create(m_outputElectronKey);
@@ -193,7 +211,7 @@ StatusCode gmsbPreparationTool::electronPreparation( std::string key) {
   m_numElectrons.first += elIn.n();
 
   for (std::size_t idx = 0; idx < static_cast<std::size_t>(elIn.n()); idx++) {
-    if ( m_userSelectionTool->isSelected(elIn, idx) ) {
+    if ( m_userSelectionTool->isSelected(elIn, idx, nPV) ) {
       electrons.add_object(elIn, idx);
     }
   }
@@ -226,7 +244,7 @@ StatusCode gmsbPreparationTool::photonPreparation( std::string key) {
   return StatusCode::SUCCESS;
 }
 
-StatusCode gmsbPreparationTool::muonPreparation( std::string key) {
+StatusCode gmsbPreparationTool::muonPreparation( std::string key, int nPV) {
   ATH_MSG_DEBUG("in muonPreparation() ");
 
   MuonD3PDObject muons = MuonD3PDObject::create(m_outputMuonKey);
@@ -241,7 +259,7 @@ StatusCode gmsbPreparationTool::muonPreparation( std::string key) {
   m_numMuons.first += muIn.n();
 
   for (std::size_t idx = 0; idx < static_cast<std::size_t>(muIn.n()); idx++) {
-    if ( m_userSelectionTool->isSelected(muIn, idx) ) {
+    if ( m_userSelectionTool->isSelected(muIn, idx, nPV) ) {
       muons.add_object(muIn, idx);
     }
   }

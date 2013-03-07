@@ -69,9 +69,10 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("ElectronEtaWindowMin", m_electronEtaWindMin = 1.37);
   declareProperty("ElectronEtaWindowMax", m_electronEtaWindMax = 1.52);
   declareProperty("ElectronEtcone20corrected", m_electronEtcone20corrected=5*GeV);
-  declareProperty("DoElectronTrackIsolation", m_doElectronTrackIsolation = false);
+  //declareProperty("DoElectronTrackIsolation", m_doElectronTrackIsolation = false);
   declareProperty("ElectronPtcone20ovEt", m_electronPtcone20ovEt=0.1);
-  declareProperty("DoEDElectronIsolation", m_doEDElectronIsolation = false);
+  //declareProperty("DoEDElectronIsolation", m_doEDElectronIsolation = false);
+  declareProperty("DoElectronIsolation", m_doElectronIsolation = gmsbSelectionTool::NONE); // isoType
   declareProperty("Simple", m_simple=false); // don't smear or decorate object
                                              // (useful for selecting already selected)
 
@@ -93,8 +94,8 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("FFSet", m_FFset = 14); //
 
   /** Muon selection */
-  declareProperty("MuonPt", m_muonPt = 10.0*GeV);
-  declareProperty("MuonEta", m_muonEta = 2.4);
+  declareProperty("MuonPt", m_muonPt = 6.0*GeV);
+  declareProperty("MuonEta", m_muonEta = 2.5);
   //declareProperty("MuonMatchChi2Max", m_matchChi2Max = 150.0);
   declareProperty("SelectCombined", m_sel_combined=true);
   declareProperty("SelectSegmentTag", m_sel_seg_tag=true);
@@ -155,7 +156,7 @@ gmsbSelectionTool::~gmsbSelectionTool()
 {}
 
 // pt = -1 means use real one
-bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t idx ) const
+bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t idx, int nPV ) const
 {
   ATH_MSG_DEBUG("in electron isSelected(), with electron = " << idx);
 
@@ -301,14 +302,59 @@ bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t id
   // }
   select = select && !badOQ;
 
-  if ( m_doElectronTrackIsolation ) {
-    const float isol = electron.ptcone20_zpv05(idx) / pt;
-    select = select && isol < m_electronPtcone20ovEt;
-  }
+  switch (m_doElectronIsolation) {
+  case TrackIso:
+    {
+      const float isol = electron.ptcone20_zpv05(idx) / pt;
+      select = select && isol < m_electronPtcone20ovEt;
+    }
+    break;
+  case EDIso:
+    {
+      const float isol = electron.topoEtcone20_corrected(idx);
+      select = select && isol < m_electronEtcone20corrected;
+    }
+    break;
+  case LooseIso:
+    {
+      float id_isocut = 0.16;
+      const float z0cut = 0.4;
+      id_isocut *= pt;
+      select = select && electron.ptcone30(idx) < id_isocut
+	&& fabs(electron.trackIPEstimate_z0_unbiasedpvunbiased(idx)*sin(electron.tracktheta(idx))) <= z0cut;
+    }
+    break;
+  case MediumIso:
+    {
+      float id_isocut = 0.16;
+      const float d0sigcut = 5.;
+      const float z0cut = 0.4;
+      id_isocut *= pt;
+      select = select && electron.ptcone30(idx) < id_isocut
+	&& fabs(electron.trackIPEstimate_z0_unbiasedpvunbiased(idx)*sin(electron.tracktheta(idx))) <= z0cut
+	&& fabs(electron.trackIPEstimate_d0_unbiasedpvunbiased(idx)/electron.trackIPEstimate_sigd0_unbiasedpvunbiased(idx)) <= d0sigcut;
+    }
+    break;
+  case TightIso:
+    {
+      float id_isocut = 0.16;
+      float calo_isocut = 0.18;
+      const float d0sigcut = 5.;
+      const float z0cut = 0.4;
+      const float corr = m_isMC ? 17.94 : 20.15;
+      const float calo_iso = electron.topoEtcone30_corrected(idx) - corr * nPV;
 
-  if ( m_doEDElectronIsolation ) {
-    const float isol = electron.topoEtcone20_corrected(idx);
-    select = select && isol < m_electronEtcone20corrected;
+      id_isocut *= pt;
+      calo_isocut *= pt;     
+
+      select = select && electron.ptcone30(idx) < id_isocut
+	&& fabs(electron.trackIPEstimate_z0_unbiasedpvunbiased(idx)*sin(electron.tracktheta(idx))) <= z0cut
+	&& fabs(electron.trackIPEstimate_d0_unbiasedpvunbiased(idx)/electron.trackIPEstimate_sigd0_unbiasedpvunbiased(idx)) <= d0sigcut
+	&& calo_iso < calo_isocut;
+    }
+    break;
+  default:
+    break;
   }
 
   ATH_MSG_DEBUG("after iso, select is now " << select);
@@ -485,7 +531,7 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
   return select;
 }
 
-bool gmsbSelectionTool::isSelected( MuonD3PDObject& muon, std::size_t idx ) const
+bool gmsbSelectionTool::isSelected( MuonD3PDObject& muon, std::size_t idx, int nPV ) const
 {
   ATH_MSG_DEBUG("in muon isSelected(), with muon = " << idx);
 
@@ -571,13 +617,13 @@ bool gmsbSelectionTool::isSelected( MuonD3PDObject& muon, std::size_t idx ) cons
 
   // do track cuts
   if (muon.expectBLayerHit(idx) && muon.nBLHits(idx) == 0) return false;
-  if (muon.nPixHits(idx) + muon.nPixelDeadSensors(idx) <= 1) return false;
-  if (muon.nSCTHits(idx) + muon.nSCTDeadSensors(idx) < 6) return false;
+  if (muon.nPixHits(idx) + muon.nPixelDeadSensors(idx) < 1) return false;
+  if (muon.nSCTHits(idx) + muon.nSCTDeadSensors(idx) < 5) return false;
   if (muon.nPixHoles(idx) + muon.nSCTHoles(idx) >= 3) return false;
   const int nTRTOutliers = muon.nTRTOutliers(idx);
   const int nTRTTotal    = nTRTOutliers + muon.nTRTHits(idx);
-  const float trackEta   = - log(tan(muon.tracktheta(idx)/2.0));;
-  if (fabs(trackEta) < 1.9) {
+  const float trackEta   = fabs(log(tan(muon.tracktheta(idx)/2.0)));
+  if (trackEta < 1.9 && trackEta > 0.1) {
     select = (nTRTTotal > 5 &&  nTRTOutliers < 0.9 * nTRTTotal);
   } else if (nTRTTotal > 5) {
     select = nTRTOutliers < 0.9*nTRTTotal;
