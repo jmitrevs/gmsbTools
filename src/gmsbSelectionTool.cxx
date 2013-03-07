@@ -79,7 +79,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("RescalerData", m_rescalerData = "EnergyRescalerData.root");
 
   /** Photon selection */
-  declareProperty("PhotonPt",   m_photonPt=25*GeV);
+  declareProperty("PhotonPt",   m_photonPt=130*GeV);
   declareProperty("PhotonEta",  m_photonEta=2.37);
   declareProperty("PhotonID", m_photonID = egammaPID::PhotonIDTightAR);
   declareProperty("PhotonIsEM", m_photonIsEM = 0);
