@@ -10,7 +10,7 @@ use AthenaBaseComps    AthenaBaseComps-*   	Control
 use AtlasROOT                   AtlasROOT-*                     External
 
 use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/egamma/egammaAnalysis
-#use MuonMomentumCorrections     MuonMomentumCorrections-*       PhysicsAnalysis/MuonID/MuonIDAnalysis
+use MuonMomentumCorrections     MuonMomentumCorrections-*       PhysicsAnalysis/MuonID/MuonIDAnalysis
 use egammaEvent			egammaEvent-*			Reconstruction/egamma
 
 

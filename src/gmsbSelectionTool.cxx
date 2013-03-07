@@ -36,8 +36,8 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 				      const std::string& name, 
 				      const IInterface* parent )
-  : AthAlgTool( type, name, parent )
-    //    m_muonSmear("Data11","staco","q_pT","Rel17","")
+  : AthAlgTool( type, name, parent ),
+    m_muonSmear("Data12","staco","q_pT","Rel17.2Repro","")
 {
   declareInterface<gmsbSelectionTool>( this );
 
@@ -99,8 +99,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   //declareProperty("MuonMatchChi2Max", m_matchChi2Max = 150.0);
   declareProperty("SelectCombined", m_sel_combined=true);
   declareProperty("SelectSegmentTag", m_sel_seg_tag=true);
-  declareProperty("DoMuonIsoCut",m_do_iso_cut = false);
-  declareProperty("DoMuonFlatIsoCut",m_do_flat_iso_cut = true);
+  declareProperty("DoMuonIsolation", m_doMuonIsolation = gmsbSelectionTool::NONE); // isoType
   declareProperty("MuonFlatIsoCut",m_flat_isolation_cut = 1.8*GeV);
   declareProperty("MuonIsoCut",m_isolation_cut = 0.1);
   //declareProperty("MuonSpecPtLimit", m_ms_pt_limit = 50.*GeV);
@@ -331,8 +330,11 @@ bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t id
       const float z0cut = 0.4;
       id_isocut *= pt;
       select = select && electron.ptcone30(idx) < id_isocut
-	&& fabs(electron.trackIPEstimate_z0_unbiasedpvunbiased(idx)*sin(electron.tracktheta(idx))) <= z0cut
-	&& fabs(electron.trackIPEstimate_d0_unbiasedpvunbiased(idx)/electron.trackIPEstimate_sigd0_unbiasedpvunbiased(idx)) <= d0sigcut;
+	&& fabs(electron.trackIPEstimate_z0_unbiasedpvunbiased(idx)*sin(electron.tracktheta(idx))) <= z0cut;
+
+      if (electron.trackIPEstimate_sigd0_unbiasedpvunbiased(idx) != 0) {
+	select = select && fabs(electron.trackIPEstimate_d0_unbiasedpvunbiased(idx)/electron.trackIPEstimate_sigd0_unbiasedpvunbiased(idx)) <= d0sigcut;
+      }
     }
     break;
   case TightIso:
@@ -349,12 +351,18 @@ bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t id
 
       select = select && electron.ptcone30(idx) < id_isocut
 	&& fabs(electron.trackIPEstimate_z0_unbiasedpvunbiased(idx)*sin(electron.tracktheta(idx))) <= z0cut
-	&& fabs(electron.trackIPEstimate_d0_unbiasedpvunbiased(idx)/electron.trackIPEstimate_sigd0_unbiasedpvunbiased(idx)) <= d0sigcut
 	&& calo_iso < calo_isocut;
+
+      if (electron.trackIPEstimate_sigd0_unbiasedpvunbiased(idx) != 0) {
+	select = select && fabs(electron.trackIPEstimate_d0_unbiasedpvunbiased(idx)/electron.trackIPEstimate_sigd0_unbiasedpvunbiased(idx)) <= d0sigcut;
+      }
     }
     break;
+  case NONE:
+    break; // do nothing
   default:
-    break;
+    ATH_MSG_ERROR("Using unimplemented electron isolation: " << m_doElectronIsolation);
+    return StatusCode::FAILURE;
   }
 
   ATH_MSG_DEBUG("after iso, select is now " << select);
@@ -547,70 +555,124 @@ bool gmsbSelectionTool::isSelected( MuonD3PDObject& muon, std::size_t idx, int n
   float pt = muon.pt(idx);
 
   // ATH_MSG_DEBUG("Here 2");
-  // if (!m_simple) {
-  //   if (m_isMC && m_smearMC) {
-  //     ATH_MSG_DEBUG("Here 2a");
-  //     int seed = int(1.e+5*fabs(muon->phi()));
-  //     if (!seed) seed = 1;
-  //     m_muonSmear.SetSeed(seed);
-  //     ATH_MSG_DEBUG("Here 2b");
-  //     ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
-  // 		    << muon->inDetTrackParticle() << ", "
-  // 		    << muon->pt() << ", "
-  // 		    <<  muon->eta());
+  if (!m_simple) {
+    if (m_isMC && m_smearMC) {
+      int seed = int(fabs(muon.phi(idx)*1.e+5));
+      if (!seed) seed = 1;
+      m_muonSmear.SetSeed(seed);
       
-  //     // float charge = muon->charge();
-  //     float eta = muon->eta();
-  //     float ptcb = muon->pt();
-  //     float ptms = muon->muonExtrapolatedTrackParticle() ? muon->muonExtrapolatedTrackParticle()->pt() : 1;
-  //     float ptid = muon->inDetTrackParticle() ? muon->inDetTrackParticle()->pt() : 1;
+      // float charge = muon->charge();
+      const float eta = muon.eta(idx);
+      const float ptcb = pt;
+      const float ptid = (muon.id_qoverp_exPV(idx) != 0.) ? 
+	fabs(sin(muon.id_theta_exPV(idx))/muon.id_qoverp_exPV(idx)) : 0.;
+      const float ptms = (muon.me_qoverp_exPV(idx) != 0.) ? 
+	fabs(sin(muon.me_theta_exPV(idx))/muon.me_qoverp_exPV(idx)) : 0.;
       
-  //     m_muonSmear.Event(ptms,ptid,ptcb,eta);
-      
-  //     if (m_muonResSyst == "") {
-  // 	if (muon->isCombinedMuon()) {
-  // 	  pt = m_muonSmear.pTCB();
-  // 	} else {
-  // 	  pt = m_muonSmear.pTID();
-  // 	}
-  //     } else {
-  // 	float pTMS_smeared = 0.;
-  // 	float pTID_smeared = 0.;
-  // 	float pTCB_smeared = 0.;
-	
-  // 	// Valid values for "THESTRING": {"MSLOW", "MSUP", "IDLOW", "IDUP"} 
-  // 	m_muonSmear.PTVar(pTMS_smeared, pTID_smeared, pTCB_smeared, m_muonResSyst);
-	
-  // 	if (muon->isCombinedMuon()) {
-  // 	  pt = pTCB_smeared;
-  // 	} else {
-  // 	  pt = pTID_smeared;
-  // 	}
-  //     }
-    
+      if (muon.isCombinedMuon(idx))
+	m_muonSmear.Event(ptms,ptid,ptcb,eta,muon.charge(idx)); 
+      else if (muon.isSegmentTaggedMuon(idx))
+	m_muonSmear.Event(ptid,eta,"ID",muon.charge(idx)); 
+      else
+	m_muonSmear.Event(ptms,eta,"MS",muon.charge(idx)); 
 
-  //     // let's cosnt-cast the four-mom
-  //     if (pt != 0) {
-  // 	Analysis::Muon* volmu = const_cast<Analysis::Muon*>(muon);
-  // 	if (!volmu) {
-  // 	  ATH_MSG_ERROR("Const-cast for muon did not work");
-  // 	  return false;
-  // 	}
-  // 	volmu->setIPt(1.0/pt);
-  //     }
-  //   }
-  // }
+      std::string THESTRING = "";
+      bool doSyst = false;
+      switch(m_whichsyste) {
+      case SystErr::MMSLOW: THESTRING = "MSLOW";  doSyst = true; break;
+      case SystErr::MMSUP:   THESTRING = "MSUP";  doSyst = true;  break;
+      case SystErr::MIDLOW: THESTRING = "IDLOW"; doSyst = true; break;
+      case SystErr::MIDUP:   THESTRING = "IDUP"; doSyst = true;  break;
+      case SystErr::MSCALELOW: THESTRING = "SCALELOW"; doSyst = true; break;
+      case SystErr::MSCALEUP:   THESTRING = "SCALEUP"; doSyst = true;  break;
+      default: break;
+      }
+      if (!doSyst) {
+	if (muon.isCombinedMuon(idx))
+	  pt = m_muonSmear.pTCB();
+	else if (muon.isSegmentTaggedMuon(idx))
+	  pt = m_muonSmear.pTID();
+	else
+	  pt = m_muonSmear.pTMS();
+      } else {
+	double pTMS_smeared = pt;
+	double pTID_smeared = pt;
+	double pTCB_smeared = pt;
+         
+	// Valid values for "THESTRING":{"IDLOW", IDUP", "MSLOW", MSUP","SCALELOW", "SCALEUP"} 
+	m_muonSmear.PTVar(pTMS_smeared, pTID_smeared, pTCB_smeared, THESTRING);
+ 
+	if (muon.isCombinedMuon(idx)) pt = pTCB_smeared;
+	else if (muon.isSegmentTaggedMuon(idx)) pt = pTID_smeared;
+	else pt = pTMS_smeared;    
+      }
+      muon.pt(idx) = pt;
+    }
+  }
     
   // select must be true before in order to get here, so can overwrite
   select = pt >m_muonPt && fabs(muon.eta(idx))<m_muonEta;
 
   // do iso cut
-  if (m_do_iso_cut) {
-    if (m_do_flat_iso_cut) {
-      select = select && muon.ptcone20(idx)<m_flat_isolation_cut;
-  } else {
-      select = select && muon.ptcone20(idx)/pt<m_isolation_cut;
+  
+  switch (m_doMuonIsolation) {
+  case FlatTrackIso:
+    select = select && muon.ptcone20(idx)<m_flat_isolation_cut;
+    break;
+  case TrackIso:
+    select = select && muon.ptcone20(idx)/pt<m_isolation_cut;
+    break;
+  case LooseIso:
+    {
+      float id_isocut = 0.12;
+      const float z0cut = 0.4;
+      id_isocut *= pt;
+
+      select = select && muon.ptcone30_trkelstyle(idx) < id_isocut
+	&& fabs(muon.trackIPEstimate_z0_unbiasedpvunbiased(idx)*sin(muon.tracktheta(idx))) <= z0cut;
     }
+    break;
+  case MediumIso:
+    {
+      float id_isocut = 0.12;
+      const float d0sigcut = 3.;
+      const float z0cut = 0.4;
+      id_isocut *= pt;
+      select = select && muon.ptcone30_trkelstyle(idx) < id_isocut
+	&& fabs(muon.trackIPEstimate_z0_unbiasedpvunbiased(idx)*sin(muon.tracktheta(idx))) <= z0cut;
+
+      if (muon.trackIPEstimate_sigd0_unbiasedpvunbiased(idx) != 0) {
+	select = select && fabs(muon.trackIPEstimate_d0_unbiasedpvunbiased(idx)/muon.trackIPEstimate_sigd0_unbiasedpvunbiased(idx)) <= d0sigcut;
+      }
+    }
+    break;
+  case TightIso:
+    {
+      float id_isocut = 0.12;
+      float calo_isocut = 0.12;
+      const float d0sigcut = 3.;
+      const float z0cut = 0.4;
+      const float corr = m_isMC ? 69.2 : 64.8;
+      const float corr2 = m_isMC ? 0.76 : 0.98;
+      const float calo_iso = muon.etcone30(idx) - corr * nPV - corr2 * nPV * nPV;
+
+      id_isocut *= pt;
+      calo_isocut *= pt;     
+
+      select = select && muon.ptcone30_trkelstyle(idx) < id_isocut
+	&& fabs(muon.trackIPEstimate_z0_unbiasedpvunbiased(idx)*sin(muon.tracktheta(idx))) <= z0cut
+	&& calo_iso < calo_isocut;
+
+      if (muon.trackIPEstimate_sigd0_unbiasedpvunbiased(idx) != 0) {
+	select = select && fabs(muon.trackIPEstimate_d0_unbiasedpvunbiased(idx)/muon.trackIPEstimate_sigd0_unbiasedpvunbiased(idx)) <= d0sigcut;
+      }
+    }
+    break;
+  case NONE:
+    break; // do nothing
+  default:
+    ATH_MSG_ERROR("Using unimplemented muon isolation: " << m_doMuonIsolation);
+    return StatusCode::FAILURE;
   }
 
   if (!select) return false;

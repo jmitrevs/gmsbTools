@@ -1,4 +1,6 @@
 
+NONE, EDIso, TrackIso, FlatTrackIso, LooseIso, MediumIso, TightIso = tuple(range(7))
+
 
 from gmsbTools.gmsbToolsConf import \
     gmsbSelectionTool as ConfiguredUserSelectionTool
@@ -12,9 +14,9 @@ print      gmsbSelectionTool
 
 gmsbFinalSelectionTool = ConfiguredUserSelectionTool(
     name = "gmsbFinalSelectionTool",
-    DoElectronTrackIsolation = True,
+    DoElectronIsolation = TightIso,
     DoEDPhotonIsolation = False, # already done
-    DoMuonIsoCut = True,
+    DoMuonIsolation = TightIso,
     MuonPt = 25*GeV,
     Simple = True,
     #OutputLevel = DEBUG

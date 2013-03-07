@@ -20,7 +20,7 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 #include "egammaAnalysisUtils/EnergyRescalerUpgrade.h"
 #include "egammaAnalysisUtils/FudgeMCTool.h"
 
-//#include "MuonMomentumCorrections/SmearingClass.h"
+#include "MuonMomentumCorrections/SmearingClass.h"
 
 #include "gmsbTools/gmsbSystError.h"
 
@@ -63,7 +63,7 @@ public:
 
   //  bool isBJet( const Jet * jet ) const;
 
-  enum isoType {NONE = 0, EDIso, TrackIso, LooseIso, MediumIso, TightIso};
+  enum isoType {NONE = 0, EDIso, TrackIso, FlatTrackIso, LooseIso, MediumIso, TightIso};
 
 protected:
 
@@ -132,8 +132,7 @@ private:
   // float m_matchChi2Max;
   bool m_sel_combined;
   bool m_sel_seg_tag;
-  bool m_do_iso_cut;
-  bool m_do_flat_iso_cut;
+  int m_doMuonIsolation;
   float m_flat_isolation_cut;
   float m_isolation_cut;
   //float m_ms_pt_limit;
@@ -155,7 +154,7 @@ private:
 
   mutable egRescaler::EnergyRescalerUpgrade m_eRescale;
 
-  // mutable MuonSmear::SmearingClass m_muonSmear;
+  mutable MuonSmear::SmearingClass m_muonSmear;
 
 };
 
