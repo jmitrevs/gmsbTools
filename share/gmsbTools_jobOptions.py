@@ -15,9 +15,11 @@ print      gmsbSelectionTool
 gmsbFinalSelectionTool = ConfiguredUserSelectionTool(
     name = "gmsbFinalSelectionTool",
     DoElectronIsolation = TightIso,
-    DoEDPhotonIsolation = False, # already done
+    DoEDPhotonIsolation = True,
     DoMuonIsolation = TightIso,
+    ElectronPt = 25*GeV,
     MuonPt = 25*GeV,
+    PhotonPt = 130*GeV,
     Simple = True,
     #OutputLevel = DEBUG
     )

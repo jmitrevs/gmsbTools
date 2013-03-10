@@ -61,7 +61,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 
 
   /** Electron selection */
-  declareProperty("ElectronPt",       m_electronPt=25*GeV);
+  declareProperty("ElectronPt",       m_electronPt=7*GeV);
   declareProperty("ElectronEta",      m_electronEta=2.47);
   declareProperty("ElectronID", m_electronID = egammaPID::ElectronIDMediumPP);
   declareProperty("AuthorEgammaOnly", m_authorEgammaOnly=true);
@@ -79,7 +79,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("RescalerData", m_rescalerData = "EnergyRescalerData.root");
 
   /** Photon selection */
-  declareProperty("PhotonPt",   m_photonPt=130*GeV);
+  declareProperty("PhotonPt",   m_photonPt=20*GeV);
   declareProperty("PhotonEta",  m_photonEta=2.37);
   declareProperty("PhotonID", m_photonID = egammaPID::PhotonIDTightAR);
   declareProperty("PhotonIsEM", m_photonIsEM = 0);
@@ -89,7 +89,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareProperty("PhotonPtcone20ovEt", m_photonPtcone20ovEt=0.1);
   declareProperty("DoPhotonTrackIsolation", m_doPhotonTrackIsolation = false);
   declareProperty("PhotonEtcone20corrected", m_photonEtcone20corrected=5*GeV);
-  declareProperty("DoEDPhotonIsolation", m_doEDPhotonIsolation = true);
+  declareProperty("DoEDPhotonIsolation", m_doEDPhotonIsolation = false);
   declareProperty("ApplyFF", m_doFF = true); // only applied on fullsim MC
   declareProperty("FFSet", m_FFset = 14); //
 
