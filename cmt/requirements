@@ -13,8 +13,8 @@ use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/e
 use MuonMomentumCorrections     MuonMomentumCorrections-*       PhysicsAnalysis/MuonID/MuonIDAnalysis
 use egammaEvent			egammaEvent-*			Reconstruction/egamma
 
-
 private
+use ApplyJetCalibration         ApplyJetCalibration-*           Reconstruction/Jet
 use PathResolver       PathResolver-* Tools
 use gmsbD3PDObjects             gmsbD3PDObjects-*
 use AtlasCLHEP			AtlasCLHEP-*			External

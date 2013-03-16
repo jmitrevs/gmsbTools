@@ -28,6 +28,11 @@ namespace FourMomHelpers {
     if ( deltaR2 > dR*dR ) return false;                   // <==
     return true;
   }
-}
 
+
+  inline float deltaR( float etaA, float phiA, float etaB, float phiB )
+  {
+    return hypotf(deltaPhi(phiA, phiB), deltaEta(etaA, etaB));
+  }			
+}
 #endif

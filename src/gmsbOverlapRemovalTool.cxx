@@ -244,8 +244,8 @@ StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
 						     particle->phi(), false);
 	break;
       default:
-	overlap = m_userOverlapCheckingTool->overlap(aod_electrons.eta(idx), 
-						     aod_electrons.phi(idx),
+	overlap = m_userOverlapCheckingTool->overlap(aod_electrons.cl_eta(idx), 
+						     aod_electrons.cl_phi(idx),
 						     particle->eta(), 
 						     particle->phi(), true);
 	break;
@@ -317,8 +317,8 @@ StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
 						     particle->phi(), false);
 	break;
       default:
-	overlap = m_userOverlapCheckingTool->overlap(aod_photons.eta(idx), 
-						     aod_photons.phi(idx),
+	overlap = m_userOverlapCheckingTool->overlap(aod_photons.cl_eta(idx), 
+						     aod_photons.cl_phi(idx),
 						     particle->eta(), 
 						     particle->phi(), true);
 	break;
@@ -442,6 +442,13 @@ StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
 						       particle->eta(), 
 						       particle->phi(), true);
 	}
+	break;
+      case genericParticle::electron:
+      case genericParticle::photon:
+	overlap = m_userOverlapCheckingTool->overlap(aod_jets.eta(idx), 
+						     aod_jets.phi(idx),
+						     particle->cl_eta(), 
+						     particle->cl_phi(), true);
 	break;
       default:
 	overlap = m_userOverlapCheckingTool->overlap(aod_jets.eta(idx), 

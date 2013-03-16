@@ -38,6 +38,7 @@ class ElectronD3PDObject;
 class MuonD3PDObject;
 class JetD3PDObject;
 class PhotonD3PDObject;
+class JetCalibrationTool;
 
 class gmsbSelectionTool : public AthAlgTool {
 
@@ -59,7 +60,8 @@ public:
   bool isSelected( ElectronD3PDObject& electron, std::size_t idx, int nPV) const; 
   bool isSelected( PhotonD3PDObject& photon, std::size_t idx ) const; 
   bool isSelected( MuonD3PDObject& muon, std::size_t idx, int nPV) const;
-  bool isSelected( JetD3PDObject& jet, std::size_t idx ) const;
+  bool isSelected( JetD3PDObject& jet, std::size_t idx, 
+		   float rhoKt4LC, float mu, int nPV2) const;
 
   //  bool isBJet( const Jet * jet ) const;
 
@@ -145,6 +147,8 @@ private:
   float m_bJetLikelihood;
   float m_rejNegEJets;		// reject jets with neg E
 
+  std::string m_fsJESConfigFile;
+  std::string m_af2JESConfigFile;
 
   // // the OQ utility
   // egammaOQ m_OQ;
@@ -155,6 +159,8 @@ private:
   mutable egRescaler::EnergyRescalerUpgrade m_eRescale;
 
   mutable MuonSmear::SmearingClass m_muonSmear;
+
+  JetCalibrationTool *m_jetCalibrator;
 
 };
 

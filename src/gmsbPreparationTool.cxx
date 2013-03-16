@@ -16,6 +16,8 @@ Purpose : User Analysis Preparation - see gmsbPreparationTool.h for details
 #include "gmsbD3PDObjects/JetD3PDObject.h"
 #include "gmsbD3PDObjects/PhotonD3PDObject.h"
 #include "gmsbD3PDObjects/PrimaryVertexD3PDObject.h"
+#include "gmsbD3PDObjects/EventShapeD3PDObject.h"
+#include "gmsbD3PDObjects/EventInfoD3PDObject.h"
 
 // User Tools
 #include "gmsbTools/gmsbPreparationTool.h"
@@ -89,16 +91,26 @@ StatusCode gmsbPreparationTool::execute() {
   /** check that the input and the output containers are defined */
   StatusCode sc = StatusCode::SUCCESS;
 
+  const EventInfoD3PDObject evtInfo;
+  ATH_CHECK(evtInfo.retrieve());
+
+  const EventShapeD3PDObject evtShape;
+  ATH_CHECK(evtShape.retrieve());
+
   // retrieve the container of Vertex
   const PrimaryVertexD3PDObject vxContainer(m_vxCandidatesName);
   ATH_CHECK(vxContainer.retrieve());
 
   // find the number of PVs with 5 tracks or more
   int nPV = 0;
+  int nPV2 = 0;
 
   for (int i = 0; i < vxContainer.n(); i++) {
     if (vxContainer.nTracks(i) >= 5) {
       nPV++;
+    }
+    if (vxContainer.nTracks(i) >= 2) {
+      nPV2++;
     }
   }
 
@@ -138,7 +150,8 @@ StatusCode gmsbPreparationTool::execute() {
     loc = m_inputContainerKeys[i].find( "jet_", 0);
     if ( loc != std::string::npos ) { 
       if ( m_first ) m_outputJetKey = m_outputContainerKeys[i];
-      sc = this->jetPreparation( m_inputContainerKeys[i] );
+      sc = this->jetPreparation( m_inputContainerKeys[i], evtShape.rhoKt4LC(), 
+				 evtInfo.averageIntPerXing(), nPV2);
     }
     if ( sc.isFailure() ) return sc;
   }
@@ -268,7 +281,9 @@ StatusCode gmsbPreparationTool::muonPreparation( std::string key, int nPV) {
   return StatusCode::SUCCESS;
 }
 
-StatusCode gmsbPreparationTool::jetPreparation( std::string key) {
+StatusCode gmsbPreparationTool::jetPreparation( std::string key, 
+						float rhoKt4LC, 
+						float mu, int nPV2) {
   ATH_MSG_DEBUG("in jetPreparation() ");
 
   JetD3PDObject jets = JetD3PDObject::create(m_outputJetKey);
@@ -283,7 +298,7 @@ StatusCode gmsbPreparationTool::jetPreparation( std::string key) {
   m_numJets.first += jetIn.n();
 
   for (std::size_t idx = 0; idx < static_cast<std::size_t>(jetIn.n()); idx++) {
-    if ( m_userSelectionTool->isSelected(jetIn, idx) ) {
+    if ( m_userSelectionTool->isSelected(jetIn, idx, rhoKt4LC, mu, nPV2) ) {
       jets.add_object(jetIn, idx);
     }
   }

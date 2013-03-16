@@ -21,6 +21,8 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 
 //#include "egammaAnalysisUtils/CaloIsoCorrection.h"
 
+#include "ApplyJetCalibration/ApplyJetCalibration.h"
+
 #include "egammaAnalysisUtils/PhotonIDTool.h"
 
 #include "PathResolver/PathResolver.h"
@@ -110,8 +112,13 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   /** Jet selection */
   declareProperty("JetPt",          m_jetPt=20*GeV);
   declareProperty("JetEta",         m_jetEta=100);
-  declareProperty("rejectNegativeEnergyJets", m_rejNegEJets = true); 
+  declareProperty("rejectNegativeEnergyJets", m_rejNegEJets = false); 
   declareProperty("BJetLikelihood", m_bJetLikelihood=6.0);
+
+  declareProperty("FullSimJESConfigFile", 
+		  m_fsJESConfigFile = "JES_Full2012dataset_Preliminary_Jan13.config");
+  declareProperty("AF2JESConfigFile", 
+		  m_af2JESConfigFile = "JES_Full2012dataset_Preliminary_AFII_Jan13.config");
 
 }
 
@@ -132,6 +139,13 @@ StatusCode gmsbSelectionTool::initialize() {
     if (m_doFF && m_isMC && !m_isAtlfast) {
       m_ft.SetPreselection(m_FFset);
     }
+
+    m_jetCalibrator = new JetCalibrationTool("AntiKt4LCTopo", 
+					     m_isAtlfast ? m_af2JESConfigFile : m_fsJESConfigFile,
+					     !m_isMC);
+
+  } else{
+    m_jetCalibrator = 0;
   }
   // m_eRescale.useDefaultCalibConstants("2011");
   // // m_eRescale.SetRandomSeed(m_randomSeed);
@@ -147,6 +161,8 @@ StatusCode gmsbSelectionTool::finalize() {
 
   ATH_MSG_DEBUG("in finalize()");
  
+  delete m_jetCalibrator;
+
   return StatusCode::SUCCESS;
 }
 
@@ -696,8 +712,28 @@ bool gmsbSelectionTool::isSelected( MuonD3PDObject& muon, std::size_t idx, int n
   return select;
 }
 
-bool gmsbSelectionTool::isSelected( JetD3PDObject& jet, std::size_t idx ) const
+bool gmsbSelectionTool::isSelected( JetD3PDObject& jet, std::size_t idx, 
+				    float rhoKt4LC, float mu, int nPV2) const
 {
+
+  if (!m_simple) {
+    TLorentzVector jlv = m_jetCalibrator->ApplyJetAreaOffsetEtaJES(jet.constscale_E(idx),
+								   jet.constscale_eta(idx),
+								   jet.constscale_phi(idx),
+								   jet.constscale_m(idx),
+								   jet.ActiveAreaPx(idx),  
+								   jet.ActiveAreaPy(idx), 
+								   jet.ActiveAreaPz(idx),  
+								   jet.ActiveAreaE(idx), 
+								   rhoKt4LC,
+								   mu,
+								   nPV2);
+
+    jet.E(idx) = jlv.E();
+    jet.eta(idx) = jlv.Eta();
+    jet.phi(idx) = jlv.Phi();
+    jet.pt(idx) = jlv.Pt();
+  }
 
   if (m_rejNegEJets && jet.E(idx) < 0) {
     return false;

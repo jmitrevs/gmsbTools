@@ -71,7 +71,8 @@ private:
   StatusCode electronPreparation( std::string key, int nPV );
   StatusCode photonPreparation( std::string key );
   StatusCode muonPreparation( std::string key, int nPV );
-  StatusCode jetPreparation( std::string key );
+  StatusCode jetPreparation( std::string key, float rhoKt4LC, 
+			     float mu, int nPV2);
 
   /** for debugging purposes - called if MSG_Level = DEBUG */
   void print();
