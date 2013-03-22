@@ -10,7 +10,7 @@ Purpose : User Analysis Selections - see gmsbSelectionTool.h for details
 //#include "GaudiKernel/Property.h"
 
 // Accessing data:
-#include "CLHEP/Units/PhysicalConstants.h"
+#include "CLHEP/Units/SystemOfUnits.h"
 #include "gmsbD3PDObjects/ElectronD3PDObject.h"
 #include "gmsbD3PDObjects/MuonD3PDObject.h"
 #include "gmsbD3PDObjects/JetD3PDObject.h"
@@ -406,7 +406,7 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
   const float cleta = photon.cl_eta(idx);
 
   egRescaler::EnergyRescalerUpgrade::ParticleType particleType = 
-    (photon.convFlag(idx)) ? 
+    (photon.isConv(idx)) ? 
     egRescaler::EnergyRescalerUpgrade::Converted : 
     egRescaler::EnergyRescalerUpgrade::Unconverted;
 
@@ -510,9 +510,13 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
 
   select = pt > m_photonPt && absClusEta < m_photonEta; 
 
+  ATH_MSG_DEBUG("isEM before fudgind = " << std::hex << photon.isEM(idx) << std::dec << " and passID = " << photon.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_photonID)));
+
   if (m_doFF && m_isMC && !m_isAtlfast && !m_simple) {
     fudgeID(photon, idx);
   } 
+
+  ATH_MSG_DEBUG("isEM after fudging = " << std::hex << photon.isEM(idx) << std::dec << " and passID = " << photon.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_photonID)));
 
   select = select && photon.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_photonID));
 
@@ -717,6 +721,10 @@ bool gmsbSelectionTool::isSelected( JetD3PDObject& jet, std::size_t idx,
 {
 
   if (!m_simple) {
+
+    // ATH_MSG_WARNING("calling isSelected with rhoKt4LC = " << rhoKt4LC << ", mu = " 
+    // 		    <<  mu << ", nPV2 = " << nPV2);
+
     TLorentzVector jlv = m_jetCalibrator->ApplyJetAreaOffsetEtaJES(jet.constscale_E(idx),
 								   jet.constscale_eta(idx),
 								   jet.constscale_phi(idx),
@@ -780,6 +788,10 @@ void gmsbSelectionTool::fudgeID(PhotonD3PDObject& photon,
   float deltae = emax2 - emin;  
   float eratio = (emaxs1+emax2)==0. ? 0 : (emaxs1 - emax2)/(emaxs1+emax2);
 
+  ATH_MSG_DEBUG("fudging with et = " << et << ", eta2 = " << eta2 
+		<< ", reta = " << reta << ", rphi = " << rphi 
+		<< ", deltae = " << deltae <<  ", eratio = " << eratio 
+		<< ", isConv = " << photon.isConv(idx)); 
 
   m_ft.FudgeShowers(photon.pt(idx),
 		    eta2,
@@ -795,7 +807,7 @@ void gmsbSelectionTool::fudgeID(PhotonD3PDObject& photon,
 		    photon.ws3(idx),
 		    deltae,
 		    eratio,
-		    photon.convFlag(idx));
+		    photon.isConv(idx));
 
   PhotonIDTool myTool(et,
 		      eta2,
@@ -811,7 +823,7 @@ void gmsbSelectionTool::fudgeID(PhotonD3PDObject& photon,
 		      photon.ws3(idx),
 		      deltae,
 		      eratio,
-		      photon.convFlag(idx));
+		      photon.isConv(idx));
 
   const unsigned int fudgedIsEM = myTool.isEM(4,2012);
 

@@ -1,21 +1,9 @@
 #include "gmsbTools/TruthStudies.h"
 
-#include "EventInfo/EventInfo.h"
-#include "EventInfo/EventID.h"
+#include "gmsbD3PDObjects/TruthParticleD3PDObject.h"
+//#include "gmsbD3PDObjects/GenEventD3PDObject.h"
 
-#include "egammaEvent/ElectronContainer.h"
-#include "egammaEvent/Electron.h"
-#include "egammaEvent/PhotonContainer.h"
-#include "egammaEvent/Photon.h"
-#include "egammaEvent/egammaPIDdefs.h"
-#include "egammaEvent/EMShower.h"
-
-#include "McParticleEvent/TruthParticleContainer.h"
-#include "FourMomUtils/P4Helpers.h"
-#include "GeneratorObjects/McEventCollection.h"
-
-#include "HepMC/GenParticle.h"
-#include "HepMC/GenVertex.h"
+#include "CLHEP/Units/SystemOfUnits.h"
 #include "CLHEP/Vector/LorentzVector.h"
 
 #include <iostream>
@@ -28,8 +16,8 @@ TruthStudies::TruthStudies(const std::string& type,
 {
   declareInterface<TruthStudies>( this );
 
-  declareProperty("McParticleContainer", m_truthParticleContainerName = "SpclMC");
-  declareProperty("McEventCollection", m_mcEventCollectionName = "TruthEvent");
+  declareProperty("McParticleContainer", m_truthParticleContainerName = "mc_");
+  //declareProperty("McEventCollection", m_mcEventCollectionName = "mcevt_");
   declareProperty("PrintDecayTree", m_printDecayTree = false);
   declareProperty("UseAnnotated", m_useAnnotated = false);
   declareProperty("DumpEntireTree", m_dumpEntireTree = false);
@@ -58,8 +46,6 @@ StatusCode TruthStudies::execute()
 {
   ATH_MSG_DEBUG("execute");
 
-  StatusCode sc = StatusCode::SUCCESS;
-  
   m_decays.clear();
   m_type = unknown;
   m_isStrong = false;
@@ -69,89 +55,40 @@ StatusCode TruthStudies::execute()
 
   m_Wpt = -999.;
 
-  const HepMC::GenEvent *ge = 0;
+  const TruthParticleD3PDObject truthObj(m_truthParticleContainerName);
+  ATH_CHECK(truthObj.retrieve());
 
-  /** get the MC truth particle AOD or ESD container from StoreGate */
-  const McEventCollection *mcEventCol = 0;
-  if (evtStore()->contains<McEventCollection>(m_mcEventCollectionName)) {
-    sc=evtStore()->retrieve( mcEventCol, m_mcEventCollectionName);
-    if( sc.isFailure()  ||  !mcEventCol) {
-      ATH_MSG_ERROR("could not retrieve MC event container");
-      return StatusCode::RECOVERABLE;
-    }
-    ATH_MSG_DEBUG("McEventCollection found with name " <<  m_mcEventCollectionName);
-    ge = mcEventCol->at(0);
-  }
-  
-  if (!ge) {
-    const TruthParticleContainer*  mcpartTES = 0;
-    if (evtStore()->contains<TruthParticleContainer>(m_truthParticleContainerName)) {
-      sc=evtStore()->retrieve( mcpartTES, m_truthParticleContainerName);
-      if( sc.isFailure()  ||  !mcpartTES ) {
-	ATH_MSG_ERROR("could not retrieve MC truth container");
-	return StatusCode::RECOVERABLE;
-      }
-      ATH_MSG_DEBUG("McEventCollection found with name " <<  m_mcEventCollectionName);
-      ge=mcpartTES->genEvent();
-    }
-  }
 
-  // const EventInfo*  evtInfo = 0;
-  // sc = evtStore()->retrieve(evtInfo);
-  // if(sc.isFailure() || !evtInfo) {
-  //   ATH_MSG_ERROR("could not retrieve event info");
-  //   return StatusCode::RECOVERABLE;
-  // }
+  if (truthObj.n()) {
+    // int obj = 0;
 
-  // const unsigned runNum = evtInfo->event_ID()->run_number();
-  // //const unsigned lbNum = evtInfo->event_ID()->lumi_block();
-  // //const unsigned evNum = evtInfo->event_ID()->event_number();
-
-  
-  //mLog <<MSG::DEBUG << "ge = " << (unsigned int) ge << endreq;
-
-  const HepMC::GenVertex *pvtx = NULL;
-
-  if (ge) {
-    pvtx = ge->signal_process_vertex();
-    // mLog <<MSG::DEBUG << "pvtx from signal_process_vertex = " << (unsigned int) pvtx << endreq;
-
-    if (!pvtx) {
-      ATH_MSG_DEBUG("signal_process_vertex() failed, using getMCHardInteraction");
-      pvtx = getMCHardInteraction(ge);
-      // mLog <<MSG::DEBUG << "pvtx from getMCHardInteraction = " << (unsigned int) pvtx << endreq;
-    }
+    // if (m_printDecayTree) {
+    //   for (HepMC::GenVertex::particles_in_const_iterator init = pvtx->particles_in_const_begin();
+    // 	   init != pvtx->particles_in_const_end();
+    // 	   init++) {
+    // 	const TParticlePDG* pdgpt = m_pdg.GetParticle((*init)->pdg_id());
+    // 	if (pdgpt) {
+    // 	  msg(MSG::INFO) << std::setw(7) << std::left <<  pdgpt->GetName();
+    // 	} else {
+    // 	  msg(MSG::INFO) << std::setw(7) << std::left <<  (*init)->pdg_id();
+    // 	}
+    //   }
+    //   msg(MSG::INFO) << " ->\t";
+    // }
+    // if (m_useAnnotated) {
+    //   FollowDecayTreeAnnotated(pvtx);
+    // } else {
+    //   FollowDecayTree(pvtx);
+    // }
     
-    if (pvtx) {
+    if (m_dumpEntireTree) DumpEntireTree(truthObj);
 
-      if (m_printDecayTree) {
-	for (HepMC::GenVertex::particles_in_const_iterator init = pvtx->particles_in_const_begin();
-	     init != pvtx->particles_in_const_end();
-	     init++) {
-	  const TParticlePDG* pdgpt = m_pdg.GetParticle((*init)->pdg_id());
-	  if (pdgpt) {
-	    msg(MSG::INFO) << std::setw(7) << std::left <<  pdgpt->GetName();
-	  } else {
-	    msg(MSG::INFO) << std::setw(7) << std::left <<  (*init)->pdg_id();
-	  }
-	}
-	msg(MSG::INFO) << " ->\t";
-      }
-      if (m_useAnnotated) {
-	FollowDecayTreeAnnotated(pvtx);
-      } else {
-	FollowDecayTree(pvtx);
-      }
-    }
-    
-    if (m_dumpEntireTree) DumpEntireTree(ge);
+    // m_nPhotons = findPhotons(ge);
 
-    m_nPhotons = findPhotons(ge);
+    // findElectrons(ge);
 
-    findElectrons(ge);
-
-    FillEventType();
-    ATH_MSG_DEBUG("Truth type = " << m_type << "; strong = " << m_isStrong << ", num truth photons = " << m_nPhotons);
+    // FillEventType();
+    // ATH_MSG_DEBUG("Truth type = " << m_type << "; strong = " << m_isStrong << ", num truth photons = " << m_nPhotons);
 
   }
   
@@ -165,6 +102,7 @@ StatusCode TruthStudies::finalize() {
     return StatusCode::SUCCESS;
 }
 
+/*
 // This is how the hard interaction is gotten
 // for now it's a heuristic and probably doesn't work in most cases
 HepMC::GenVertex* TruthStudies::getMCHardInteraction(const HepMC::GenEvent *const ge) const
@@ -413,20 +351,40 @@ const HepMC::GenVertex *TruthStudies::FindNextVertex(const HepMC::GenParticle *p
     return NULL;
   }
 }
-
-void TruthStudies::DumpEntireTree(const HepMC::GenEvent *ge) const
+*/
+void TruthStudies::DumpEntireTree(const TruthParticleD3PDObject& truthObj) const
 {
-  ATH_MSG_INFO("***About to dump vertices***");
-  for(HepMC::GenEvent::vertex_const_iterator vitr=ge->vertices_begin();
-      vitr!=ge->vertices_end(); ++vitr ){
-    (*vitr)->print();
-    std::cout << std::flush;
+  ATH_MSG_INFO("***About to dump particles***");
+  for (int i = 0; i < truthObj.n(); i++) {
+    if (truthObj.barcode(i) < 200000) {
+      msg(MSG::INFO) << i << ": ";
+      const TParticlePDG* pdgpt = m_pdg.GetParticle(truthObj.pdgId(i));
+      if (pdgpt) {
+	msg(MSG::INFO) <<  pdgpt->GetName();
+      } else {
+	msg(MSG::INFO) <<  truthObj.pdgId(i);
+      }
+      
+      msg(MSG::INFO) << " st: " << truthObj.status(i)
+		     << " pt: " << truthObj.pt(i)
+	// << " bar: " << truthObj.barcode(i)
+		     << " par:";
+      
+      const std::vector<int>& parents = truthObj.parent_index(i);
+      for (std::vector<int>::const_iterator it = parents.begin(); 
+	   it != parents.end(); ++it) {
+	msg(MSG::INFO) << " " << *it;
+      }
+      msg(MSG::INFO) << " chld: ";
+      const std::vector<int>& children = truthObj.child_index(i);
+      for (std::vector<int>::const_iterator it = children.begin(); 
+	   it != children.end(); ++it) {
+	msg(MSG::INFO) << " " << *it;
+      }
+      msg(MSG::INFO) << endmsg;
+    }
   }
-  // ATH_MSG_INFO("About to dump particles");
-  // for(HepMC::GenEvent::particle_const_iterator pitr=ge->particles_begin();
-  //     pitr!=ge->particles_end(); ++pitr ){
-  //   (*pitr)->print();
-  // }
+  ATH_MSG_INFO("***Finished dumping particles***");
 }
 
 
@@ -662,7 +620,7 @@ void TruthStudies::FillEventType()
     break;
   }
 }
-
+/*
 int TruthStudies::findPhotons(const HepMC::GenEvent* genEvt)
 {
   int NPhotons = 0;
@@ -840,3 +798,4 @@ bool TruthStudies::passCuts(const HepMC::GenParticle* photon) const
 
   return true;
 }
+*/

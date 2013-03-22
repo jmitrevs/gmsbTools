@@ -6,17 +6,9 @@
 #include "GaudiKernel/ToolHandle.h"
 
 #include "TDatabasePDG.h"
+#include <vector>
 
-class Jet;
-namespace Reco  { class ITrackToVertex; }
-
-namespace HepMC {
-  class GenVertex;
-  class GenParticle;
-  class GenEvent;
-  class FourVector;
-}
-
+class TruthParticleD3PDObject;
 
 /** Interface ID */  
 static const InterfaceID IID_TruthStudies("TruthStudies", 1, 0);
@@ -128,6 +120,7 @@ private:
 
   void FillEventType();
 
+  /*
   HepMC::GenVertex* getMCHardInteraction(const HepMC::GenEvent *const ge) const;
 
   // haveSeen is the pdgid of what has been seen 
@@ -136,29 +129,33 @@ private:
 
    // also adds the pT of each particle. (Doesn't deterimine the event type)
   void FollowDecayTreeAnnotated(const HepMC::GenVertex *vtx, int extraSpaces=0) const;
-
-  void DumpEntireTree(const HepMC::GenEvent *ge) const;
+  */
+  void DumpEntireTree(const TruthParticleD3PDObject& truthObj) const;
 
   // some utilities for it
   bool StatusGood(int status) const;
+  
+  /*
   const HepMC::GenVertex *FindNextVertex(const HepMC::GenParticle *pcl) const;
 
-  int findPhotons(const HepMC::GenEvent* genEvt);
-  int findElectrons(const HepMC::GenEvent* genEvt);
+  int findPhotons(const TruthParticleD3PDObject& truthObj);
+  int findElectrons(const TruthParticleD3PDObject& truthObj);
 
   // returns the PID
-  const HepMC::GenParticle* findParent(const HepMC::GenParticle* pcl) const;
+  //const HepMC::GenParticle* findParent(const HepMC::GenParticle* pcl) const;
 
   bool passCuts() const;
-  bool passCuts(const HepMC::GenParticle* photon) const;
+  bool passCuts(int photon) const;
+  */
+
   // a PDG database that can be used to get particle properties
   TDatabasePDG m_pdg;
 
   /** name of the AOD truth particle container to retrieve from StoreGate */
   std::string m_truthParticleContainerName;
 
-  /** can alternately use the McEventCollection */
-  std::string m_mcEventCollectionName;
+  // /** can alternately use the McEventCollection */
+  // std::string m_mcEventCollectionName;
 
 
   bool m_printDecayTree;
@@ -190,9 +187,9 @@ private:
 
   int m_WptID; // the W ID (usually 24, but can change to 23 for Z)
 
-  // to match truth filters
-  std::vector<const HepMC::GenParticle *> m_leptons;
-  std::vector<const HepMC::GenParticle *> m_lightParticles;
+  // // to match truth filters
+  std::vector<int> m_leptons;
+  std::vector<int> m_lightParticles;
   
 
 };
