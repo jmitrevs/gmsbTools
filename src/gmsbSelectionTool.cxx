@@ -791,23 +791,24 @@ void gmsbSelectionTool::fudgeID(PhotonD3PDObject& photon,
   ATH_MSG_DEBUG("fudging with et = " << et << ", eta2 = " << eta2 
 		<< ", reta = " << reta << ", rphi = " << rphi 
 		<< ", deltae = " << deltae <<  ", eratio = " << eratio 
+		<< ", emaxs1 = " << emaxs1 << ", emax2 = " << emax2
 		<< ", isConv = " << photon.isConv(idx)); 
 
   m_ft.FudgeShowers(photon.pt(idx),
-		    eta2,
-		    rhad1,
-		    rhad,
-		    photon.E277(idx),
-		    reta,
-		    rphi,
-		    photon.weta2(idx),
-		    photon.f1(idx),
-		    photon.fside(idx),
-		    photon.wstot(idx),
-		    photon.ws3(idx),
-		    deltae,
-		    eratio,
-		    photon.isConv(idx));
+  		    eta2,
+  		    rhad1,
+  		    rhad,
+  		    photon.E277(idx),
+  		    reta,
+  		    rphi,
+  		    photon.weta2(idx),
+  		    photon.f1(idx),
+  		    photon.fside(idx),
+  		    photon.wstot(idx),
+  		    photon.ws3(idx),
+  		    deltae,
+  		    eratio,
+  		    photon.isConv(idx));
 
   PhotonIDTool myTool(et,
 		      eta2,
