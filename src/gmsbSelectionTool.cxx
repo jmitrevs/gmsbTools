@@ -63,7 +63,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 
 
   /** Electron selection */
-  declareProperty("ElectronPt",       m_electronPt=7*GeV);
+  declareProperty("ElectronPt",       m_electronPt=20*GeV);
   declareProperty("ElectronEta",      m_electronEta=2.47);
   declareProperty("ElectronID", m_electronID = egammaPID::ElectronIDMediumPP);
   declareProperty("AuthorEgammaOnly", m_authorEgammaOnly=true);
@@ -792,6 +792,9 @@ void gmsbSelectionTool::fudgeID(PhotonD3PDObject& photon,
 		<< ", reta = " << reta << ", rphi = " << rphi 
 		<< ", deltae = " << deltae <<  ", eratio = " << eratio 
 		<< ", emaxs1 = " << emaxs1 << ", emax2 = " << emax2
+		<< ", rhad1 = " << rhad1 << ", rhad = " << rhad
+		<< ", wstot = " << photon.wstot(idx)
+		<< ", ws3 = " << photon.ws3(idx)
 		<< ", isConv = " << photon.isConv(idx)); 
 
   m_ft.FudgeShowers(photon.pt(idx),
@@ -809,6 +812,15 @@ void gmsbSelectionTool::fudgeID(PhotonD3PDObject& photon,
   		    deltae,
   		    eratio,
   		    photon.isConv(idx));
+
+  ATH_MSG_DEBUG("after fudge"
+		<< " reta = " << reta << ", rphi = " << rphi 
+		<< ", deltae = " << deltae <<  ", eratio = " << eratio 
+		<< ", emaxs1 = " << emaxs1 << ", emax2 = " << emax2
+		<< ", rhad1 = " << rhad1 << ", rhad = " << rhad
+		<< ", wstot = " << photon.wstot(idx)
+		<< ", ws3 = " << photon.ws3(idx)
+		<< ", isConv = " << photon.isConv(idx)); 
 
   PhotonIDTool myTool(et,
 		      eta2,
