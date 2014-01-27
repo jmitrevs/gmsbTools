@@ -25,7 +25,6 @@ use NavFourMom			NavFourMom-*			Event
 use FourMomUtils		FourMomUtils-*			Event
 
 use egammaAnalysisUtils         egammaAnalysisUtils-*           Reconstruction/egamma/egammaAnalysis
-use MuonMomentumCorrections     MuonMomentumCorrections-*       PhysicsAnalysis/MuonID/MuonIDAnalysis
 
 
 private
@@ -50,4 +49,4 @@ apply_tag  ROOTGraphicsLibs
 apply_tag  ROOTTableLibs
 
 private
-macro_append gmsbTools_use_linkopts " -lEG"
+macro_append ROOT_linkopts " -lEG"

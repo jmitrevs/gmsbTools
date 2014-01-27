@@ -16,6 +16,7 @@
 
 #include "HepMC/GenParticle.h"
 #include "HepMC/GenVertex.h"
+#include "CLHEP/Units/SystemOfUnits.h"
 #include "CLHEP/Vector/LorentzVector.h"
 
 #include <iostream>

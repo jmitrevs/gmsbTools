@@ -34,8 +34,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 				      const std::string& name, 
 				      const IInterface* parent )
   : AthAlgTool( type, name, parent ), 
-    m_userdatasvc("UserDataSvc", name),
-    m_muonSmear("Data11","staco","q_pT","Rel17","")
+    m_userdatasvc("UserDataSvc", name)
 {
   declareInterface<gmsbSelectionTool>( this );
 
@@ -157,8 +156,8 @@ StatusCode gmsbSelectionTool::initialize() {
   m_eRescale.useDefaultCalibConstants("2011");
   // m_eRescale.SetRandomSeed(m_randomSeed);
 
-  m_muonSmear.UseScale(1);
-  m_muonSmear.UseImprovedCombine();
+  // m_muonSmear.UseScale(1);
+  // m_muonSmear.UseImprovedCombine();
 
   return StatusCode::SUCCESS;
 }
@@ -629,57 +628,57 @@ bool gmsbSelectionTool::isSelected( const Analysis::Muon * muon ) const
 
   // ATH_MSG_DEBUG("Here 2");
   if (!m_simple) {
-    if (m_isMC && m_smearMC) {
-      ATH_MSG_DEBUG("Here 2a");
-      int seed = int(1.e+5*fabs(muon->phi()));
-      if (!seed) seed = 1;
-      m_muonSmear.SetSeed(seed);
-      ATH_MSG_DEBUG("Here 2b");
-      ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
-		    << muon->inDetTrackParticle() << ", "
-		    << muon->pt() << ", "
-		    <<  muon->eta());
+    // if (m_isMC && m_smearMC) {
+    //   ATH_MSG_DEBUG("Here 2a");
+    //   int seed = int(1.e+5*fabs(muon->phi()));
+    //   if (!seed) seed = 1;
+    //   m_muonSmear.SetSeed(seed);
+    //   ATH_MSG_DEBUG("Here 2b");
+    //   ATH_MSG_DEBUG(" args = " << muon->muonExtrapolatedTrackParticle() << ", "
+    // 		    << muon->inDetTrackParticle() << ", "
+    // 		    << muon->pt() << ", "
+    // 		    <<  muon->eta());
       
-      // double charge = muon->charge();
-      double eta = muon->eta();
-      double ptcb = muon->pt();
-      double ptms = muon->muonExtrapolatedTrackParticle() ? muon->muonExtrapolatedTrackParticle()->pt() : 1;
-      double ptid = muon->inDetTrackParticle() ? muon->inDetTrackParticle()->pt() : 1;
+    //   // double charge = muon->charge();
+    //   double eta = muon->eta();
+    //   double ptcb = muon->pt();
+    //   double ptms = muon->muonExtrapolatedTrackParticle() ? muon->muonExtrapolatedTrackParticle()->pt() : 1;
+    //   double ptid = muon->inDetTrackParticle() ? muon->inDetTrackParticle()->pt() : 1;
       
-      m_muonSmear.Event(ptms,ptid,ptcb,eta);
+    //   m_muonSmear.Event(ptms,ptid,ptcb,eta);
       
-      if (m_muonResSyst == "") {
-	if (muon->isCombinedMuon()) {
-	  pt = m_muonSmear.pTCB();
-	} else {
-	  pt = m_muonSmear.pTID();
-	}
-      } else {
-	double pTMS_smeared = 0.;
-	double pTID_smeared = 0.;
-	double pTCB_smeared = 0.;
+    //   if (m_muonResSyst == "") {
+    // 	if (muon->isCombinedMuon()) {
+    // 	  pt = m_muonSmear.pTCB();
+    // 	} else {
+    // 	  pt = m_muonSmear.pTID();
+    // 	}
+    //   } else {
+    // 	double pTMS_smeared = 0.;
+    // 	double pTID_smeared = 0.;
+    // 	double pTCB_smeared = 0.;
 	
-	// Valid values for "THESTRING": {"MSLOW", "MSUP", "IDLOW", "IDUP"} 
-	m_muonSmear.PTVar(pTMS_smeared, pTID_smeared, pTCB_smeared, m_muonResSyst);
+    // 	// Valid values for "THESTRING": {"MSLOW", "MSUP", "IDLOW", "IDUP"} 
+    // 	m_muonSmear.PTVar(pTMS_smeared, pTID_smeared, pTCB_smeared, m_muonResSyst);
 	
-	if (muon->isCombinedMuon()) {
-	  pt = pTCB_smeared;
-	} else {
-	  pt = pTID_smeared;
-	}
-      }
+    // 	if (muon->isCombinedMuon()) {
+    // 	  pt = pTCB_smeared;
+    // 	} else {
+    // 	  pt = pTID_smeared;
+    // 	}
+    //   }
     
 
-      // let's cosnt-cast the four-mom
-      if (pt != 0) {
-	Analysis::Muon* volmu = const_cast<Analysis::Muon*>(muon);
-	if (!volmu) {
-	  ATH_MSG_ERROR("Const-cast for muon did not work");
-	  return false;
-	}
-	volmu->setIPt(1.0/pt);
-      }
-    }
+    //   // let's cosnt-cast the four-mom
+    //   if (pt != 0) {
+    // 	Analysis::Muon* volmu = const_cast<Analysis::Muon*>(muon);
+    // 	if (!volmu) {
+    // 	  ATH_MSG_ERROR("Const-cast for muon did not work");
+    // 	  return false;
+    // 	}
+    // 	volmu->setIPt(1.0/pt);
+    //   }
+    // }
   }
     
   // select must be true before in order to get here, so can overwrite
