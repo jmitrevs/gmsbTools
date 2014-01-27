@@ -30,6 +30,7 @@ Purpose : User tools for analyis preparation on ESD/AOD/DPD in Athena - selectio
 #include <map>
 #include <vector>
 
+#include <TLorentzVector.h>
 
 /** Interface ID */  
 static const InterfaceID IID_gmsbSelectionTool("gmsbSelectionTool", 1, 0);
@@ -54,6 +55,12 @@ public:
   /** Overriding initialize, finalize, and execute */
   virtual StatusCode initialize();
   virtual StatusCode finalize();
+
+  float calibrate(const ElectronD3PDObject& electron, std::size_t idx) const; // return is energy
+  float calibrate(const PhotonD3PDObject& photon, std::size_t idx) const; // return is energy
+  float calibrate(const MuonD3PDObject& muon, std::size_t idx) const; // return is pt
+  TLorentzVector calibrate(const JetD3PDObject& jet, std::size_t idx, 
+			   float rhoKt4LC, float mu, int nPV2) const; // return is TLV
 
   /** pre-selections */
   // note: the references are not const since an update can be made to the calibrations
