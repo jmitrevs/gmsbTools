@@ -111,6 +111,12 @@ public:
 
   double Wpt() const { return m_Wpt; };
 
+  const std::vector<const HepMC::GenParticle *>& tops() const {return m_tops; };
+  const std::vector<const HepMC::GenParticle *>& Ws() const {return m_Ws; };
+  const std::vector<const HepMC::GenParticle *>& bsFromTops() const {return m_bsFromTops; };
+  const std::vector<const HepMC::GenParticle *>& otherBs() const {return m_otherBs; };
+  const std::vector<const HepMC::GenParticle *>& lightQuarks() const {return m_lightQuarks; };
+
 private:
 
   // this is for one side of the decay
@@ -192,8 +198,14 @@ private:
 
   // to match truth filters
   std::vector<const HepMC::GenParticle *> m_leptons;
-  std::vector<const HepMC::GenParticle *> m_lightParticles;
-  
+  std::vector<const HepMC::GenParticle *> m_lightParticles; // for truth filters,
+
+  // and for plots
+  std::vector<const HepMC::GenParticle *> m_tops;
+  std::vector<const HepMC::GenParticle *> m_Ws;
+  std::vector<const HepMC::GenParticle *> m_bsFromTops;
+  std::vector<const HepMC::GenParticle *> m_otherBs;
+  std::vector<const HepMC::GenParticle *> m_lightQuarks;
 
 };
 

@@ -20,6 +20,7 @@
 #include "CLHEP/Vector/LorentzVector.h"
 
 #include <iostream>
+#include <algorithm>
 
 /////////////////////////////////////////////////////////////////////////////
 TruthStudies::TruthStudies(const std::string& type,
@@ -54,6 +55,15 @@ StatusCode TruthStudies::initialize(){
   return StatusCode::SUCCESS;
 }
 
+namespace {
+  bool sortHelper(const HepMC::GenParticle *part1, const HepMC::GenParticle *part2) 
+  {
+    const HepMC::FourVector& p1 = part1->momentum();
+    const HepMC::FourVector& p2 = part2->momentum();
+    return (p1.perp() > p2.perp());
+  }
+}
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 StatusCode TruthStudies::execute() 
 {
@@ -67,6 +77,11 @@ StatusCode TruthStudies::execute()
 
   m_leptons.clear();
   m_lightParticles.clear();
+  m_tops.clear();
+  m_Ws.clear();
+  m_bsFromTops.clear();
+  m_otherBs.clear();
+  m_lightQuarks.clear();
 
   m_Wpt = -999.;
 
@@ -154,6 +169,11 @@ StatusCode TruthStudies::execute()
     FillEventType();
     ATH_MSG_DEBUG("Truth type = " << m_type << "; strong = " << m_isStrong << ", num truth photons = " << m_nPhotons);
 
+    std::stable_sort(m_tops.begin(), m_tops.end(), sortHelper);
+    std::stable_sort(m_Ws.begin(), m_Ws.end(), sortHelper);
+    std::stable_sort(m_bsFromTops.begin(), m_bsFromTops.end(), sortHelper);
+    std::stable_sort(m_otherBs.begin(), m_otherBs.end(), sortHelper);
+    std::stable_sort(m_lightQuarks.begin(), m_lightQuarks.end(), sortHelper);
   }
   
   return StatusCode::SUCCESS;
@@ -248,11 +268,24 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
 	  // just to make it easier
 	  abspid =1;
 	}
+      } else if (haveSeen == 6) {
+	if (abspid == 5) {
+	  m_bsFromTops.push_back(*outit);
+	} else if (abspid == 24) {
+	  m_Ws.push_back(*outit);
+	}
       } else {
 	if (abspid == 1000022 || abspid == 1000024) {
 	  newHaveSeen = abspid;
 	} else if (abspid == 1000021) {
 	  m_isStrong = true;
+	} else if (abspid == 6) {
+	  // top quark
+	  m_tops.push_back(*outit);
+	} else if (abspid == 5) {
+	  m_otherBs.push_back(*outit);
+	} else if (abspid < 5 && abspid > 0) {
+	  m_lightQuarks.push_back(*outit);
 	}
       }
 
