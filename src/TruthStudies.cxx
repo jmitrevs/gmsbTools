@@ -31,7 +31,7 @@ TruthStudies::TruthStudies(const std::string& type,
   declareInterface<TruthStudies>( this );
 
   declareProperty("McParticleContainer", m_truthParticleContainerName = "SpclMC");
-  declareProperty("McEventCollection", m_mcEventCollectionName = "TruthEvent");
+  declareProperty("McEventCollection", m_mcEventCollectionName = "GEN_AOD");
   declareProperty("PrintDecayTree", m_printDecayTree = false);
   declareProperty("UseAnnotated", m_useAnnotated = false);
   declareProperty("DumpEntireTree", m_dumpEntireTree = false);
