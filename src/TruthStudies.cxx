@@ -62,6 +62,10 @@ namespace {
     const HepMC::FourVector& p2 = part2->momentum();
     return (p1.perp() > p2.perp());
   }
+  bool sortHelperAlt(const ROOT::Math::PxPyPzEVector& p1, const ROOT::Math::PxPyPzEVector& p2) 
+  {
+    return (p1.Pt() > p2.Pt());
+  }
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -79,6 +83,8 @@ StatusCode TruthStudies::execute()
   m_lightParticles.clear();
   m_tops.clear();
   m_Ws.clear();
+  m_WLeps.clear();
+  m_WNeuts.clear();
   m_bsFromTops.clear();
   m_otherBs.clear();
   m_lightQuarks.clear();
@@ -174,8 +180,24 @@ StatusCode TruthStudies::execute()
     std::stable_sort(m_bsFromTops.begin(), m_bsFromTops.end(), sortHelper);
     std::stable_sort(m_otherBs.begin(), m_otherBs.end(), sortHelper);
     std::stable_sort(m_lightQuarks.begin(), m_lightQuarks.end(), sortHelper);
+
+    if (m_Ws.empty()) {
+      m_WsAlt.clear();
+      if (m_WLeps.empty()) {
+	ATH_MSG_WARNING("No Ws and no W decay products");
+      }
+      if (m_WLeps.size() != m_WNeuts.size()) {
+	ATH_MSG_ERROR("The W decay producs are malformed");
+      } else {
+	for (size_t i = 0; i < m_WLeps.size(); i++) {
+	  ROOT::Math::PxPyPzEVector p(m_WLeps[i]->momentum());
+	  p += m_WNeuts[i]->momentum();
+	  m_WsAlt.push_back(p);
+	}
+	std::stable_sort(m_WsAlt.begin(), m_WsAlt.end(), sortHelperAlt);
+      }
+    }
   }
-  
   return StatusCode::SUCCESS;
 }
 
@@ -192,9 +214,9 @@ HepMC::GenVertex* TruthStudies::getMCHardInteraction(const HepMC::GenEvent *cons
 {
   for (int i = -1; i > -20; --i) {
     HepMC::GenVertex* vtx = ge->barcode_to_vertex(i);
-    //if (vtx && vtx->particles_in_size() == 2) {
+    if (vtx && vtx->particles_in_size() == 2) {
       return vtx;
-      //}
+    }
   }
   return NULL;
 }
@@ -270,10 +292,18 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
 	}
       } else if (haveSeen == 6) {
 	if (abspid == 5) {
+	  ATH_MSG_DEBUG("found B from quarks");
 	  m_bsFromTops.push_back(*outit);
 	} else if (abspid == 24) {
+	  ATH_MSG_DEBUG("found W");
 	  m_Ws.push_back(*outit);
-	}
+	} else if (abspid == 11 || abspid == 13 || abspid == 15) {
+	  ATH_MSG_DEBUG("found lepton");
+	  m_WLeps.push_back(*outit);
+	} else if (abspid == 12 || abspid == 14 || abspid == 16) {
+	  ATH_MSG_DEBUG("found neutrino");
+	  m_WNeuts.push_back(*outit);
+	}	  
       } else {
 	if (abspid == 1000022 || abspid == 1000024) {
 	  newHaveSeen = abspid;
@@ -281,10 +311,13 @@ void TruthStudies::FollowDecayTree(const HepMC::GenVertex *vtx, int extraSpaces,
 	  m_isStrong = true;
 	} else if (abspid == 6) {
 	  // top quark
+	  ATH_MSG_DEBUG("found top quark");
 	  m_tops.push_back(*outit);
 	} else if (abspid == 5) {
+	  ATH_MSG_DEBUG("found other B");
 	  m_otherBs.push_back(*outit);
 	} else if (abspid < 5 && abspid > 0) {
+	  //ATH_MSG_DEBUG("found light quarks");
 	  m_lightQuarks.push_back(*outit);
 	}
       }
