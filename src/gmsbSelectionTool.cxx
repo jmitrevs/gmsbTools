@@ -344,6 +344,13 @@ bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t id
       select = select && isol < m_electronEtcone20corrected;
     }
     break;
+  case LooserIso:
+    {
+      float id_isocut = 0.16;
+      id_isocut *= pt;
+      select = select && electron.ptcone30(idx) < id_isocut;
+    }
+    break;
   case LooseIso:
     {
       float id_isocut = 0.16;
@@ -679,6 +686,14 @@ bool gmsbSelectionTool::isSelected( MuonD3PDObject& muon, std::size_t idx, int n
     break;
   case TrackIso:
     select = select && muon.ptcone20(idx)/pt<m_isolation_cut;
+    break;
+  case LooserIso:
+    {
+      float id_isocut = 0.12;
+      id_isocut *= pt;
+
+      select = select && muon.ptcone30_trkelstyle(idx) < id_isocut;
+    }
     break;
   case LooseIso:
     {

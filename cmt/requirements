@@ -38,4 +38,4 @@ apply_tag  ROOTGraphicsLibs
 apply_tag  ROOTTableLibs
 
 private
-macro_append gmsbTools_use_linkopts " -lEG"
+macro_append ROOT_linkopts " -lEG"

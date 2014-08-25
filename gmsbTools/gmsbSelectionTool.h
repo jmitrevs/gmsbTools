@@ -72,7 +72,7 @@ public:
 
   //  bool isBJet( const Jet * jet ) const;
 
-  enum isoType {NONE = 0, EDIso, TrackIso, FlatTrackIso, LooseIso, MediumIso, TightIso};
+  enum isoType {NONE = 0, EDIso, TrackIso, FlatTrackIso, LooseIso, MediumIso, TightIso, LooserIso};
 
 protected:
 
