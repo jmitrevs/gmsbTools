@@ -48,7 +48,8 @@ gmsbOverlapRemovalTool::gmsbOverlapRemovalTool( const std::string& type,
   declareProperty("OutputJetKey",           m_outputJetKey           = "FinalStateJets");
   // declareProperty("OutputBJetKey",          m_outputBJetKey          = "FinalStateBJets");
   // declareProperty("OutputLightJetKey",      m_outputLightJetKey      = "FinalStateLightJets");
-  declareProperty("RemoveOverlapInSameContainer", m_removeOverlapInSameContainer=true);
+  declareProperty("RemoveOverlapInSameContainer", m_removeOverlapInSameContainer=false);
+  declareProperty("ElPhKillMuon", m_elPhKillMuon=false);
 
   /** initialize counters */
   m_numElectrons      = std::make_pair(0,0);
@@ -379,10 +380,12 @@ StatusCode gmsbOverlapRemovalTool::muonPreparation( std:: string key ) {
 	break;
       case genericParticle::electron:
       case genericParticle::photon:
-	overlap = m_userOverlapCheckingTool->overlap(aod_muons.eta(idx), 
-						     aod_muons.phi(idx),
-						     particle->eta(), 
-						     particle->phi(), false);
+	if (m_elPhKillMuon) {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_muons.eta(idx), 
+						       aod_muons.phi(idx),
+						       particle->eta(), 
+						       particle->phi(), false);
+	}
 	break;
       default:
 	overlap = m_userOverlapCheckingTool->overlap(aod_muons.eta(idx), 

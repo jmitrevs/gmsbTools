@@ -550,7 +550,7 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
     fudgeID(photon, idx);
   } 
 
-  ATH_MSG_DEBUG("isEM after fudging = " << std::hex << photon.isEM(idx) << std::dec << " and passID = " << photon.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_photonID)));
+    ATH_MSG_DEBUG("isEM after fudging = " << std::hex << photon.isEM(idx) << ", mask = " << egammaPID::PhotonTightAR << std::dec << " and passID = " << photon.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_photonID)));
 
   select = select && photon.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_photonID));
 
@@ -765,9 +765,7 @@ bool gmsbSelectionTool::isSelected( MuonD3PDObject& muon, std::size_t idx, int n
   const float trackEta   = fabs(log(tan(muon.tracktheta(idx)/2.0)));
   if (trackEta < 1.9 && trackEta > 0.1) {
     select = (nTRTTotal > 5 &&  nTRTOutliers < 0.9 * nTRTTotal);
-  } else if (nTRTTotal > 5) {
-    select = nTRTOutliers < 0.9*nTRTTotal;
-  }
+  } 
   
   ATH_MSG_INFO("Muon with pt = " << pt << ", select = " << select);
   

@@ -145,6 +145,9 @@ private:
   /** remove overlay in same container */
   bool m_removeOverlapInSameContainer;
 
+  /** do electrons and photons kill muons */
+  bool m_elPhKillMuon;
+
   /** doing debugging */
   bool m_debug;
 
