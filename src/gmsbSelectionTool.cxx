@@ -39,7 +39,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
 				      const std::string& name, 
 				      const IInterface* parent )
   : AthAlgTool( type, name, parent ),
-    m_muonSmear("Data12","staco","q_pT","Rel17.2Repro","")
+    m_muonSmear("Data12","staco","q_pT","Rel17.2Sum13","")
 {
   declareInterface<gmsbSelectionTool>( this );
 
@@ -599,6 +599,8 @@ float gmsbSelectionTool::calibrate(const MuonD3PDObject& muon, std::size_t idx) 
   if (m_isMC && m_smearMC) {
     int seed = int(fabs(muon.phi(idx)*1.e+5));
     if (!seed) seed = 1;
+    ATH_MSG_INFO("seed = " << seed);
+
     m_muonSmear.SetSeed(seed);
     
     // float charge = muon->charge();
@@ -609,12 +611,15 @@ float gmsbSelectionTool::calibrate(const MuonD3PDObject& muon, std::size_t idx) 
     const float ptms = (muon.me_qoverp_exPV(idx) != 0.) ? 
       fabs(sin(muon.me_theta_exPV(idx))/muon.me_qoverp_exPV(idx)) : 0.;
     
-    if (muon.isCombinedMuon(idx))
-      m_muonSmear.Event(ptms,ptid,ptcb,eta,muon.charge(idx)); 
+    if (muon.isCombinedMuon(idx)) {
+      m_muonSmear.Event(ptms,ptid,ptcb,eta,muon.charge(idx),muon.phi(idx)); 
+      ATH_MSG_INFO("m_muonSmear.Event(" << ptms << ", " << ptid << " ," << ptcb << ", " 
+		   << eta << ", " << muon.charge(idx) << ");");
+    }
     else if (muon.isSegmentTaggedMuon(idx))
-      m_muonSmear.Event(ptid,eta,"ID",muon.charge(idx)); 
+      m_muonSmear.Event(ptid,eta,"ID",muon.charge(idx),muon.phi(idx)); 
     else
-      m_muonSmear.Event(ptms,eta,"MS",muon.charge(idx)); 
+      m_muonSmear.Event(ptms,eta,"MS",muon.charge(idx),muon.phi(idx)); 
     
     std::string THESTRING = "";
     bool doSyst = false;
@@ -662,7 +667,7 @@ bool gmsbSelectionTool::isSelected( MuonD3PDObject& muon, std::size_t idx, int n
 
   if (!select) return false;
 
-  ATH_MSG_INFO("Pass type and loose");
+  ATH_MSG_INFO("Pass type and loose; isCombined = " << muon.isCombinedMuon(idx));
 
   //float pt = (muon->isCombinedMuon()) ? muon->pt() : muon->inDetTrackParticle()->pt(); ;
   float pt = muon.pt(idx);
