@@ -20,6 +20,8 @@ gmsbFinalSelectionTool = ConfiguredUserSelectionTool(
     ElectronPt = 20*GeV,
     MuonPt = 20*GeV,
     PhotonPt = 125*GeV,
+    JetPt = 40*GeV,
+    JetEta = 2.8,
     Simple = True,
     #OutputLevel = DEBUG
     )
