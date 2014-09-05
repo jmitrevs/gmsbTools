@@ -546,7 +546,7 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
 
   ATH_MSG_DEBUG("isEM before fudgind = " << std::hex << photon.isEM(idx) << std::dec << " and passID = " << photon.passID(idx, static_cast<egammaPID::egammaIDQuality>(m_photonID)));
 
-  if (m_doFF && m_isMC && !m_isAtlfast && !m_simple) {
+  if (m_doFF && !m_simple) {
     fudgeID(photon, idx);
   } 
 
@@ -865,22 +865,23 @@ void gmsbSelectionTool::fudgeID(PhotonD3PDObject& photon,
 		<< ", ws3 = " << photon.ws3(idx)
 		<< ", isConv = " << photon.isConv(idx)); 
 
-  m_ft.FudgeShowers(photon.pt(idx),
-  		    eta2,
-  		    rhad1,
-  		    rhad,
-  		    photon.E277(idx),
-  		    reta,
-  		    rphi,
-  		    photon.weta2(idx),
-  		    photon.f1(idx),
-  		    photon.fside(idx),
-  		    photon.wstot(idx),
-  		    photon.ws3(idx),
-  		    deltae,
-  		    eratio,
-  		    photon.isConv(idx));
-
+  if (m_isMC && !m_isAtlfast) {
+    m_ft.FudgeShowers(photon.pt(idx),
+		      eta2,
+		      rhad1,
+		      rhad,
+		      photon.E277(idx),
+		      reta,
+		      rphi,
+		      photon.weta2(idx),
+		      photon.f1(idx),
+		      photon.fside(idx),
+		      photon.wstot(idx),
+		      photon.ws3(idx),
+		      deltae,
+		      eratio,
+		      photon.isConv(idx));
+  }
   ATH_MSG_DEBUG("after fudge"
 		<< " reta = " << reta << ", rphi = " << rphi 
 		<< ", deltae = " << deltae <<  ", eratio = " << eratio 
