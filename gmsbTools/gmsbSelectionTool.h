@@ -68,7 +68,7 @@ public:
   bool isSelected( PhotonD3PDObject& photon, std::size_t idx ) const; 
   bool isSelected( MuonD3PDObject& muon, std::size_t idx, int nPV) const;
   bool isSelected( JetD3PDObject& jet, std::size_t idx, 
-		   float rhoKt4LC, float mu, int nPV2) const;
+		   float rhoKt4LC = -999.0, float mu = -999.0, int nPV2 = -999) const;
 
   //  bool isBJet( const Jet * jet ) const;
 

@@ -181,6 +181,8 @@ private:
 
   bool m_doDeltaRLepton;
   double m_deltaRLepton;
+  bool m_doDeltaRLight;
+  double m_deltaRLight;
   bool m_doMInv;
   double m_mInv;
   bool m_decayTaus; // only for classification, not for results

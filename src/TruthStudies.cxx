@@ -23,11 +23,13 @@ TruthStudies::TruthStudies(const std::string& type,
   declareProperty("DumpEntireTree", m_dumpEntireTree = false);
 
   // when counting photons
-  declareProperty("Ptcut",m_Ptmin = 40*GeV);
-  declareProperty("Etacut",m_EtaRange = 2.50);
+  declareProperty("Ptcut",m_Ptmin = 80*GeV);
+  declareProperty("Etacut",m_EtaRange = 5.0);
   declareProperty("doDeltaRLepton", m_doDeltaRLepton = false);
+  declareProperty("doDeltaRLight", m_doDeltaRLight = false);
   declareProperty("doMInv", m_doMInv = false);
-  declareProperty("DeltaRLepton", m_deltaRLepton = 0.5);
+  declareProperty("DeltaRLepton", m_deltaRLepton = 0.1);
+  declareProperty("DeltaRLight", m_deltaRLight = 0.1);
   declareProperty("MInv", m_mInv = 5*GeV);
   declareProperty("decayTaus", m_decayTaus = false);
   declareProperty("WptID", m_WptID = 24); // can change it to 23 for Z

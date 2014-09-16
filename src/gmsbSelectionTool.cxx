@@ -800,6 +800,10 @@ bool gmsbSelectionTool::isSelected( JetD3PDObject& jet, std::size_t idx,
 
   if (!m_simple) {
 
+    if (nPV2 == -999) {
+      ATH_MSG_ERROR("The variables aren't set properly for jet selector");
+      return false;
+    }
     // ATH_MSG_WARNING("calling isSelected with rhoKt4LC = " << rhoKt4LC << ", mu = " 
     // 		    <<  mu << ", nPV2 = " << nPV2);
 
