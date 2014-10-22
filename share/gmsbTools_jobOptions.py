@@ -4,6 +4,19 @@ NONE, EDIso, TrackIso, FlatTrackIso, LooseIso, MediumIso, TightIso, LooserIso = 
 
 from gmsbTools.gmsbToolsConf import \
     gmsbSelectionTool as ConfiguredUserSelectionTool
+gmsbPreSelectionTool = ConfiguredUserSelectionTool(
+    name = "gmsbPreSelectionTool",
+    Simple = True,
+    ElectronPt = -99*GeV,
+    MuonPt = -99*GeV,
+    PhotonPt = -99*GeV,
+    JetPt = -99*GeV,
+    #OutputLevel = DEBUG
+)
+
+ToolSvc += gmsbPreSelectionTool
+print      gmsbPreSelectionTool
+
 gmsbSelectionTool = ConfiguredUserSelectionTool(
     name = "gmsbSelectionTool",
     #OutputLevel = DEBUG
@@ -32,6 +45,35 @@ print      gmsbFinalSelectionTool
 
 from gmsbTools.gmsbToolsConf import \
      gmsbPreparationTool as ConfiguredgmsbPreparationTool
+gmsbPrePreparationTool = ConfiguredgmsbPreparationTool(
+    name = "gmsbPrePreparationTool",
+
+    # define the pre-selection tools
+    UserSelectionTool = gmsbPreSelectionTool,
+    
+    # thelist of the input container keys - the order does not matter
+    InputContainerKeys=[ "ph_",
+                         "el_",
+                         "mu_staco_",
+                         "jet_AntiKt4LCTopo_"
+                         ],
+    
+    
+    
+    # the list of the output container keys - these containers container the selected objects
+    # The order matter::Should follow the same order as the input container keys above
+    OutputContainerKeys=[ "pre_ph_",
+                          "pre_el_",
+                          "pre_mu_staco_",
+                          "pre_jet_AntiKt4LCTopo_"
+                          ],
+    #OutputLevel = DEBUG
+    
+    )
+
+ToolSvc += gmsbPrePreparationTool
+print      gmsbPrePreparationTool
+
 gmsbPreparationTool = ConfiguredgmsbPreparationTool(
     name = "gmsbPreparationTool",
 
@@ -39,10 +81,10 @@ gmsbPreparationTool = ConfiguredgmsbPreparationTool(
     UserSelectionTool = gmsbSelectionTool,
     
     # thelist of the input container keys - the order does not matter
-    InputContainerKeys=[ "ph_",
-                         "el_",
-                         "mu_staco_",
-                         "jet_AntiKt4LCTopo_"
+    InputContainerKeys=[ "pre_ph_",
+                         "pre_el_",
+                         "pre_mu_staco_",
+                         "pre_jet_AntiKt4LCTopo_"
                          ],
     
     
@@ -93,7 +135,7 @@ gmsbOverlapRemovalTool1 = ConfiguredgmsbOverlapRemovalTool(
     # Whether to check overlap in same container or not. 
     # For example, muon overlapping with muon?
     # Currently when set to False, it applies to all contianers. 
-    RemoveOverlapInSameContainer = True,
+    # RemoveOverlapInSameContainer = True,
     
     # define the overlap checking tools
     UserOverlapCheckingTool = gmsbOverlapCheckingTool1,
@@ -133,7 +175,7 @@ gmsbOverlapRemovalTool2 = ConfiguredgmsbOverlapRemovalTool(
     # Whether to check overlap in same container or not. 
     # For example, muon overlapping with muon?
     # Currently when set to False, it applies to all contianers. 
-    RemoveOverlapInSameContainer = True,
+    # RemoveOverlapInSameContainer = True,
     
     # define the overlap checking tools
     UserOverlapCheckingTool = gmsbOverlapCheckingTool2,

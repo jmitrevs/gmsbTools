@@ -305,6 +305,10 @@ bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t id
     electron.eta(idx) = eta;
     electron.phi(idx) = phi;
     electron.pt(idx) = energy/cosh(eta); // massless
+
+    // put the original index here
+    electron.tightIso(idx) = idx;
+
   }
 
   const float pt = electron.pt(idx);
@@ -313,6 +317,15 @@ bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t id
 
   select = select && pt > m_electronPt && absClusEta <m_electronEta;
   ATH_MSG_DEBUG("select is now " << select);
+
+  // if (select && electron.eta(idx) != eta) {
+  //   ATH_MSG_ERROR("eta does not match: electron.eta(idx) = " << electron.eta(idx) << ", eta = " << eta);
+  //   exit(1);
+  // }
+  // if (select && electron.phi(idx) != phi) {
+  //   ATH_MSG_ERROR("phi does not match: electron.phi(idx) = " << electron.phi(idx) << ", phi = " << phi);
+  //   exit(1);
+  // }
 
   // check if electron is in bad eta region
 
@@ -537,6 +550,9 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
 
     photon.E(idx) = energy;
     photon.pt(idx) *= scale; 
+
+    // put the original index here
+    photon.tightIso(idx) = idx;
 
   }
 
