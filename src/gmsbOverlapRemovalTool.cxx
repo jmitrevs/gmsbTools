@@ -41,6 +41,7 @@ gmsbOverlapRemovalTool::gmsbOverlapRemovalTool( const std::string& type,
   declareProperty("UserOverlapCheckingTool", m_userOverlapCheckingTool);
   declareProperty("InputContainerKeys",      m_inputContainerKeys);
   declareProperty("IsAtlfastData",           m_isAtlfast=false);
+  declareProperty("isTruth",           m_isTruth=false);
 
   declareProperty("OutputPhotonKey",        m_outputPhotonKey        = "FinalStatePhotons");
   declareProperty("OutputElectronKey",      m_outputElectronKey      = "FinalStateElectrons");
@@ -226,17 +227,31 @@ StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
       switch (particle->type()) {
       case genericParticle::electron:
 	if (m_removeOverlapInSameContainer) {
+	  if (m_isTruth) {
+	    overlap = m_userOverlapCheckingTool->overlap(aod_electrons.eta(idx),
+							 aod_electrons.phi(idx),
+							 particle->eta(),
+							 particle->phi(), false);
+	  } else {
+	    overlap = m_userOverlapCheckingTool->overlap(aod_electrons.cl_eta(idx), 
+							 aod_electrons.cl_phi(idx),
+							 particle->cl_eta(), 
+							 particle->cl_phi(), false);
+	  }
+	}
+	break;
+      case genericParticle::photon:
+	if (m_isTruth) {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_electrons.eta(idx), 
+						       aod_electrons.phi(idx),
+						       particle->eta(), 
+						       particle->phi(), false);
+	} else {
 	  overlap = m_userOverlapCheckingTool->overlap(aod_electrons.cl_eta(idx), 
 						       aod_electrons.cl_phi(idx),
 						       particle->cl_eta(), 
 						       particle->cl_phi(), false);
 	}
-	break;
-      case genericParticle::photon:
-	overlap = m_userOverlapCheckingTool->overlap(aod_electrons.cl_eta(idx), 
-						     aod_electrons.cl_phi(idx),
-						     particle->cl_eta(), 
-						     particle->cl_phi(), false);
 	break;
       case genericParticle::muon:
 	overlap = m_userOverlapCheckingTool->overlap(aod_electrons.eta(idx), 
@@ -245,10 +260,17 @@ StatusCode gmsbOverlapRemovalTool::electronPreparation( std::string key ) {
 						     particle->phi(), false);
 	break;
       default:
-	overlap = m_userOverlapCheckingTool->overlap(aod_electrons.cl_eta(idx), 
-						     aod_electrons.cl_phi(idx),
-						     particle->eta(), 
-						     particle->phi(), true);
+	if (m_isTruth) {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_electrons.eta(idx), 
+						       aod_electrons.phi(idx),
+						       particle->eta(), 
+						       particle->phi(), true);
+	} else {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_electrons.cl_eta(idx), 
+						       aod_electrons.cl_phi(idx),
+						       particle->eta(), 
+						       particle->phi(), true);
+	}
 	break;
       }
       /** get out of the loop as soon as an overlap is found */
@@ -299,17 +321,31 @@ StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
       switch (particle->type()) {
       case genericParticle::photon:
 	if (m_removeOverlapInSameContainer) {
+	  if (m_isTruth) {
+	    overlap = m_userOverlapCheckingTool->overlap(aod_photons.eta(idx), 
+							 aod_photons.phi(idx),
+							 particle->eta(), 
+							 particle->phi(), false);
+	  } else {
+	    overlap = m_userOverlapCheckingTool->overlap(aod_photons.cl_eta(idx), 
+							 aod_photons.cl_phi(idx),
+							 particle->cl_eta(), 
+							 particle->cl_phi(), false);
+	  }
+	}
+	break;
+      case genericParticle::electron:
+	if (m_isTruth) {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_photons.eta(idx), 
+						       aod_photons.phi(idx),
+						       particle->eta(), 
+						       particle->phi(), false);
+	} else {
 	  overlap = m_userOverlapCheckingTool->overlap(aod_photons.cl_eta(idx), 
 						       aod_photons.cl_phi(idx),
 						       particle->cl_eta(), 
 						       particle->cl_phi(), false);
 	}
-	break;
-      case genericParticle::electron:
-	overlap = m_userOverlapCheckingTool->overlap(aod_photons.cl_eta(idx), 
-						     aod_photons.cl_phi(idx),
-						     particle->cl_eta(), 
-						     particle->cl_phi(), false);
 	break;
       case genericParticle::muon:
 	overlap = m_userOverlapCheckingTool->overlap(aod_photons.eta(idx), 
@@ -318,10 +354,17 @@ StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
 						     particle->phi(), false);
 	break;
       default:
-	overlap = m_userOverlapCheckingTool->overlap(aod_photons.cl_eta(idx), 
-						     aod_photons.cl_phi(idx),
-						     particle->eta(), 
-						     particle->phi(), true);
+	if (m_isTruth) {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_photons.eta(idx), 
+						       aod_photons.phi(idx),
+						       particle->eta(), 
+						       particle->phi(), true);
+	} else {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_photons.cl_eta(idx), 
+						       aod_photons.cl_phi(idx),
+						       particle->eta(), 
+						       particle->phi(), true);
+	}
 	break;
       }
       /** get out of the loop as soon as an overlap is found */

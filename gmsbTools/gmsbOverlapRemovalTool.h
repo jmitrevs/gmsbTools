@@ -141,6 +141,7 @@ private:
 
   /** is ATLFAST data */
   bool m_isAtlfast;
+  bool m_isTruth;
 
   /** remove overlay in same container */
   bool m_removeOverlapInSameContainer;

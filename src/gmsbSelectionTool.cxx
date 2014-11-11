@@ -44,6 +44,7 @@ gmsbSelectionTool::gmsbSelectionTool( const std::string& type,
   declareInterface<gmsbSelectionTool>( this );
 
   declareProperty("Atlfast",          m_isAtlfast=false);
+  declareProperty("isTruth",          m_isTruth=false);
 
   declareProperty("WhichSyste", m_whichsyste = SystErr::NONE);
 
@@ -127,7 +128,7 @@ StatusCode gmsbSelectionTool::initialize() {
 
   ATH_MSG_DEBUG("in initialize()");
 
-  if (!m_simple) {
+  if (!m_simple && !m_isTruth) {
     std::string rescalerData = PathResolver::find_file(m_rescalerData, "DATAPATH");
 
     if (rescalerData == "") {
@@ -273,6 +274,11 @@ bool gmsbSelectionTool::isSelected( ElectronD3PDObject& electron, std::size_t id
   ATH_MSG_DEBUG("in electron isSelected(), with electron = " << idx);
 
   bool select = true;
+
+  if (m_isTruth) {
+    const float absClusEta = fabsf(electron.eta(idx));
+    return (electron.pt(idx) > m_electronPt && absClusEta <m_electronEta);
+  }
 
   if ( m_authorEgammaOnly ) select = select && electron.author(idx, egammaParameters::AuthorElectron);
 
@@ -525,6 +531,11 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
 
   bool select = false;
 
+  if (m_isTruth) {
+    const float absClusEta = fabsf(photon.eta(idx));
+    return (photon.pt(idx) > m_photonPt && absClusEta <m_photonEta);
+  }
+
     
   if (m_isMC && m_doTruth) {
     if (photon.type(idx) != MCTruthPartClassifier::IsoPhoton) return false;
@@ -612,6 +623,7 @@ bool gmsbSelectionTool::isSelected( PhotonD3PDObject& photon, std::size_t idx ) 
 float gmsbSelectionTool::calibrate(const MuonD3PDObject& muon, std::size_t idx) const
 {
   float pt = muon.pt(idx);
+
   if (m_isMC && m_smearMC) {
     int seed = int(fabs(muon.phi(idx)*1.e+5));
     if (!seed) seed = 1;
@@ -676,6 +688,11 @@ bool gmsbSelectionTool::isSelected( MuonD3PDObject& muon, std::size_t idx, int n
   ATH_MSG_INFO("in muon isSelected(), with muon = " << idx << ", pt = " << muon.pt(idx) << ", eta = " << muon.eta(idx));
 
   // do ID cut
+  if (m_isTruth) {
+    const float absEta = fabsf(muon.eta(idx));
+    return (muon.pt(idx) > m_muonPt && absEta <m_muonEta);
+  }
+
   bool select = ((m_sel_combined && muon.isCombinedMuon(idx)) ||
 		 (m_sel_seg_tag && muon.isSegmentTaggedMuon(idx)));
   
@@ -814,7 +831,7 @@ bool gmsbSelectionTool::isSelected( JetD3PDObject& jet, std::size_t idx,
 				    float rhoKt4LC, float mu, int nPV2) const
 {
 
-  if (!m_simple) {
+  if (!m_simple && !m_isTruth) {
 
     if (nPV2 == -999) {
       ATH_MSG_ERROR("The variables aren't set properly for jet selector");

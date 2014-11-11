@@ -225,7 +225,9 @@ StatusCode gmsbPreparationTool::electronPreparation( std::string key, int nPV) {
 
   for (std::size_t idx = 0; idx < static_cast<std::size_t>(elIn.n()); idx++) {
     if ( m_userSelectionTool->isSelected(elIn, idx, nPV) ) {
+      ATH_MSG_DEBUG("about to add object");
       electrons.add_object(elIn, idx);
+      ATH_MSG_DEBUG("added object");
     }
   }
   m_numElectrons.second += electrons.n();

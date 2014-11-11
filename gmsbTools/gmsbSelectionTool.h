@@ -85,6 +85,7 @@ private:
 
   /** this is Atlfast data */
   bool m_isAtlfast;
+  bool m_isTruth;		/* is is a truth ntuple */
 
   bool m_simple; 		// if true, don't smear or decorate event
 
