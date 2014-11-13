@@ -359,6 +359,9 @@ StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
 						       aod_photons.phi(idx),
 						       particle->eta(), 
 						       particle->phi(), true);
+	  ATH_MSG_DEBUG("Overlap = " << overlap << ", eta1 = " << aod_photons.eta(idx) 
+			<< ", phi1 = " << aod_photons.phi(idx) << ", eta2 = " << particle->eta() << 
+			", phi2 = " << particle->phi());
 	} else {
 	  overlap = m_userOverlapCheckingTool->overlap(aod_photons.cl_eta(idx), 
 						       aod_photons.cl_phi(idx),
@@ -370,6 +373,9 @@ StatusCode gmsbOverlapRemovalTool::photonPreparation( std::string key ) {
       /** get out of the loop as soon as an overlap is found */
       if ( overlap ) break;
     }
+
+    ATH_MSG_DEBUG("Adding photon with eta = " << aod_photons.eta(idx) << ", phi = " << aod_photons.phi(idx) 
+		  << ", pt = " << aod_photons.pt(idx) << ", overlap = " << overlap);
     
     /** if no overlap then save */  
     if ( !overlap ) { 
@@ -491,10 +497,17 @@ StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
 	break;
       case genericParticle::electron:
       case genericParticle::photon:
-	overlap = m_userOverlapCheckingTool->overlap(aod_jets.eta(idx), 
-						     aod_jets.phi(idx),
-						     particle->cl_eta(), 
-						     particle->cl_phi(), true);
+	if (m_isTruth) {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_jets.eta(idx), 
+						       aod_jets.phi(idx),
+						       particle->eta(), 
+						       particle->phi(), true);
+	} else {
+	  overlap = m_userOverlapCheckingTool->overlap(aod_jets.eta(idx), 
+						       aod_jets.phi(idx),
+						       particle->cl_eta(), 
+						       particle->cl_phi(), true);
+	}
 	break;
       default:
 	overlap = m_userOverlapCheckingTool->overlap(aod_jets.eta(idx), 
@@ -506,6 +519,9 @@ StatusCode gmsbOverlapRemovalTool::jetPreparation( std::string key ) {
       /** get out of the loop as soon as an overlap is found */
       if ( overlap ) break;
     }
+
+    ATH_MSG_DEBUG("Adding jet with eta = " << aod_jets.eta(idx) << " and phi = " << aod_jets.phi(idx) 
+		  << ", pt = " << aod_jets.pt(idx) << ", overlap = " << overlap);
     
     /** if no overlap then save */  
     if ( !overlap ) { 
